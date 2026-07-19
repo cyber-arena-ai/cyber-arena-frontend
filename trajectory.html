@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CyberArena — Match</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@500;600;700;800;900&family=JetBrains+Mono:wght@400;600&display=swap">
+<link rel="stylesheet" href="assets/css/base.css">
+<link rel="stylesheet" href="assets/css/trajectory.css">
+</head>
+<body>
+<div class="wrap">
+  <nav class="nav">
+    <a class="brand" href="index.html">Cyber<em>Arena</em></a>
+    <span class="navlinks">
+      <a href="leaderboard.html">Leaderboard</a>
+      <a href="runs.html">Runs</a>
+      <a href="trajectory.html">Random Match</a>
+    </span>
+  </nav>
+
+  <div class="mast">
+    <div class="kicker" id="mastcat"></div>
+    <h1 id="mastname"></h1>
+    <div class="kicker" style="text-align:right" id="dateline"></div>
+  </div>
+
+  <div class="headline">
+    <h2 id="hl"></h2>
+    <p class="byline" id="byline"></p>
+  </div>
+
+  <div class="board" id="board"></div>
+
+  <div class="metrics" id="metrics"></div>
+
+  <div class="sech">
+    <span>Match thread</span>
+    <span class="filt">
+      <button data-f="all" class="on">everything</button>
+      <button data-f="think">thoughts only</button>
+      <button data-f="event">flag events</button>
+    </span>
+  </div>
+
+  <div class="threadwrap">
+    <div class="chat" id="chat"></div>
+    <div class="minis" title="Per-team minimap — click or drag to scrub">
+      <div class="minimap" data-team="team1">
+        <div class="mm-head" id="mmh1"></div>
+        <div class="mm-body"><div class="marks"></div><div class="mm-view"></div></div>
+      </div>
+      <div class="minimap" data-team="team2">
+        <div class="mm-head" id="mmh2"></div>
+        <div class="mm-body"><div class="marks"></div><div class="mm-view"></div></div>
+      </div>
+    </div>
+  </div>
+  <div class="mm-legend" id="mmlegend"></div>
+
+  <p class="colophon" id="colophon"></p>
+</div>
+<script type="module" src="assets/js/trajectory.js"></script>
+</body>
+</html>

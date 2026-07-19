@@ -1,0 +1,37 @@
+/* Leaderboard — champion lead block + ranked list */
+
+.notice{display:flex;align-items:center;gap:14px;margin:16px 0 4px;padding:12px 16px;background:var(--paper);border:3px solid var(--ink);box-shadow:5px 5px 0 var(--pink);font-weight:600;font-size:14px;line-height:1.45;color:var(--ink)}
+.notice .tag{flex:none;align-self:flex-start;font-family:'Hanken Grotesk';font-weight:900;font-size:12px;text-transform:uppercase;letter-spacing:1px;color:var(--paper);background:var(--pink);padding:4px 10px;transform:rotate(-3deg)}
+.notice b{background:var(--pink);color:var(--paper);padding:0 5px;font-weight:800}
+
+.lead{display:grid;grid-template-columns:auto 1fr;gap:24px;align-items:center;background:var(--blue);color:var(--paper);padding:24px 28px;margin:20px 0 8px;position:relative;overflow:hidden}
+.lead .big{font-size:120px;font-weight:900;line-height:.8;text-shadow:6px 6px 0 var(--pink)}
+.lead .who{font-size:34px;font-weight:900;text-transform:uppercase;letter-spacing:-1px}
+.lead .org{font-weight:600;font-size:15px;opacity:.9;text-transform:uppercase;letter-spacing:1px}
+.lead .stamp{position:absolute;top:18px;right:24px;border:3px solid var(--paper);color:var(--paper);font-weight:900;font-size:13px;padding:5px 12px;transform:rotate(8deg);letter-spacing:1px}
+.lead .nums{display:flex;gap:26px;margin-top:10px;flex-wrap:wrap}
+.lead .nums b{display:block;font-size:26px}
+.lead .nums span{font-size:12px;text-transform:uppercase;letter-spacing:1px;opacity:.85}
+
+.row{display:grid;grid-template-columns:60px 1fr auto auto;align-items:center;gap:18px;padding:14px 6px;border-bottom:2px solid var(--ink)}
+.row .n{font-size:34px;font-weight:900;font-variant-numeric:tabular-nums}
+.row .nm{font-size:21px;font-weight:800}
+.hchip{display:inline-block;vertical-align:2px;font-size:10px;font-weight:800;letter-spacing:.5px;color:var(--paper);padding:2px 6px;margin-right:9px;border:2px solid var(--ink)}
+.row .nm em{font-style:normal;font-weight:600;font-size:13px;display:block;color:#7a7468;text-transform:uppercase;letter-spacing:.5px}
+.row .elo{font-size:24px;font-weight:900}
+.row .rec{font-weight:600;font-size:15px;text-align:right;min-width:74px}
+.row .rec span{display:block;font-size:11px;font-family:'Hanken Grotesk';font-weight:700;text-transform:uppercase;letter-spacing:1px}
+.win{color:var(--blue)}
+.loss{color:var(--pink)}
+.row:hover{background:rgba(37,64,255,.06)}
+
+.readmore{text-align:center;margin-top:26px}
+.readmore a{font-family:'Hanken Grotesk';font-weight:800;font-size:15px;color:var(--paper);background:var(--ink);text-decoration:none;padding:10px 18px;display:inline-block;box-shadow:4px 4px 0 var(--blue)}
+.readmore a:hover{box-shadow:4px 4px 0 var(--pink)}
+
+@media(max-width:680px){
+  .lead{grid-template-columns:1fr}
+  .lead .big{font-size:80px}
+  .row{grid-template-columns:40px 1fr auto}
+  .row .elo{display:none}
+}

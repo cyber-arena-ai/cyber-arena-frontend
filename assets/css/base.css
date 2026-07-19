@@ -1,0 +1,57 @@
+/* CyberArena — shared Riso Zine base
+   Tokens, reset, page chrome (nav, masthead, headline, filters, colophon).
+   Fonts are loaded via <link rel="preconnect"> in each page's <head>. */
+
+:root{
+  --paper:#F7F3EC; --paper2:#FFFDF8; --ink:#1A1A1A;
+  --blue:#2540FF; --pink:#FF3D7F; --purple:#6B2BD9; --green:#0E9E6E;
+  --mut:#8a857c; --line:#e4ddcd;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+/* paint the page background on <html> too, so navigation between views never
+   flashes the browser's default white between unload and first paint */
+html{scroll-behavior:smooth;background:var(--paper);color-scheme:light}
+body{
+  font-family:'Hanken Grotesk',sans-serif;background:var(--paper);color:var(--ink);
+  min-height:100vh;padding:22px 22px 40px;position:relative;
+}
+/* paper grain */
+body::after{content:"";position:fixed;inset:0;pointer-events:none;opacity:.05;z-index:99;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
+.wrap{max-width:1000px;margin:0 auto}
+
+/* ---- nav ---- */
+.nav{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:6px}
+.brand{font-weight:900;font-size:20px;letter-spacing:-.5px;text-transform:uppercase;text-decoration:none;color:var(--ink)}
+.brand em{color:var(--pink);font-style:normal}
+.navlinks{display:flex;gap:4px}
+.navlinks a{font-weight:600;font-size:14px;color:var(--ink);text-decoration:none;padding:5px 13px;border:2px solid transparent;border-radius:30px}
+.navlinks a:hover{border-color:var(--ink)}
+.navlinks a.active{background:var(--ink);color:var(--paper)}
+
+/* ---- masthead ---- */
+.mast{border-bottom:4px solid var(--ink);padding:10px 0 14px;margin-top:8px;display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:10px}
+.kicker{font-weight:700;font-size:11px;line-height:1.5;text-transform:uppercase;letter-spacing:1.5px;color:#6f6657}
+.mast h1{font-size:50px;font-weight:900;letter-spacing:-1.5px;line-height:.9;text-transform:uppercase}
+.mast h1 em{color:var(--pink);font-style:normal}
+
+/* ---- headline / dek ---- */
+.headline{margin:26px 0 8px}
+.headline h2{font-size:40px;font-weight:900;letter-spacing:-1px;line-height:1.02;max-width:840px}
+.headline h2 mark{background:var(--blue);color:var(--paper);padding:0 6px}
+.byline,.dek{font-weight:500;font-size:16px;margin-top:12px;color:#454545;max-width:760px;line-height:1.5}
+.dek b{background:var(--blue);color:var(--paper);padding:0 6px;font-family:'Hanken Grotesk';font-weight:800}
+.dek b.p{background:var(--pink)}
+
+/* ---- section head + filters ---- */
+.sech{font-weight:800;font-size:12px;letter-spacing:1.5px;text-transform:uppercase;color:#7a7468;border-bottom:2px solid var(--ink);padding-bottom:8px;margin:34px 0 0;display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:8px}
+.filt{display:flex;gap:8px;flex-wrap:wrap}
+.filt button{font-weight:600;font-size:12.5px;background:none;border:2px solid var(--ink);border-radius:30px;padding:4px 13px;cursor:pointer;color:var(--ink)}
+.filt button.on{background:var(--ink);color:var(--paper)}
+
+.colophon{font-weight:500;font-size:13px;text-align:center;margin:24px 0 6px;color:#777}
+
+@media(max-width:760px){
+  .mast h1{font-size:32px}
+  .headline h2{font-size:27px}
+}
