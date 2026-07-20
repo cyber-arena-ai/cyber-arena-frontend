@@ -38,12 +38,18 @@ function tagChips(tags, max = 5) {
   return shown.map(chip).join('') + (extra > 0 ? `<span class="chip chip-more">+${extra}</span>` : '');
 }
 function diffPill(d) { return `<span class="gdiff ${d || ''}">${esc(d || '')}</span>`; }
+function authorLink(c, avClass) {
+  const gh = `https://github.com/${encodeURIComponent(c.contributor)}`;
+  return `<a class="gauthor" href="${gh}" target="_blank" rel="noopener" title="@${esc(c.contributor)} on GitHub">
+    <img class="gav ${avClass}" loading="lazy" src="${avatarURL(c)}" alt="" onerror="this.style.visibility='hidden'">
+    <span class="ghandle">${esc(c.contributor)}</span></a>`;
+}
 
 function card(c) {
   const cl = c.classification || {}, svc = c.service || {};
   const ports = Object.values(svc.ports || {}).join(' · ');
   const accent = c.cover?.accent || 'var(--ink)';
-  return `<a class="gcard" href="#${c.slug}" data-slug="${c.slug}" style="--accent:${accent}">
+  return `<div class="gcard" data-slug="${c.slug}" tabindex="0" role="link" aria-label="${esc(c.title || c.slug)}" style="--accent:${accent}">
     <div class="gcover"><img loading="lazy" src="${coverURL(c)}" alt=""></div>
     <div class="ginfo">
       <div class="gbanner"><h3 class="gtitle">${esc(c.title || c.slug)}</h3>${diffPill(cl.difficulty)}</div>
@@ -55,13 +61,12 @@ function card(c) {
           ${svc.protocol ? `<span class="gport">${esc(svc.protocol)} ${esc(ports)}</span>` : ''}
         </div>
         <div class="gfoot">
-          <img class="gav" loading="lazy" src="${avatarURL(c)}" alt="" onerror="this.style.visibility='hidden'">
-          <span class="ghandle">${esc(c.contributor)}</span>
+          ${authorLink(c, '')}
           <span class="gorigin ${c.origin?.type || ''}">${originLabel(c.origin?.type)}</span>
         </div>
       </div>
     </div>
-  </a>`;
+  </div>`;
 }
 
 const grid = document.getElementById('grid');
@@ -81,6 +86,19 @@ renderGrid(chals);
 // title wrap (and thus banner height) shifts with fonts + column width
 if (document.fonts?.ready) document.fonts.ready.then(setPeeks);
 let rz; window.addEventListener('resize', () => { clearTimeout(rz); rz = setTimeout(setPeeks, 150); });
+
+// cards are click-handled divs (so the author can be a real <a>); any click that
+// isn't on a real link opens the detail sheet via the hash
+grid.addEventListener('click', e => {
+  if (e.target.closest('a')) return;
+  const card = e.target.closest('.gcard');
+  if (card) location.hash = card.dataset.slug;
+});
+grid.addEventListener('keydown', e => {
+  if (e.key !== 'Enter') return;
+  const card = e.target.closest('.gcard');
+  if (card) { e.preventDefault(); location.hash = card.dataset.slug; }
+});
 
 /* ---- filters — origin + surface facets that are actually present ---- */
 const FACETS = ['ctf', 'real-world', 'web', 'binary', 'crypto', 'net', 'rev', 'misc'];
@@ -162,7 +180,7 @@ function openSheet(c) {
         <dt>Vulnerability</dt><dd>${esc(cl.vuln_class || '—')}${cl.cve ? ` · ${esc([].concat(cl.cve).join(', '))}` : ''}</dd>
         <dt>Service</dt><dd>${esc(svc.stack || '—')}${ports ? ` · ${esc(ports)}` : ''}</dd>
         <dt>Origin</dt><dd><span class="gorigin ${o.type || ''}">${originLabel(o.type)}</span> ${src}</dd>
-        <dt>Author</dt><dd><img class="gav sm" src="${avatarURL(c)}" alt="" onerror="this.style.display='none'"> ${esc(c.contributor)}</dd>
+        <dt>Author</dt><dd>${authorLink(c, 'sm')}</dd>
       </dl>
       <div class="sheet-hist">
         <h4><i class="fa-solid fa-clock-rotate-left"></i> Match history</h4>

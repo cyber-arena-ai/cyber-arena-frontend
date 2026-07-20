@@ -16,7 +16,8 @@
 /* card = full-bleed cover + title; details slide up over the cover on hover */
 .gcard{position:relative;display:block;aspect-ratio:1/1;overflow:hidden;background:var(--paper2);
   border:3px solid var(--ink);box-shadow:6px 6px 0 var(--ink);text-decoration:none;color:var(--ink);
-  --peek:54px;transition:transform .14s ease, box-shadow .14s ease}
+  --peek:54px;cursor:pointer;transition:transform .14s ease, box-shadow .14s ease}
+.gcard:focus-visible{outline:3px solid var(--accent,var(--ink));outline-offset:2px}
 .gcard:hover{transform:translate(-2px,-2px);box-shadow:9px 9px 0 var(--accent,var(--ink))}
 .gcover{position:absolute;inset:0;background:var(--paper)}
 .gcover img{width:100%;height:100%;object-fit:cover;display:block}
@@ -54,6 +55,8 @@
 .gport{font:600 10.5px/1 'JetBrains Mono',monospace;color:#8a857c;white-space:nowrap}
 
 .gfoot{display:flex;align-items:center;gap:8px;padding-top:8px;border-top:2px solid var(--line)}
+.gauthor{display:inline-flex;align-items:center;gap:8px;text-decoration:none;color:inherit}
+.gauthor:hover .ghandle{color:var(--ink);text-decoration:underline}
 .gav{width:22px;height:22px;border-radius:50%;border:2px solid var(--ink);object-fit:cover}
 .gav.sm{width:20px;height:20px;vertical-align:-5px}
 .ghandle{font:600 12px/1 'JetBrains Mono',monospace;color:#555}
