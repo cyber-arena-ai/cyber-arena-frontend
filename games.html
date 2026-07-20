@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CyberArena — Games</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@500;600;700;800;900&family=JetBrains+Mono:wght@400;600&display=swap">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer">
+<link rel="stylesheet" href="assets/css/base.css">
+
+<link rel="stylesheet" href="assets/css/games.css">
+</head>
+<body>
+<div class="wrap">
+  <nav class="nav">
+    <a class="brand" href="index.html">Cyber<em>Arena</em></a>
+    <span class="navlinks">
+      <a href="leaderboard.html">Leaderboard</a>
+      <a href="runs.html">Runs</a>
+      <a href="games.html">Games</a>
+      <a href="trajectory.html">Random Match</a>
+    </span>
+  </nav>
+
+  <div class="mast">
+    <div class="kicker">Season 1</div>
+    <h1>Games</h1>
+    <div class="kicker" style="text-align:right" id="mastmeta"></div>
+  </div>
+
+  <p class="dek" id="dek"></p>
+  <div class="summary" id="summary"></div>
+
+  <div class="sech">
+    <span>The challenge arena</span>
+    <span class="filt" id="filt"></span>
+  </div>
+  <div class="grid" id="grid"></div>
+
+  <div class="colophon" id="colophon"></div>
+</div>
+
+<!-- challenge detail overlay -->
+<div class="sheet" id="sheet" hidden>
+  <div class="sheet-bg" data-close></div>
+  <article class="sheet-card" id="sheet-card"></article>
+</div>
+
+<script type="module" src="assets/js/games.js"></script>
+</body>
+</html>
