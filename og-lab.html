@@ -37,6 +37,7 @@ layout is remembered; <b>Reset</b> restores the shipped design.</p>
   <label>kicker <input type="text" id="kicker" size="34"></label>
   <label>line 1 <input type="text" id="line1" size="10"></label>
   <label>line 2 <input type="text" id="line2" size="10"></label>
+  <label><input type="checkbox" id="shadow"> pink shadow</label>
 </div>
 
 <div class="card" id="cardWide">
@@ -83,7 +84,7 @@ const DEFAULTS={
     blue:{x:15,y:540,s:0.67,on:true},
     pink:{x:515,y:540,s:0.67,on:true} },
 };
-const TEXTS={kicker:'', line1:'cyber-arena.ai', line2:''};
+const TEXTS={kicker:'', line1:'cyber-arena.ai', line2:'', shadow:false};
 
 const store=k=>{try{return JSON.parse(localStorage.getItem('oglab2_'+k))}catch{return null}};
 const save=(k,v)=>localStorage.setItem('oglab2_'+k,JSON.stringify(v));
@@ -116,7 +117,7 @@ function drawTitle(ctx,t){
   ctx.font=`900 ${m.head}px 'Hanken Grotesk'`;
   [texts.line1,texts.line2].forEach((tx,i)=>{
     const base=t.y+m.kickGap+m.lineH*(i+1)-0.18*m.head;
-    ctx.fillStyle=PINK; ctx.fillText(tx,t.x+m.shadow,base+m.shadow);
+    if(texts.shadow){ctx.fillStyle=PINK; ctx.fillText(tx,t.x+m.shadow,base+m.shadow);}
     ctx.fillStyle=INK;  ctx.fillText(tx,t.x,base);
   });
   ctx.textAlign='left';
@@ -229,6 +230,8 @@ for(const id of ['kicker','line1','line2']){
   const inp=document.getElementById(id); inp.value=texts[id];
   inp.oninput=()=>{texts[id]=inp.value;save('texts',texts);draw('wide');draw('square');};
 }
+const sh=document.getElementById('shadow'); sh.checked=!!texts.shadow;
+sh.onchange=()=>{texts.shadow=sh.checked;save('texts',texts);draw('wide');draw('square');};
 
 /* ---- boot: fonts + sprites, then first paint ---- */
 Promise.all([
