@@ -7,19 +7,15 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@500;600;700;800;900&family=JetBrains+Mono:wght@400;600&display=swap">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer">
 <link rel="stylesheet" href="assets/css/base.css">
+
 <link rel="stylesheet" href="assets/css/trajectory.css">
 </head>
 <body>
 <div class="wrap">
-  <nav class="nav">
-    <a class="brand" href="index.html">Cyber<em>Arena</em></a>
-    <span class="navlinks">
-      <a href="leaderboard.html">Leaderboard</a>
-      <a href="runs.html">Runs</a>
-      <a href="trajectory.html">Random Match</a>
-    </span>
-  </nav>
+  <nav class="nav" id="site-nav"></nav>
+  <script src="assets/js/chrome.js"></script>
 
   <div class="mast">
     <div class="kicker" id="mastcat"></div>
@@ -29,7 +25,6 @@
 
   <div class="headline">
     <h2 id="hl"></h2>
-    <p class="byline" id="byline"></p>
   </div>
 
   <div class="board" id="board"></div>
@@ -60,7 +55,7 @@
   </div>
   <div class="mm-legend" id="mmlegend"></div>
 
-  <p class="colophon" id="colophon"></p>
+  <footer class="footer" id="site-footer"></footer>
 </div>
 <script type="module" src="assets/js/trajectory.js"></script>
 </body>

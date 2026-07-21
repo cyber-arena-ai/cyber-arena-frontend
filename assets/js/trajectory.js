@@ -22,47 +22,60 @@ if(!runId){
 const [D, H] = await Promise.all([loadJSON(api(`/api/runs/${runId}/trajectory`)), loadHarnesses()]);
 const t1 = D.teams.team1, t2 = D.teams.team2;
 
-// resolve each team to its harness and theme the page with its color
-const HH = { team1: H.get(t1.model), team2: H.get(t2.model) };
-const wrap = document.querySelector('.wrap');
-wrap.style.setProperty('--t1', HH.team1.color);
-wrap.style.setProperty('--t2', HH.team2.color);
+// resolve each team to its <model × harness> identity for names/labels only.
+// With just two teams on this page, theming stays on the stock theme colors —
+// --t1/--t2 default to --blue/--pink in the CSS; harness identity is textual.
+const HH = {
+  team1: { ...H.get(t1), color: 'var(--blue)' },
+  team2: { ...H.get(t2), color: 'var(--pink)' },
+};
 
 /* ---- headline + scoreboard ---- */
+// no score in the headline — the scoreboard right below already carries it
 const wlabel = D.winner === 'team1' ? t1.label : t2.label;
 const llabel = D.winner === 'team1' ? t2.label : t1.label;
-const wpts = Math.max(D.score.team1, D.score.team2);
-const lpts = Math.min(D.score.team1, D.score.team2);
 
 document.getElementById('mastcat').textContent = D.category;
 document.getElementById('mastname').textContent = D.name;
 document.getElementById('dateline').textContent = D.date;
 
+// defeated team: its own team color, struck through by a slightly (randomly)
+// inclined cross-out in the WINNER's color
+const defeated = (label, key, wkey) => {
+  const tilt = ((2 + Math.random() * 5) * (Math.random() < .5 ? -1 : 1)).toFixed(1);
+  return `<span class="defeat" style="color:${HH[key].color};--cross:${tilt}deg;--crossc:${HH[wkey].color}">${label}</span>`;
+};
+
+// both names in their team colors — used when nobody is defeated
+const cname = key => `<span style="color:${HH[key].color}">${(key === 'team1' ? t1 : t2).label}</span>`;
+
 // winner is null while a match is live — show a "live · X vs Y" headline then
 const leader = D.score.team1 === D.score.team2 ? null
   : (D.score.team1 > D.score.team2 ? 'team1' : 'team2');
-if(!D.winner){
+if(D.status === 'failed'){
+  document.getElementById('hl').innerHTML =
+    `${cname('team1')} <em>vs</em> ${cname('team2')}`;
+} else if(!D.winner){
   const lead = leader ? HH[leader].color : HH.team1.color;
   document.getElementById('hl').innerHTML =
-    `<mark style="background:${lead}">LIVE</mark> ${t1.label} <em>vs</em> ${t2.label} · ${D.score.team1}–${D.score.team2}`;
+    `<mark style="background:${lead}">LIVE</mark> ${cname('team1')} <em>vs</em> ${cname('team2')}`;
 } else if(D.winner === 'draw'){
   document.getElementById('hl').innerHTML =
-    `<mark style="background:${HH.team1.color}">${t1.label}</mark> and <em>${t2.label}</em> draw ${D.score.team1}–${D.score.team2}`;
+    `${cname('team1')} and ${cname('team2')} draw`;
 } else {
   document.getElementById('hl').innerHTML =
-    `<mark style="background:${HH[D.winner].color}">${wlabel}</mark> def. <em>${llabel}</em> · ${wpts}–${lpts}`;
+    `<mark style="background:${HH[D.winner].color}">${wlabel}</mark> def. ${defeated(llabel, D.winner === 'team1' ? 'team2' : 'team1', D.winner)}`;
 }
-document.getElementById('byline').textContent =
-  `${D.rounds}-round attack-and-defense · ${D.category}. ${D.challenge}`;
-document.getElementById('colophon').textContent = `CyberArena 2026 · ${D.date}`;
 
 function side(team, key, cls){
   const w = D.winner === key;
+  // identity line = the full combo: model · harness
+  const md = [team.model, HH[key].fullName].filter(Boolean).join(' · ');
   return `<div class="side ${cls} ${w?'win':''}">
     ${w?'<div class="stampwin">Winner</div>':''}
-    <div class="nm">${team.label}</div><div class="md">${team.model}</div>
+    <div class="nm">${team.label}</div><div class="md">${md}</div>
     <div class="pts">${D.score[key]}</div>
-    <div class="br">⚑ ${D.attack_flags[key]} captured · ${D.defense_patches[key]} patched</div></div>`;
+    <div class="br"><i class="fa-solid fa-flag"></i> ${D.attack_flags[key]} captured · ${D.defense_patches[key]} patched</div></div>`;
 }
 refreshBoard();  // initial scoreboard paint (same renderer live updates use)
 
@@ -76,7 +89,7 @@ if(mhost && M){
       ? `<span class="mseg ${cls}" style="width:${100*v/w}%" title="${lbl} ${fmtTime(v)}">${100*v/w>=9?lbl:''}</span>` : '';
     return `<div class="mrow"><div class="mlbl" style="color:${HH[key].color}">${team.label}</div>`
       + `<div class="mbar">${seg('mt-think',m.think_s,'think')}${seg('mt-tool',m.tool_s,'tool')}${seg('mt-un',m.untrack_s,'idle')}</div>`
-      + `<div class="mnum">🧠 ${fmtTime(m.think_s)}${m.overlap?'*':''} · ⚙ ${fmtTime(m.tool_s)} · ⏸ ${fmtTime(m.untrack_s)} · ${m.out_tok.toLocaleString()} tok @ ${m.tok_per_s} tok/s</div></div>`;
+      + `<div class="mnum"><i class="fa-solid fa-brain"></i> ${fmtTime(m.think_s)}${m.overlap?'*':''} · <i class="fa-solid fa-gear"></i> ${fmtTime(m.tool_s)} · <i class="fa-solid fa-pause"></i> ${fmtTime(m.untrack_s)} · ${m.out_tok.toLocaleString()} tok @ ${m.tok_per_s} tok/s</div></div>`;
   };
   mhost.innerHTML = `<div class="mhead">Time budget · <b class="mt-think-t">thinking</b> / <b class="mt-tool-t">tool exec</b> / <b class="mt-un-t">idle+untracked</b>`
     + `<span class="msub">thinking = Σ model-inference latency · tool = Σ tool exec · wall = game duration${Object.values(M).some(m=>m.overlap)?' · *concurrent API calls overlap wall':''}</span></div>`
@@ -86,9 +99,13 @@ if(mhost && M){
 /* ---- chat thread ---- */
 // act-kind -> label; the backend uses an open set (bash/mcp/web/tool/…), so
 // unknown kinds get a generic label rather than being mislabeled as a search
-const ACT_LABELS = { bash: '$ shell', mcp: '⚙ cyberarena tool', web: '⌕ web search' };
+const ACT_LABELS = {
+  bash: '<i class="fa-solid fa-terminal"></i> shell',
+  mcp: '<i class="fa-solid fa-gear"></i> cyberarena tool',
+  web: '<i class="fa-solid fa-magnifying-glass"></i> web search',
+};
 function actChip(a){
-  const lbl = ACT_LABELS[a.k] || `⚙ ${a.k}`;
+  const lbl = ACT_LABELS[a.k] || `<i class="fa-solid fa-gear"></i> ${a.k}`;
   const txt = a.k==='mcp' ? a.x + '()' : a.x;
   return `<div class="act ${a.k}"><span class="al">${lbl}</span><code>${esc(txt)}</code></div>`;
 }
@@ -110,10 +127,10 @@ function sysMsg(e){
       return `<div class="sys dup" data-kind="event" data-mm-type="dup" data-mm-team="${e.by}">${who} re-submitted a stolen flag — duplicate, no points · ${fmtTime(e.t)}</div>`;
     return `<div class="sys steal ${e.by}" data-kind="event" data-mm-type="capture" data-mm-team="${e.by}"
               title="${fmtTime(e.t)} — ${who} captured ${victim}'s flag">
-              <b>⚑ ${who}</b> captured <b>${victim}'s</b> flag<span class="tm">${fmtTime(e.t)} · +1 flag</span></div>`;
+              <b><i class="fa-solid fa-flag"></i> ${who}</b> captured <b>${victim}'s</b> flag<span class="tm">${fmtTime(e.t)} · +1 flag</span></div>`;
   }
   return `<div class="patchwrap" data-kind="event" data-mm-type="patch" data-mm-team="${e.by}" title="${fmtTime(e.t)} — ${who} patched">
-            <span class="sys patch">⟳ ${who} patched the service · ${fmtTime(e.t)}</span></div>`;
+            <span class="sys patch"><i class="fa-solid fa-wrench"></i> ${who} patched the service · ${fmtTime(e.t)}</span></div>`;
 }
 
 const rstarts = Object.entries(D.round_starts)
@@ -133,9 +150,9 @@ chat.innerHTML = D.feed.map(renderItem).join('');
 
 /* ---- per-team minimaps ---- */
 document.getElementById('mmh1').textContent = HH.team1.shortName;
-document.getElementById('mmh1').title = t1.label;
+document.getElementById('mmh1').title = `${t1.label} · ${HH.team1.fullName}`;
 document.getElementById('mmh2').textContent = HH.team2.shortName;
-document.getElementById('mmh2').title = t2.label;
+document.getElementById('mmh2').title = `${t2.label} · ${HH.team2.fullName}`;
 
 document.getElementById('mmlegend').innerHTML = `
   <span><i class="s" style="background:${HH.team1.color};border-color:var(--ink)"></i>${t1.label} capture</span>
@@ -217,9 +234,11 @@ document.querySelectorAll('.filt button').forEach(b => b.onclick = () => {
 function statusBadge(){
   const el = document.getElementById('mastcat');
   const s = D.status;
-  const chip = s === 'running' ? '<span class="live-chip">● LIVE</span>'
+  const chip = s === 'running' ? '<span class="live-chip"><i class="fa-solid fa-circle"></i> LIVE</span>'
     : s === 'failed' ? '<span class="fail-chip">failed</span>' : '';
-  el.innerHTML = `${D.category || ''} ${chip}`;
+  // only flag hint mode; hard is the default and stays untagged
+  const mode = D.hint === true ? '<span class="mode-chip hint" title="hint mode — agents were given the vulnerability hint">hint</span>' : '';
+  el.innerHTML = `${D.category || ''} ${mode} ${chip}`;
 }
 statusBadge();
 
@@ -267,14 +286,30 @@ if(D.status === 'running'){
 }
 
 /* ---- analysis panel (finished + succeeded) ---- */
+function analysisFailedNote(){
+  const panel = document.createElement('section');
+  panel.className = 'analysis';
+  panel.innerHTML =
+    `<div class="an-sech">Post-match analysis <span class="an-valid warn">analysis failed</span></div>
+     <p class="an-fail-note">Deep analysis could not be produced for this match after repeated attempts. The match thread below is complete.</p>`;
+  document.getElementById('metrics').after(panel);
+}
 async function renderAnalysis(){
   let a = D.analysis;
-  if(!a && D.succeeded){
+  if(!a && D.succeeded && !D.analysis_failed){
     try { a = await loadJSON(api(`/api/runs/${runId}/analysis`)); } catch { return; }
   }
+  if(D.analysis_failed || a?.status === 'failed'){ analysisFailedNote(); return; }
   if(!a || a.status === 'pending' || a.error) return;
 
-  const cls = c => `<span class="cls cls-${c}">${c}</span>`;
+  // A/B/C = WHY an attack failed (rubric §2). Hover for the meaning.
+  const CLS_MEAN = {
+    A: "A — Can't break in (capability gap): never reached a working exploit",
+    B: "B — Too slow / opponent already patched: had the exploit but lost on tempo or defense",
+    C: "C — Had reach, never converted: reached the flag but never hand-fired submit_flag",
+  };
+  const cls = c => `<span class="cls cls-${c}" data-tip="${esc(CLS_MEAN[c] || '')}">${c}</span>`;
+  const CLS_KEY = `<span class="an-key">A can't break · B too slow · C never converted</span>`;
   const outcomeRows = t => (a.attack_outcomes?.[t] || []).map(o =>
     `<li>${cls(o.class)} <b>${esc(o.service||'')}</b>${o.round?` r${o.round}`:''} — ${esc(o.justification||'')}</li>`).join('') || '<li class="none">held all services</li>';
   const flagRows = (a.accepted_flags || []).map(f =>
@@ -287,21 +322,33 @@ async function renderAnalysis(){
       <div class="unum">${u.A_productive_pct||0}/${u.B_lowvalue_pct||0}/${u.C_idle_pct||0}</div></div>`;
   };
 
+  // TLDR = the validity verdict; the verdict word lives INSIDE the white chip
+  // (readable on white), the reason sits on the black background. Details = headline.
+  const vok = a.validity?.verdict === 'VALID';
+  const verdictChip = `<span class="tldr">TLDR${a.validity?.verdict ? `<b class="verdict ${vok?'ok':'warn'}">${esc(a.validity.verdict)}</b>` : ''}</span>`;
+  const vreason = a.validity?.reason ? esc(a.validity.reason) : '';
+
+  // one card per module — the panel is a grid of riso cards, not one block
+  const card = (cls, title, body) =>
+    body ? `<article class="an-card ${cls}"><h4>${title}</h4>${body}</article>` : '';
+  const utilBars = util('team1') + util('team2');
+
   const panel = document.createElement('section');
   panel.className = 'analysis';
   panel.innerHTML = `
-    <div class="an-head">Post-match analysis
-      <span class="an-valid ${a.validity?.verdict==='VALID'?'ok':'warn'}">${esc(a.validity?.verdict||'')}${a.validity?.reason?` · ${esc(a.validity.reason)}`:''}</span></div>
-    ${a.headline ? `<p class="an-headline">${esc(a.headline)}</p>` : ''}
-    <div class="an-grid">
-      <div><h4>${t1.label} — failed attacks</h4><ul class="an-list">${outcomeRows('team1')}</ul></div>
-      <div><h4>${t2.label} — failed attacks</h4><ul class="an-list">${outcomeRows('team2')}</ul></div>
-    </div>
-    ${flagRows ? `<h4>Accepted flags — intended?</h4><ul class="an-list flags">${flagRows}</ul>` : ''}
-    <h4>Time utilization <span class="an-key">productive / low-value / idle</span></h4>
-    ${util('team1')}${util('team2')}
-    ${a.conversion ? `<p class="an-note"><b>Conversion:</b> ${esc(a.conversion)}</p>` : ''}
-    ${a.awareness ? `<p class="an-note"><b>Awareness:</b> ${esc(a.awareness)}</p>` : ''}`;
+    <div class="an-sech">Post-match analysis</div>
+    <div class="an-cards">
+      ${(a.validity || a.headline) ? `<article class="an-card lede ${vok ? 'v-ok' : 'v-bad'}">
+        <div class="tldr-cap">${verdictChip}${vreason ? ' ' + vreason : ''}</div>
+        ${a.headline ? `<span class="lede-div"></span><p class="lede-details">${esc(a.headline)}</p>` : ''}
+      </article>` : ''}
+      ${card('t1', `${t1.label} — failed attacks ${CLS_KEY}`, `<ul class="an-list">${outcomeRows('team1')}</ul>`)}
+      ${card('t2', `${t2.label} — failed attacks ${CLS_KEY}`, `<ul class="an-list">${outcomeRows('team2')}</ul>`)}
+      ${flagRows ? card('wide', 'Accepted flags — intended?', `<ul class="an-list flags">${flagRows}</ul>`) : ''}
+      ${utilBars ? card('wide', `Time utilization <span class="an-key">productive / low-value / idle</span>`, utilBars) : ''}
+      ${a.conversion ? card('note', 'Conversion', `<p>${esc(a.conversion)}</p>`) : ''}
+      ${a.awareness ? card('note', 'Awareness', `<p>${esc(a.awareness)}</p>`) : ''}
+    </div>`;
   document.getElementById('metrics').after(panel);
 }
 renderAnalysis();

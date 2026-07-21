@@ -13,6 +13,11 @@
 .lead .nums b{display:block;font-size:26px}
 .lead .nums span{font-size:12px;text-transform:uppercase;letter-spacing:1px;opacity:.85}
 
+.lead:not(.in){opacity:0}
+.lead.in,.row{animation:floatin .55s cubic-bezier(.2,.7,.3,1) backwards;animation-delay:var(--d,0s)}
+@keyframes floatin{from{opacity:0;transform:translateY(22px)}to{opacity:1;transform:none}}
+@media(prefers-reduced-motion:reduce){.lead.in,.row{animation:none}}
+
 .row{display:grid;grid-template-columns:60px 1fr auto auto;align-items:center;gap:18px;padding:14px 6px;border-bottom:2px solid var(--ink)}
 .row .n{font-size:34px;font-weight:900;font-variant-numeric:tabular-nums}
 .row .nm{font-size:21px;font-weight:800}

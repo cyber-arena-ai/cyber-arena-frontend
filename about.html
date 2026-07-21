@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CyberArena — About us</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@500;600;700;800;900&family=JetBrains+Mono:wght@400;600&display=swap">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer">
+<link rel="stylesheet" href="assets/css/base.css">
+
+<link rel="stylesheet" href="assets/css/about.css">
+</head>
+<body>
+<div class="wrap">
+  <nav class="nav" id="site-nav"></nav>
+  <script src="assets/js/chrome.js"></script>
+
+  <div class="mast">
+    <div class="kicker">The crew</div>
+    <h1>About <em>us</em></h1>
+    <div class="kicker" style="text-align:right">CyberArena</div>
+  </div>
+
+  <p class="dek">The people building the arena — the sandbox, the benchmark, and this gazette.</p>
+
+  <div class="org">
+    <a class="org-badge" href="https://2077ai.com" target="_blank" rel="noopener">
+      <img src="assets/img/inst/2077ai.png" alt="2077AI logo"></a>
+    <p>CyberArena is a project of the <a href="https://2077ai.com" target="_blank" rel="noopener"><b>2077AI
+    Foundation</b></a> — an open-source foundation working on AI data standardization: unlocking greater
+    value from data, accelerating AI development, and fostering an open, prosperous AI data ecosystem.</p>
+  </div>
+
+  <div class="sech"><span>Team</span></div>
+  <div class="team" id="team"></div>
+
+  <div class="sech"><span>Contact us</span></div>
+  <div class="contact">
+    <a class="cbox" href="https://x.com/cyberarenaai" target="_blank" rel="noopener">
+      <i class="fa-brands fa-x-twitter"></i>
+      <b>Twitter</b>
+    </a>
+    <a class="cbox" href="https://github.com/cyber-arena-ai" target="_blank" rel="noopener">
+      <i class="fa-brands fa-github"></i>
+      <b>GitHub</b>
+    </a>
+    <a class="cbox" href="mailto:bangya@2077ai.com">
+      <i class="fa-solid fa-envelope"></i>
+      <b>Email</b>
+    </a>
+  </div>
+
+  <footer class="footer" id="site-footer"></footer>
+</div>
+<script src="institutions/contributors.js"></script>
+<script>
+// the author list (GitHub handles, in display order) lives in
+// institutions/contributors.js — edit that file to add/remove/reorder
+document.getElementById('team').innerHTML = (window.CONTRIBUTORS || []).map(u => `
+  <a class="member" href="https://github.com/${u}" target="_blank" rel="noopener" title="@${u} on GitHub">
+    <img loading="lazy" src="https://github.com/${u}.png?size=160" alt="${u}'s avatar">
+    <span class="handle">${u}</span>
+  </a>`).join('');
+</script>
+</body>
+</html>

@@ -28,18 +28,33 @@ body::after{content:"";position:fixed;inset:0;pointer-events:none;opacity:.05;z-
 .navlinks a{font-weight:600;font-size:14px;color:var(--ink);text-decoration:none;padding:5px 13px;border:2px solid transparent;border-radius:30px}
 .navlinks a:hover{border-color:var(--ink)}
 .navlinks a.active{background:var(--ink);color:var(--paper)}
+/* mobile: the links fold behind a burger icon (toggled by chrome.js) */
+.nav-burger{display:none;background:var(--paper2);border:2px solid var(--ink);box-shadow:3px 3px 0 var(--ink);
+  padding:7px 8px;cursor:pointer}
+.nav-burger span{display:block;width:18px;height:3px;background:var(--ink);margin:3px 0}
+.nav-burger:active{transform:translate(2px,2px);box-shadow:1px 1px 0 var(--ink)}
+@media(max-width:900px){
+  .nav-burger{display:block}
+  .navlinks{display:none;width:100%;flex-wrap:wrap;gap:6px;margin-top:10px}
+  .nav.open .navlinks{display:flex}
+  .navlinks a{border:2px solid var(--ink);border-radius:0;background:var(--paper2);padding:5px 14px}
+  .navlinks a.active{background:var(--ink)}
+}
 
 /* ---- masthead ---- */
-.mast{border-bottom:4px solid var(--ink);padding:10px 0 14px;margin-top:8px;display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:10px}
+.mast{border-bottom:4px solid var(--ink);padding:10px 0 14px;margin-top:8px;display:flex;align-items:flex-end;flex-wrap:wrap;gap:10px}
 .kicker{font-weight:700;font-size:11px;line-height:1.5;text-transform:uppercase;letter-spacing:1.5px;color:#6f6657}
-.mast h1{font-size:50px;font-weight:900;letter-spacing:-1.5px;line-height:.9;text-transform:uppercase}
+/* the two side kickers take equal, content-independent width so the title is
+   the true center of the line — and never repositions when JS fills a kicker */
+.mast > .kicker{flex:1 1 0;min-width:0}
+.mast h1{flex:0 0 auto;text-align:center;font-size:50px;font-weight:900;letter-spacing:-1.5px;line-height:.9;text-transform:uppercase}
 .mast h1 em{color:var(--pink);font-style:normal}
 
 /* ---- headline / dek ---- */
 .headline{margin:26px 0 8px}
 .headline h2{font-size:40px;font-weight:900;letter-spacing:-1px;line-height:1.02;max-width:840px}
 .headline h2 mark{background:var(--blue);color:var(--paper);padding:0 6px}
-.byline,.dek{font-weight:500;font-size:16px;margin-top:12px;color:#454545;max-width:760px;line-height:1.5}
+.dek{font-weight:500;font-size:16px;margin-top:12px;color:#454545;max-width:760px;line-height:1.5}
 .dek b{background:var(--blue);color:var(--paper);padding:0 6px;font-family:'Hanken Grotesk';font-weight:800}
 .dek b.p{background:var(--pink)}
 
@@ -49,7 +64,20 @@ body::after{content:"";position:fixed;inset:0;pointer-events:none;opacity:.05;z-
 .filt button{font-weight:600;font-size:12.5px;background:none;border:2px solid var(--ink);border-radius:30px;padding:4px 13px;cursor:pointer;color:var(--ink)}
 .filt button.on{background:var(--ink);color:var(--paper)}
 
+/* ---- the arrow — one rounded-stroke glyph for every arrow on the site.
+   A currentColor mask, so it inherits text color and scales with font-size.
+   Default points right; .up is the 45° external-link arrow. ---- */
+.arw{display:inline-block;width:1em;height:1em;vertical-align:-.12em;background:currentColor;
+  -webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M4 12h15M12 5l7 7-7 7' fill='none' stroke='%23000' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center/contain no-repeat;
+  mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M4 12h15M12 5l7 7-7 7' fill='none' stroke='%23000' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center/contain no-repeat}
+.arw.up{transform:rotate(-45deg)}
+
 .colophon{font-weight:500;font-size:13px;text-align:center;margin:24px 0 6px;color:#777}
+
+/* ---- uniform footer (injected by assets/js/chrome.js) ---- */
+.footer{margin-top:44px;border-top:4px solid var(--ink);padding:16px 0 6px}
+.footer .foot-line{display:flex;justify-content:center;align-items:center;flex-wrap:wrap;gap:14px 30px}
+.brand em.b{color:var(--blue)}
 
 @media(max-width:760px){
   .mast h1{font-size:32px}

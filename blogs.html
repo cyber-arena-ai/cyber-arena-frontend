@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CyberArena — Blogs</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@500;600;700;800;900&family=JetBrains+Mono:wght@400;600&display=swap">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer">
+<link rel="stylesheet" href="assets/css/base.css">
+<style>
+/* Blogs — writing from the arena. Placeholder cards until posts land. */
+.posts{display:grid;grid-template-columns:1fr;gap:16px;margin-top:30px}
+.post{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:20px;
+  border:3px solid var(--ink);background:var(--paper2);padding:20px 22px;box-shadow:6px 6px 0 var(--ink)}
+.post .pk{font:800 40px/1 'Hanken Grotesk',sans-serif;color:var(--ink);font-variant-numeric:tabular-nums}
+.post h3{font-size:24px;font-weight:900;letter-spacing:-.5px;line-height:1.05}
+.post .ptag{display:inline-block;font:800 10px/1 'JetBrains Mono',monospace;letter-spacing:1px;
+  text-transform:uppercase;color:var(--paper);background:var(--purple);border:2px solid var(--ink);
+  padding:4px 8px;margin-bottom:8px}
+.post p{font-size:14px;color:#6a6456;margin-top:6px;line-height:1.5}
+.post .pgo{font:800 10.5px/1.5 'Hanken Grotesk',sans-serif;text-transform:uppercase;letter-spacing:1px;
+  color:var(--paper);background:var(--ink);aspect-ratio:1;display:grid;place-items:center;
+  padding:10px;text-align:center}
+.post.soon{background:var(--paper);border-style:dashed;box-shadow:6px 6px 0 var(--purple);opacity:.95}
+.post.soon .pgo{background:#8a8378}
+@media(max-width:680px){
+  .post{grid-template-columns:1fr;text-align:left}
+  .post .pk{font-size:28px}
+  .post .pgo{justify-self:start}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <nav class="nav" id="site-nav"></nav>
+  <script src="assets/js/chrome.js"></script>
+
+  <div class="mast">
+    <div class="kicker">Writing</div>
+    <h1>Blogs</h1>
+    <div class="kicker" style="text-align:right">From the arena</div>
+  </div>
+
+
+  <div class="posts">
+    <!-- TODO: replace this placeholder with the real technical report link once published -->
+    <article class="post soon">
+      <div class="pk">01</div>
+      <div>
+        <span class="ptag">Technical report</span>
+        <h3>CyberArena: a symmetric attack-and-defense benchmark for AI agents</h3>
+        <p>The full methodology — sandbox topology, scoring, hint vs hard mode, and season-one
+        results. Coming soon.</p>
+      </div>
+      <span class="pgo">Coming<br>soon</span>
+    </article>
+  </div>
+
+  <footer class="footer" id="site-footer"></footer>
+</div>
+</body>
+</html>

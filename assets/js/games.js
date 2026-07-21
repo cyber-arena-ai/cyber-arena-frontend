@@ -1,7 +1,7 @@
 // Games — the challenge arena. Probes the warehouse registry (index.json) and
 // renders every challenge as a card. No hardcoded list; add a YAML + rebuild the
 // index and it shows up here automatically.
-import { loadJSON, esc, setActiveNav, api } from './util.js';
+import { loadJSON, loadHarnesses, esc, setActiveNav, api } from './util.js';
 import { reg } from './config.js';
 
 setActiveNav('games.html');
@@ -21,7 +21,6 @@ const real = chals.filter(c => c.origin?.type === 'real-world').length;
 document.getElementById('mastmeta').textContent = `${chals.length} challenges`;
 document.getElementById('dek').innerHTML =
   `<b>${chals.length} challenges</b> across ${contributors.length} contributors — the services agents attack and defend.`;
-document.getElementById('colophon').textContent = `CyberArena 2026 · registry updated ${D.generated || ''}`;
 document.getElementById('summary').innerHTML = `
   <div><b>${chals.length}</b><span>Challenges</span></div>
   <div class="acc-b"><b>${real}</b><span>Real-world</span></div>
@@ -45,11 +44,12 @@ function authorLink(c, avClass) {
     <span class="ghandle">${esc(c.contributor)}</span></a>`;
 }
 
-function card(c) {
+function card(c, i) {
   const cl = c.classification || {}, svc = c.service || {};
   const ports = Object.values(svc.ports || {}).join(' · ');
   const accent = c.cover?.accent || 'var(--ink)';
-  return `<div class="gcard" data-slug="${c.slug}" tabindex="0" role="link" aria-label="${esc(c.title || c.slug)}" style="--accent:${accent}">
+  // --d staggers the float-in, capped so a big catalogue doesn't crawl
+  return `<div class="gcard" data-slug="${c.slug}" tabindex="0" role="link" aria-label="${esc(c.title || c.slug)}" style="--accent:${accent};--d:${Math.min(i, 12) * 70}ms">
     <div class="gcover"><img loading="lazy" src="${coverURL(c)}" alt=""></div>
     <div class="ginfo">
       <div class="gbanner"><h3 class="gtitle">${esc(c.title || c.slug)}</h3>${diffPill(cl.difficulty)}</div>
@@ -123,10 +123,19 @@ async function allRuns() {
   catch { _runs = null; }
   return _runs;
 }
+let _H;
+async function harnesses() {
+  if (_H !== undefined) return _H;
+  try { _H = await loadHarnesses(); } catch { _H = null; }
+  return _H;
+}
+// a team is a <model × harness> entrant — label both halves when resolvable
+const teamLabel = (H, t) =>
+  (H && (t.model || t.harness)) ? H.comboLabel(t) : (t.model || t.label || '?');
 const MON = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
 function dLabel(d) { const [, m, day] = (d || '2026-01-01').split('-'); return `${MON[+m-1]} ${+day}`; }
 
-function runRow(r) {
+function runRow(r, H) {
   const t1 = r.teams?.team1 || {}, t2 = r.teams?.team2 || {};
   const w = r.winner;
   const s1 = `<b class="${w === 'team1' ? 'win' : ''}">${r.score?.team1 ?? '–'}</b>`;
@@ -136,20 +145,20 @@ function runRow(r) {
     : r.state === 'failed' ? `<span class="hstate failed">failed</span>` : '';
   return `<a class="hrow" href="trajectory.html?run=${r.id}">
     <span class="hdate">${dLabel(r.date)}</span>
-    <span class="hvs">${esc(t1.model || t1.label || 'team1')} <em>vs</em> ${esc(t2.model || t2.label || 'team2')}</span>
+    <span class="hvs">${esc(teamLabel(H, t1))} <em>vs</em> ${esc(teamLabel(H, t2))}</span>
     <span class="hscore">${s1}<i>–</i>${s2}</span>
     ${state}
-    <i class="fa-solid fa-arrow-right hgo"></i>
+    <i class="arw hgo"></i>
   </a>`;
 }
 async function loadHistory(slug) {
   const el = document.getElementById('sheet-history');
   if (!el) return;
-  const runs = await allRuns();
+  const [runs, H] = await Promise.all([allRuns(), harnesses()]);
   if (runs === null) { el.innerHTML = `<p class="hnote">Match history unavailable.</p>`; return; }
   const mine = runs.filter(r => r.name === slug);
   el.innerHTML = mine.length
-    ? mine.map(runRow).join('')
+    ? mine.map(r => runRow(r, H)).join('')
     : `<p class="hnote">No matches recorded yet.</p>`;
 }
 
@@ -161,7 +170,7 @@ function openSheet(c) {
   const cl = c.classification || {}, o = c.origin || {}, svc = c.service || {};
   const ports = Object.entries(svc.ports || {}).map(([k, v]) => `${k}:${v}`).join(' · ');
   const src = o.url
-    ? `<a href="${esc(o.url)}" target="_blank" rel="noopener">${esc(o.source || o.reference || 'source')} <i class="fa-solid fa-arrow-up-right-from-square"></i></a>`
+    ? `<a href="${esc(o.url)}" target="_blank" rel="noopener">${esc(o.source || o.reference || 'source')} <i class="arw up"></i></a>`
     : esc(o.source || '—');
   sheetCard.style.setProperty('--accent', c.cover?.accent || 'var(--ink)');
   sheetCard.innerHTML = `

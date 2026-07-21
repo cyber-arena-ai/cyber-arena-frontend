@@ -17,6 +17,9 @@
 .gcard{position:relative;display:block;aspect-ratio:1/1;overflow:hidden;background:var(--paper2);
   border:3px solid var(--ink);box-shadow:6px 6px 0 var(--ink);text-decoration:none;color:var(--ink);
   --peek:54px;cursor:pointer;transition:transform .14s ease, box-shadow .14s ease}
+.gcard{animation:floatin .55s cubic-bezier(.2,.7,.3,1) backwards;animation-delay:var(--d,0s)}
+@keyframes floatin{from{opacity:0;transform:translateY(22px)}to{opacity:1;transform:none}}
+@media(prefers-reduced-motion:reduce){.gcard{animation:none}}
 .gcard:focus-visible{outline:3px solid var(--accent,var(--ink));outline-offset:2px}
 .gcard:hover{transform:translate(-2px,-2px);box-shadow:9px 9px 0 var(--accent,var(--ink))}
 .gcover{position:absolute;inset:0;background:var(--paper)}
@@ -98,7 +101,7 @@
 .sheet-hist h4{font:800 11px/1 'JetBrains Mono',monospace;text-transform:uppercase;letter-spacing:.5px;
   margin-bottom:8px;color:var(--ink)}
 .sheet-hist h4 i{margin-right:5px;color:var(--accent,var(--ink))}
-.hlist{border:2px solid var(--ink)}
+.hlist{border:2px solid var(--ink);max-height:136px;overflow-y:auto;overscroll-behavior:contain}
 .hrow{display:grid;grid-template-columns:44px 1fr auto auto 14px;align-items:center;gap:10px;
   padding:7px 10px;border-top:2px solid var(--line);text-decoration:none;color:var(--ink)}
 .hrow:first-child{border-top:0}
@@ -123,8 +126,9 @@
   .summary{grid-template-columns:1fr 1fr}
   .summary div:nth-child(2){border-right:0}
   .summary div{border-bottom:2px solid var(--ink)}
-  .grid{grid-template-columns:1fr}
+  .grid{gap:14px}
   .sheet-card{grid-template-columns:1fr;max-height:92vh}
   .sheet-cover{border-right:0;border-bottom:3px solid var(--ink);max-height:220px}
   .sheet-ad{grid-template-columns:1fr}
 }
+@media(max-width:480px){ .grid{grid-template-columns:1fr} }

@@ -1,0 +1,37 @@
+/* About us — team avatar grid + contact boxes (extends base.css) */
+
+/* ---- 2077AI intro ---- */
+.org{display:flex;align-items:center;gap:18px;margin-top:18px;
+  border:3px solid var(--ink);background:var(--paper2);box-shadow:6px 6px 0 var(--blue);padding:16px 18px}
+.org-badge{flex:0 0 auto;display:block}
+.org-badge img{display:block;height:76px;width:auto}
+.org p{font-size:14px;line-height:1.5;color:#3a3a3a}
+.org p a{color:var(--blue);text-decoration:none}
+.org p a:hover{text-decoration:underline}
+
+/* ---- team grid ---- */
+.team{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:16px;margin-top:16px}
+.member{display:block;text-align:center;text-decoration:none;color:var(--ink);
+  border:3px solid var(--ink);background:var(--paper2);box-shadow:4px 4px 0 var(--ink);padding:12px 8px 10px}
+.member:hover{transform:translate(2px,2px);box-shadow:2px 2px 0 var(--ink)}
+.member img{display:block;width:76px;height:76px;margin:0 auto;border:2px solid var(--ink);border-radius:50%;
+  background:var(--paper);object-fit:cover}
+.member .handle{display:block;margin-top:9px;font:600 11.5px/1.2 'JetBrains Mono',monospace;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+/* ---- contact boxes ---- */
+.contact{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:16px}
+.cbox{display:block;text-align:center;text-decoration:none;color:var(--ink);
+  border:3px solid var(--ink);background:var(--paper2);box-shadow:5px 5px 0 var(--ink);padding:18px 14px 16px}
+.cbox:hover{transform:translate(2px,2px);box-shadow:3px 3px 0 var(--ink)}
+.cbox i{font-size:26px}
+.cbox b{display:block;font-weight:900;font-size:15px;text-transform:uppercase;letter-spacing:-.2px;margin-top:9px}
+.cbox:nth-child(1) i{color:var(--ink)}
+.cbox:nth-child(2) i{color:var(--purple)}
+.cbox:nth-child(3) i{color:var(--pink)}
+
+@media(max-width:760px){
+  .org{flex-direction:column;align-items:flex-start;gap:12px}
+  .team{grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:12px}
+  .contact{grid-template-columns:1fr}
+}
