@@ -551,9 +551,13 @@ if (!reduced){
       introDone = true; dock();
     }
   }
-  addEventListener('scroll', decide, { passive:true, once:true });
-  addEventListener('load', () => requestAnimationFrame(decide));
-  setTimeout(decide, 250);
+  // never swing in blank: hold the intro until both idle sprites are decoded
+  const spritesReady = Promise.all([heroBlue, heroPink].map(el =>
+    el.querySelector('img[data-f="idle"]').decode().catch(() => {})));
+  const settled = () => spritesReady.then(decide);
+  addEventListener('scroll', settled, { passive:true, once:true });
+  addEventListener('load', () => requestAnimationFrame(settled));
+  setTimeout(settled, 250);
 
   // shrink over the first viewport of scroll, docking into the bottom corners
   function dock(){
