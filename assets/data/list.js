@@ -1,7 +1,7 @@
 /* CyberArena — contributing institutions, in display order.
    The homepage conveyor renders exactly this list, top to bottom.
    Each entry: { name, url, img } — img files live in assets/img/inst/
-   (preprocessed from institutions/*: white knocked out, trimmed, padded). */
+   (preprocessed from the raw logos: white knocked out, trimmed, padded). */
 window.INSTITUTIONS = [
   { name: '2077AI',                url: 'https://2077ai.com',        img: 'assets/img/inst/2077ai.png' },
   { name: 'Abaka AI',              url: 'https://www.abaka.ai',      img: 'assets/img/inst/abaka.png' },

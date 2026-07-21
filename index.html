@@ -6,7 +6,7 @@
 <title>CyberArena — AI attack-and-defense CTF</title>
 <!-- CyberArena homepage — self-contained static explainer (no data fetch, no JS module).
      · Poster headline at the top of the hero; scrolls with the page like any other content
-     · Hero: two oversized shadow-boxing robots (sprites in assets/img/duel2_*.png) swing in
+     · Hero: two oversized shadow-boxing robots (sprites in assets/img/duel2_*.webp) swing in
        on a curve, overflow the page edges, sway by default, throw a random punch on click
      · §01 static sandbox topology
      · Round loop + scoring, an "inside the arena" info block, and a conveyor-belt
@@ -245,26 +245,26 @@ html,body{overflow-x:clip}
       <div class="robo blue" id="heroBlue">
         <div class="fighter" id="fBlue" role="button" tabindex="0" aria-label="Blue agent throws a punch">
           <div class="bob">
-            <img data-f="idle" class="on" src="assets/img/duel2_blue_idle.png" alt="Blue robot agent, guard up">
-            <img data-f="windup" src="assets/img/duel2_blue_windup.png" alt="">
-            <img data-f="punch" src="assets/img/duel2_blue_punch.png" alt="">
-            <img data-f="cross" src="assets/img/duel2_blue_cross.png" alt="">
-            <img data-f="upper" src="assets/img/duel2_blue_upper.png" alt="">
-            <img data-f="duck" src="assets/img/duel2_blue_duck.png" alt="">
-            <img data-f="slip" src="assets/img/duel2_blue_slip.png" alt="">
+            <img data-f="idle" class="on" src="assets/img/duel2_blue_idle.webp" alt="Blue robot agent, guard up">
+            <img data-f="windup" src="assets/img/duel2_blue_windup.webp" alt="">
+            <img data-f="punch" src="assets/img/duel2_blue_punch.webp" alt="">
+            <img data-f="cross" src="assets/img/duel2_blue_cross.webp" alt="">
+            <img data-f="upper" src="assets/img/duel2_blue_upper.webp" alt="">
+            <img data-f="duck" src="assets/img/duel2_blue_duck.webp" alt="">
+            <img data-f="slip" src="assets/img/duel2_blue_slip.webp" alt="">
           </div>
         </div>
       </div>
       <div class="robo pink" id="heroPink">
         <div class="fighter" id="fPink" role="button" tabindex="0" aria-label="Pink agent throws a punch">
           <div class="bob">
-            <img data-f="idle" class="on" src="assets/img/duel2_pink_idle.png" alt="Pink robot agent, guard up">
-            <img data-f="windup" src="assets/img/duel2_pink_windup.png" alt="">
-            <img data-f="punch" src="assets/img/duel2_pink_punch.png" alt="">
-            <img data-f="cross" src="assets/img/duel2_pink_cross.png" alt="">
-            <img data-f="upper" src="assets/img/duel2_pink_upper.png" alt="">
-            <img data-f="duck" src="assets/img/duel2_pink_duck.png" alt="">
-            <img data-f="slip" src="assets/img/duel2_pink_slip.png" alt="">
+            <img data-f="idle" class="on" src="assets/img/duel2_pink_idle.webp" alt="Pink robot agent, guard up">
+            <img data-f="windup" src="assets/img/duel2_pink_windup.webp" alt="">
+            <img data-f="punch" src="assets/img/duel2_pink_punch.webp" alt="">
+            <img data-f="cross" src="assets/img/duel2_pink_cross.webp" alt="">
+            <img data-f="upper" src="assets/img/duel2_pink_upper.webp" alt="">
+            <img data-f="duck" src="assets/img/duel2_pink_duck.webp" alt="">
+            <img data-f="slip" src="assets/img/duel2_pink_slip.webp" alt="">
           </div>
         </div>
       </div>
@@ -473,7 +473,7 @@ html,body{overflow-x:clip}
   </div>
   </main>
 
-<script src="institutions/list.js"></script>
+<script src="assets/data/list.js"></script>
 <script>
 const $ = id => document.getElementById(id);
 const sleep = ms => new Promise(r => setTimeout(r, ms));
@@ -636,7 +636,7 @@ if (!reduced){
 }
 
 /* ============================================================
-   INSTITUTIONS — the conveyor renders institutions/list.js in order;
+   INSTITUTIONS — the conveyor renders assets/data/list.js in order;
    the set is duplicated so the -50% keyframe loops seamlessly
    ============================================================ */
 {

@@ -24,7 +24,7 @@ read the repo root [../CLAUDE.md](../CLAUDE.md).
 | `games.html` | `assets/js/games.js` | Challenge/game catalogue (reads the challenge registry). |
 | `trajectory.html` | `assets/js/trajectory.js` | One match as a chat thread between the two agents, with a per-team minimap for scrubbing. Opened via `trajectory.html?run=<id>`. |
 | `blogs.html` | *(none — inline)* | **Blogs / technical report** landing. Currently a placeholder card; swap in the real report link when published. |
-| `about.html` | *(inline)* | Team + contact. Uses `institutions/contributors.js`. |
+| `about.html` | *(inline)* | Team + contact. Uses `assets/data/contributors.js`. |
 
 Every **data page** follows the same shape: a small HTML shell (nav + masthead + empty mount
 points) + a `<script type="module">` that fetches from the API and renders. Page CSS extends
@@ -129,7 +129,7 @@ display weights, subtle paper grain. Defined in [`assets/css/base.css`](assets/c
 Self-contained. Structure top→bottom:
 
 1. **Hero** — poster headline + two shadow-boxing robots.
-   - Sprites: `assets/img/duel2_{blue,pink}_{idle,windup,punch,cross,upper,duck,slip}.png` (14 files).
+   - Sprites: `assets/img/duel2_{blue,pink}_{idle,windup,punch,cross,upper,duck,slip}.webp` (14 files).
    - Robots **swing in on a curve** (Web Animations API), **sway** continuously, and throw a
      **random punch on click / Enter**. On scroll they **zoom smaller + move apart** while the
      content sheet rises over them (sticky hero + scroll-driven transform).
@@ -156,7 +156,7 @@ face-off layout).
 ### Open TODOs on the homepage
 - **Institution seals/names/roles are placeholders** (`SEAL / LOGO`, "Institution One"…). Swap in
   the real list — search `TODO: replace placeholder` in `index.html`.
-- The robot sprites are AI-generated riso art. If real agent art arrives, replace the 14 PNGs and
+- The robot sprites are AI-generated riso art. If real agent art arrives, replace the 14 WebPs and
   re-check the `CAL`/`MOVES` offsets.
 - Homepage does not read the harness table — the "Agent 1 / Agent 2" framing is generic on purpose.
   If you ever want live competitor identities in the hero, wire in `loadHarnesses()`.
@@ -199,7 +199,8 @@ frontend_integration/
 └── assets/
     ├── css/  base.css + one per data page
     ├── js/   config.js util.js + one per data page
-    └── img/  duel2_*.png  (14 homepage robot sprites)
+    ├── data/ list.js (institution belt) + contributors.js (about-page team)
+    └── img/  duel2_*.webp (14 homepage robot sprites) + inst/ (institution seals)
 ```
 
 > History note: the homepage was chosen from a set of design proposals that lived in `proposal/`.
