@@ -75,18 +75,18 @@ const ROBOT=700;                       // sprite native size
 // title x = center-x, y = top, s scales all its font sizes
 const DEFAULTS={
   wide:{ w:1200,h:630,frame:12,file:'og.jpg',guide:true,
-    title:{x:600,y:40,s:1,on:true},
-    blue:{x:-60,y:250,s:0.63,on:true},
-    pink:{x:820,y:250,s:0.63,on:true} },
+    title:{x:582,y:61,s:0.533,on:true},
+    blue:{x:80,y:74,s:0.788,on:true},
+    pink:{x:533,y:71,s:0.779,on:true} },
   square:{ w:1000,h:1000,frame:14,file:'og-square.jpg',
     title:{x:500,y:40,s:1.06,on:true},
     blue:{x:15,y:540,s:0.67,on:true},
     pink:{x:515,y:540,s:0.67,on:true} },
 };
-const TEXTS={kicker:'AI vs AI · ATTACK-AND-DEFENSE CTF', line1:'CYBER', line2:'ARENA'};
+const TEXTS={kicker:'', line1:'cyber-arena.ai', line2:''};
 
-const store=k=>{try{return JSON.parse(localStorage.getItem('oglab_'+k))}catch{return null}};
-const save=(k,v)=>localStorage.setItem('oglab_'+k,JSON.stringify(v));
+const store=k=>{try{return JSON.parse(localStorage.getItem('oglab2_'+k))}catch{return null}};
+const save=(k,v)=>localStorage.setItem('oglab2_'+k,JSON.stringify(v));
 const texts=Object.assign({},TEXTS,store('texts')||{});
 const state={
   wide:Object.assign(structuredClone(DEFAULTS.wide),store('wide')||{}),
