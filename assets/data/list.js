@@ -9,7 +9,7 @@ window.INSTITUTIONS = [
   { name: 'Google DeepMind',       url: 'https://deepmind.google',   img: 'assets/img/inst/gdm.png' },
   { name: 'UC Berkeley',           url: 'https://www.berkeley.edu',  img: 'assets/img/inst/ucb.png' },
   { name: 'MIT',                   url: 'https://www.mit.edu',       img: 'assets/img/inst/mit.png' },
-  { name: 'UC San Diego',          url: 'https://ucsd.edu',          img: 'assets/img/inst/ucsd.png' },
+  { name: 'UC Santa Barbara',      url: 'https://www.ucsb.edu',      img: 'assets/img/inst/ucsb.png' },
   { name: 'UC Santa Cruz',         url: 'https://www.ucsc.edu',      img: 'assets/img/inst/ucsc.png' },
   { name: 'UW–Madison',            url: 'https://www.wisc.edu',      img: 'assets/img/inst/uwisc.png' },
   { name: 'Johns Hopkins',         url: 'https://www.jhu.edu',       img: 'assets/img/inst/jhu.png' },
