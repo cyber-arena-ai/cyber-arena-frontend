@@ -37,6 +37,7 @@ const llabel = D.winner === 'team1' ? t2.label : t1.label;
 
 document.getElementById('mastcat').textContent = D.category;
 document.getElementById('mastname').textContent = D.name;
+document.title = `${D.name}: ${t1.label} vs ${t2.label} · CyberArena`;
 document.getElementById('dateline').textContent = D.date;
 
 // defeated team: its own team color, struck through by a slightly (randomly)
