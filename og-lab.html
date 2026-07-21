@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OG card lab — CyberArena</title>
+<!-- Local layout tool for the share cards (og.jpg / og-square.jpg). Not linked
+     from the site nav. Drag elements, scroll to resize, download the JPEGs,
+     drop them into assets/img/. Layout persists in localStorage. -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@600;900&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+body{font-family:'Hanken Grotesk',sans-serif;background:#e9e4da;color:#1A1A1A;margin:0;padding:24px}
+h1{font-size:20px;font-weight:900;margin:0 0 4px}
+.hint{font-size:13px;color:#6f6657;margin:0 0 18px}
+.card{background:#fff;border:3px solid #1A1A1A;box-shadow:6px 6px 0 #1A1A1A;padding:16px;margin-bottom:26px;max-width:1240px}
+.card h2{font-size:14px;font-weight:900;text-transform:uppercase;letter-spacing:1px;margin:0 0 10px}
+canvas.stage{display:block;width:100%;height:auto;border:1px solid #cfc7b6;cursor:grab;touch-action:none}
+canvas.stage.dragging{cursor:grabbing}
+.bar{display:flex;flex-wrap:wrap;gap:14px;align-items:center;margin-top:10px;font-size:13px}
+.bar label{display:flex;gap:5px;align-items:center;font-weight:600}
+.bar input[type=text]{font-family:'JetBrains Mono',monospace;font-size:12px;border:2px solid #1A1A1A;padding:4px 6px}
+button{font-family:'Hanken Grotesk',sans-serif;font-weight:800;font-size:13px;border:2px solid #1A1A1A;background:#F7F3EC;padding:6px 12px;cursor:pointer;box-shadow:3px 3px 0 #1A1A1A}
+button:active{transform:translate(2px,2px);box-shadow:1px 1px 0 #1A1A1A}
+button.dl{background:#2540FF;color:#fff}
+.pos{font-family:'JetBrains Mono',monospace;font-size:11px;color:#6f6657;margin-top:8px;word-break:break-all}
+</style>
+</head>
+<body>
+<h1>OG card lab</h1>
+<p class="hint">Drag an element to move it · scroll over it to resize (hold <b>Shift</b> for fine steps) ·
+checkboxes hide/show · <b>Download</b> saves the exact JPEG for <code>assets/img/</code> ·
+layout is remembered; <b>Reset</b> restores the shipped design.</p>
+
+<div class="bar card" style="max-width:1240px">
+  <label>kicker <input type="text" id="kicker" size="34"></label>
+  <label>line 1 <input type="text" id="line1" size="10"></label>
+  <label>line 2 <input type="text" id="line2" size="10"></label>
+</div>
+
+<div class="card" id="cardWide">
+  <h2>Wide — 1200 × 630 (og.jpg)</h2>
+  <canvas class="stage" width="1200" height="630"></canvas>
+  <div class="bar">
+    <label><input type="checkbox" data-el="title" checked> title</label>
+    <label><input type="checkbox" data-el="blue" checked> blue robot</label>
+    <label><input type="checkbox" data-el="pink" checked> pink robot</label>
+    <label><input type="checkbox" data-guide> square-crop guide</label>
+    <button data-act="reset">Reset</button>
+    <button data-act="dl" class="dl">Download og.jpg</button>
+    <button data-act="copy">Copy layout JSON</button>
+  </div>
+  <div class="pos"></div>
+</div>
+
+<div class="card" id="cardSquare" style="max-width:1032px">
+  <h2>Square — 1000 × 1000 (og-square.jpg)</h2>
+  <canvas class="stage" width="1000" height="1000"></canvas>
+  <div class="bar">
+    <label><input type="checkbox" data-el="title" checked> title</label>
+    <label><input type="checkbox" data-el="blue" checked> blue robot</label>
+    <label><input type="checkbox" data-el="pink" checked> pink robot</label>
+    <button data-act="reset">Reset</button>
+    <button data-act="dl" class="dl">Download og-square.jpg</button>
+    <button data-act="copy">Copy layout JSON</button>
+  </div>
+  <div class="pos"></div>
+</div>
+
+<script>
+const INK='#1A1A1A', PAPER='#F7F3EC', PINK='#FF3D7F', PURPLE='#6B2BD9';
+const ROBOT=700;                       // sprite native size
+// element state: robots x/y = top-left, s = scale (px = 700*s);
+// title x = center-x, y = top, s scales all its font sizes
+const DEFAULTS={
+  wide:{ w:1200,h:630,frame:12,file:'og.jpg',guide:true,
+    title:{x:420,y:40,s:1,on:true},
+    blue:{x:640,y:40,s:0.886,on:true},
+    pink:{x:900,y:260,s:0.6,on:false} },
+  square:{ w:1000,h:1000,frame:14,file:'og-square.jpg',
+    title:{x:500,y:40,s:1.06,on:true},
+    blue:{x:210,y:450,s:0.83,on:true},
+    pink:{x:640,y:640,s:0.5,on:false} },
+};
+const TEXTS={kicker:'AI vs AI · ATTACK-AND-DEFENSE CTF', line1:'CYBER', line2:'ARENA'};
+
+const store=k=>{try{return JSON.parse(localStorage.getItem('oglab_'+k))}catch{return null}};
+const save=(k,v)=>localStorage.setItem('oglab_'+k,JSON.stringify(v));
+const texts=Object.assign({},TEXTS,store('texts')||{});
+const state={
+  wide:Object.assign(structuredClone(DEFAULTS.wide),store('wide')||{}),
+  square:Object.assign(structuredClone(DEFAULTS.square),store('square')||{}),
+};
+
+const imgs={};
+function loadImg(name,src){return new Promise(r=>{const i=new Image();i.onload=()=>r(imgs[name]=i);i.src=src;});}
+
+/* ---- title metrics (kicker + two headline lines, center-anchored) ---- */
+function titleLayout(s){
+  const f=s.s||1;
+  return { kick:24*f, head:150*f, kickGap:36*f, lineH:160*f, shadow:7*f };
+}
+function titleBox(ctx,t){
+  const m=titleLayout(t);
+  ctx.font=`900 ${m.head}px 'Hanken Grotesk'`;
+  const w=Math.max(ctx.measureText(texts.line1).width,ctx.measureText(texts.line2).width)+m.shadow;
+  const h=m.kickGap+2*m.lineH;
+  return {x:t.x-w/2,y:t.y,w,h};
+}
+function drawTitle(ctx,t){
+  const m=titleLayout(t);
+  ctx.textAlign='center';
+  ctx.font=`600 ${m.kick}px 'JetBrains Mono'`; ctx.fillStyle=PURPLE;
+  ctx.fillText(texts.kicker,t.x,t.y+m.kick);
+  ctx.font=`900 ${m.head}px 'Hanken Grotesk'`;
+  [texts.line1,texts.line2].forEach((tx,i)=>{
+    const base=t.y+m.kickGap+m.lineH*(i+1)-0.18*m.head;
+    ctx.fillStyle=PINK; ctx.fillText(tx,t.x+m.shadow,base+m.shadow);
+    ctx.fillStyle=INK;  ctx.fillText(tx,t.x,base);
+  });
+  ctx.textAlign='left';
+}
+
+function box(ctx,c,el){
+  if(el==='title')return titleBox(ctx,c.title);
+  const e=c[el]; return {x:e.x,y:e.y,w:ROBOT*e.s,h:ROBOT*e.s};
+}
+
+function draw(key,{decor=true}={}){
+  const c=state[key],cv=cards[key].canvas,ctx=cv.getContext('2d');
+  ctx.clearRect(0,0,c.w,c.h);
+  ctx.fillStyle=PAPER; ctx.fillRect(0,0,c.w,c.h);
+  for(const el of ['blue','pink','title']){
+    if(!c[el].on)continue;
+    if(el==='title')drawTitle(ctx,c.title);
+    else{const e=c[el];ctx.drawImage(imgs[el],e.x,e.y,ROBOT*e.s,ROBOT*e.s);}
+  }
+  ctx.lineWidth=c.frame; ctx.strokeStyle=INK;
+  ctx.strokeRect(c.frame/2,c.frame/2,c.w-c.frame,c.h-c.frame);
+  if(decor&&c.guide&&c.w!==c.h){ // center-square crop zone (WeChat / small cards)
+    const s=Math.min(c.w,c.h),gx=(c.w-s)/2,gy=(c.h-s)/2;
+    ctx.save();
+    ctx.fillStyle='rgba(26,26,26,.30)';
+    ctx.fillRect(0,0,gx,c.h); ctx.fillRect(gx+s,0,c.w-gx-s,c.h);
+    ctx.fillRect(gx,0,s,gy); ctx.fillRect(gx,gy+s,s,c.h-gy-s);
+    ctx.setLineDash([10,8]); ctx.lineWidth=3; ctx.strokeStyle='#0E9E6E';
+    ctx.strokeRect(gx,gy,s,s);
+    ctx.setLineDash([]); ctx.font="600 16px 'JetBrains Mono'"; ctx.fillStyle='#0E9E6E';
+    ctx.fillText('center square — what WeChat / small cards keep',gx+12,gy+26);
+    ctx.restore();
+  }
+  if(decor&&cards[key].hover&&c[cards[key].hover].on){
+    const b=box(ctx,c,cards[key].hover);
+    ctx.save();ctx.setLineDash([8,6]);ctx.lineWidth=3;ctx.strokeStyle=PURPLE;
+    ctx.strokeRect(b.x,b.y,b.w,b.h);ctx.restore();
+  }
+  cards[key].pos.textContent=JSON.stringify({title:c.title,blue:c.blue,pink:c.pink});
+}
+
+/* ---- wire the two cards ---- */
+const cards={
+  wide:{root:document.getElementById('cardWide')},
+  square:{root:document.getElementById('cardSquare')},
+};
+for(const key of Object.keys(cards)){
+  const c=cards[key];
+  c.canvas=c.root.querySelector('canvas'); c.pos=c.root.querySelector('.pos'); c.hover=null;
+  const ctx=c.canvas.getContext('2d');
+  const pt=ev=>{const r=c.canvas.getBoundingClientRect();
+    return {x:(ev.clientX-r.left)*state[key].w/r.width,y:(ev.clientY-r.top)*state[key].h/r.height};};
+  const hit=p=>{ // topmost first: title, then pink, then blue
+    for(const el of ['title','pink','blue']){
+      if(!state[key][el].on)continue;
+      const b=box(ctx,state[key],el);
+      if(p.x>=b.x&&p.x<=b.x+b.w&&p.y>=b.y&&p.y<=b.y+b.h)return el;
+    } return null;};
+  let drag=null;
+  c.canvas.addEventListener('pointerdown',ev=>{
+    const p=pt(ev),el=hit(p); if(!el)return;
+    drag={el,dx:p.x-state[key][el].x,dy:p.y-state[key][el].y};
+    c.canvas.setPointerCapture(ev.pointerId); c.canvas.classList.add('dragging');
+  });
+  c.canvas.addEventListener('pointermove',ev=>{
+    const p=pt(ev);
+    if(drag){const e=state[key][drag.el];e.x=Math.round(p.x-drag.dx);e.y=Math.round(p.y-drag.dy);}
+    else{const h=hit(p);if(h!==c.hover){c.hover=h;}}
+    draw(key); if(drag)save(key,state[key]);
+  });
+  c.canvas.addEventListener('pointerup',ev=>{drag=null;c.canvas.classList.remove('dragging');});
+  c.canvas.addEventListener('pointerleave',()=>{c.hover=null;draw(key);});
+  c.canvas.addEventListener('wheel',ev=>{
+    const p=pt(ev),el=hit(p); if(!el)return;
+    ev.preventDefault();
+    const e=state[key][el],b=box(ctx,state[key],el);
+    const f=1+(ev.deltaY<0?1:-1)*(ev.shiftKey?0.01:0.04);
+    e.s=Math.max(0.1,e.s*f);
+    if(el!=='title'){ // scale around center so it doesn't drift
+      const nb=box(ctx,state[key],el);
+      e.x=Math.round(e.x+(b.w-nb.w)/2); e.y=Math.round(e.y+(b.h-nb.h)/2);
+    }
+    draw(key); save(key,state[key]);
+  },{passive:false});
+  c.root.querySelectorAll('input[data-el]').forEach(cb=>{
+    cb.checked=state[key][cb.dataset.el].on;
+    cb.onchange=()=>{state[key][cb.dataset.el].on=cb.checked;draw(key);save(key,state[key]);};
+  });
+  const g=c.root.querySelector('input[data-guide]');
+  if(g){g.checked=!!state[key].guide;
+    g.onchange=()=>{state[key].guide=g.checked;draw(key);save(key,state[key]);};}
+  c.root.querySelector('[data-act=reset]').onclick=()=>{
+    state[key]=structuredClone(DEFAULTS[key]);save(key,state[key]);
+    c.root.querySelectorAll('input[data-el]').forEach(cb=>cb.checked=state[key][cb.dataset.el].on);
+    if(g)g.checked=!!state[key].guide;
+    draw(key);};
+  c.root.querySelector('[data-act=copy]').onclick=ev=>{
+    navigator.clipboard.writeText(c.pos.textContent);ev.target.textContent='Copied!';
+    setTimeout(()=>ev.target.textContent='Copy layout JSON',900);};
+  c.root.querySelector('[data-act=dl]').onclick=()=>{
+    c.hover=null;draw(key,{decor:false});
+    c.canvas.toBlob(b=>{
+      const a=document.createElement('a');a.href=URL.createObjectURL(b);
+      a.download=state[key].file;a.click();URL.revokeObjectURL(a.href);
+    },'image/jpeg',0.9);};
+}
+
+/* ---- text inputs ---- */
+for(const id of ['kicker','line1','line2']){
+  const inp=document.getElementById(id); inp.value=texts[id];
+  inp.oninput=()=>{texts[id]=inp.value;save('texts',texts);draw('wide');draw('square');};
+}
+
+/* ---- boot: fonts + sprites, then first paint ---- */
+Promise.all([
+  loadImg('blue','assets/img/duel2_blue_idle.webp'),
+  loadImg('pink','assets/img/duel2_pink_idle.webp'),
+  document.fonts.load("900 150px 'Hanken Grotesk'"),
+  document.fonts.load("600 24px 'JetBrains Mono'"),
+]).then(()=>{draw('wide');draw('square');});
+</script>
+</body>
+</html>
