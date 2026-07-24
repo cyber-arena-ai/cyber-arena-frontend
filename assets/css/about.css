@@ -5,7 +5,7 @@
   border:3px solid var(--ink);background:var(--paper2);box-shadow:6px 6px 0 var(--blue);padding:16px 18px}
 .org-badge{flex:0 0 auto;display:block}
 .org-badge img{display:block;height:76px;width:auto}
-.org p{font-size:14px;line-height:1.5;color:#3a3a3a}
+.org p{font-size:clamp(14px,1.9vw,24px);line-height:1.5;color:#3a3a3a}
 .org p a{color:var(--blue);text-decoration:none}
 .org p a:hover{text-decoration:underline}
 
@@ -34,4 +34,30 @@
   .org{flex-direction:column;align-items:flex-start;gap:12px}
   .team{grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:12px}
   .contact{grid-template-columns:1fr}
+}
+
+/* ---- institutions — conveyor belt (copied from the homepage) ---- */
+/* crates float a touch above the belt; the rollers spin in place (side view) */
+.convey{margin-top:16px;position:relative;overflow:hidden}
+.belt-items{overflow:hidden}
+/* the marquee transform is driven by JS (rAF) — a CSS keyframe animation here
+   gets throttled by Chrome when the page loads scrolled past the belt and can
+   stay frozen after scroll restore; rAF never does. Hovering a card pauses. */
+.belt-track{display:flex;align-items:flex-end;gap:26px;width:max-content;padding:10px 9px 9px;will-change:transform}
+.inst{flex:0 0 auto;width:172px;text-align:center;border:3px solid var(--ink);background:var(--paper2);
+  box-shadow:4px 4px 0 var(--ink);padding:12px 12px 9px;text-decoration:none;color:inherit}
+.inst:hover{transform:translate(2px,2px);box-shadow:2px 2px 0 var(--ink)}
+.inst img{display:block;width:100%;height:64px;object-fit:contain;margin:0 auto}
+.inst .nm{font-weight:900;font-size:11.5px;text-transform:uppercase;margin-top:9px;letter-spacing:-.2px}
+/* the belt — a black capsule loop, wheels overlapping on it (side view) */
+.band{position:relative;height:32px;background:var(--ink);border-radius:999px}
+.rollers{position:absolute;inset:0;display:flex;justify-content:space-between;align-items:center;padding:0 8px}
+/* the wheels — spinning counter-clockwise (top surface runs left) */
+.roller{width:20px;height:20px;border-radius:50%;background:var(--paper2);
+  position:relative;transform:rotate(var(--wheel,0deg))}
+.roller::before{content:"";position:absolute;left:50%;top:2px;bottom:2px;width:3px;margin-left:-1.5px;background:var(--ink);border-radius:2px}
+.roller::after{content:"";position:absolute;left:50%;top:50%;width:7px;height:7px;margin:-3.5px;background:var(--ink);border-radius:50%}
+
+@media(prefers-reduced-motion:reduce){
+  .belt-track{flex-wrap:wrap;justify-content:center}
 }

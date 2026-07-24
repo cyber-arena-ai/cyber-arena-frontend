@@ -44,7 +44,9 @@
 <style>
 /* full-bleed hero needs the page not to scroll sideways (robots overflow the edges) */
 html,body{overflow-x:clip}
-.topbar{position:relative;z-index:30}
+/* sticky header — high-opacity paper + blur; bleeds past the body side padding */
+.topbar{position:sticky;top:0;z-index:30;margin:-22px -22px 0;padding:14px 22px 6px;
+  background:rgba(247,243,236,.86);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}
 
 /* ============ HERO ============ */
 /* normal-flow hero: the slogan sits at the top and scrolls up with the page (no pin, no fade);
@@ -79,7 +81,14 @@ html,body{overflow-x:clip}
 
 /* the two shadow-boxing robots — fixed to the viewport, above the sheet: they stick on
    screen and zoom smaller as you scroll, docking at the bottom corners */
-.robo{position:fixed;bottom:0;--rw:clamp(240px,42vw,660px);width:var(--rw);aspect-ratio:340/360;z-index:20;pointer-events:none;
+.robo{position:fixed;bottom:0;
+  /* as large as possible without eating the slogan: bound by viewport width (55vw),
+     by the vertical room left below the slogan (100vh minus the 3 slogan lines, at
+     the 340/360 aspect), and by the 1000px body (side gutter + 480px of reach).
+     The slogan height mirrors .poster .line: 3 × .92 × clamp(26px, 7.4vw, 84px).
+     Hard ceiling: 800px, so huge displays don't get monster robots. */
+  --rw:max(240px,min(55vw,calc((100vh - min(20.42vw, 232px)) / 1.06),calc((100vw - 1000px)/2 + 480px),800px));
+  width:var(--rw);aspect-ratio:340/360;z-index:20;pointer-events:none;
   will-change:transform;transform-origin:bottom center}
 .robo.blue{left:calc(var(--rw) * -0.15);transform-origin:bottom left} .robo.pink{right:calc(var(--rw) * -0.15);transform-origin:bottom right}
 .robo .fighter{position:absolute;inset:0;pointer-events:auto;cursor:pointer;-webkit-tap-highlight-color:transparent;will-change:transform;transform-origin:50% 100%}
@@ -100,7 +109,7 @@ html,body{overflow-x:clip}
 
 /* block-heavy section titles: a small mono kicker + one long shouting sentence,
    key words either riso-marked (ink block in a theme color) or thick-underlined */
-.secth{margin:56px 0 6px}
+.secth{margin:84px 0 6px}
 .secth h2{font-weight:900;font-size:clamp(24px,3.6vw,40px);letter-spacing:-1px;line-height:1.14;text-transform:uppercase;max-width:920px}
 .secth mark{color:var(--paper);padding:0 10px;display:inline-block;transform:rotate(-1deg)}
 /* each color leans its own way — hand-set "random" inclines */
@@ -828,51 +837,6 @@ if (!reduced){
   requestAnimationFrame(frame);
 })();
 
-/* ============================================================
-   MAGNET MOUNT — after scrolling settles, gently ease to the
-   CLOSEST section title (either direction), slow with ease-out
-   ============================================================ */
-(function(){
-  if (reduced) return;
-  const OFFSET = 18;          // where a title parks below the top edge
-  const DUR = 2000;           // ms — slow, unhurried glide
-  const easeInOut = t => t < 0.5 ? 4*t*t*t : 1 - Math.pow(-2*t + 2, 3) / 2;
-  let settle, animating = false, raf;
-
-  function animateTo(targetY){
-    animating = true;
-    const startY = scrollY, dist = targetY - startY, t0 = performance.now();
-    cancelAnimationFrame(raf);
-    (function step(now){
-      const p = Math.min(1, (now - t0) / DUR);
-      scrollTo({ top: startY + dist * easeInOut(p), behavior: 'instant' });
-      if (p < 1 && animating) raf = requestAnimationFrame(step);
-      else animating = false;
-    })(t0);
-  }
-
-  function snap(){
-    if (animating) return;
-    // pull when the closest title is within ~0.65 screens (viewport-relative)
-    const THRESHOLD = Math.max(260, innerHeight * 0.65);
-    let best = null, bestAbs = Infinity;
-    document.querySelectorAll('.secth').forEach(el => {
-      const d = el.getBoundingClientRect().top - OFFSET;   // signed: closest either way
-      if (Math.abs(d) < bestAbs){ bestAbs = Math.abs(d); best = d; }
-    });
-    if (best !== null && bestAbs > 2 && bestAbs <= THRESHOLD) animateTo(scrollY + best);
-  }
-
-  addEventListener('scroll', () => {
-    if (animating) return;
-    clearTimeout(settle);
-    settle = setTimeout(snap, 120);        // wait for the flick to finish
-  }, { passive:true });
-
-  // any manual input cancels an in-flight glide so it never fights the user
-  ['wheel','touchstart','keydown'].forEach(ev =>
-    addEventListener(ev, () => { if (animating){ animating = false; cancelAnimationFrame(raf); } }, { passive:true }));
-})();
 </script>
 </body>
 </html>

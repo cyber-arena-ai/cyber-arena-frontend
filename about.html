@@ -74,8 +74,16 @@
     </a>
   </div>
 
+  <!-- institutions — conveyor belt (same vis as the homepage) -->
+  <div class="sech"><span>Participating institutions</span></div>
+  <div class="convey">
+    <div class="belt-items"><div class="belt-track" id="belt"></div></div>
+    <div class="band"><div class="rollers"></div></div><!-- wheels are generated to fit the width -->
+  </div>
+
   <footer class="footer" id="site-footer"></footer>
 </div>
+<script src="assets/data/list.js"></script>
 <script src="assets/data/contributors.js"></script>
 <script>
 // the author list (GitHub handles, in display order) lives in
@@ -85,6 +93,47 @@ document.getElementById('team').innerHTML = (window.CONTRIBUTORS || []).map(u =>
     <img loading="lazy" src="https://github.com/${u}.png?size=160" alt="${u}'s avatar">
     <span class="handle">${u}</span>
   </a>`).join('');
+
+// institutions conveyor — same belt as the homepage; renders assets/data/list.js
+// in order, duplicated so the -50% loop is seamless. rAF-driven (not CSS keyframes).
+{
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const belt = document.getElementById('belt');
+  // the wheel count adapts to the band width — one wheel per ~55px, refilled on resize
+  const band = document.querySelector('.band');
+  const fillRollers = () => {
+    if (!band) return;
+    const n = Math.max(2, Math.round(band.clientWidth / 55));
+    const rollers = band.firstElementChild;
+    if (rollers.childElementCount !== n) rollers.innerHTML = '<i class="roller"></i>'.repeat(n);
+  };
+  fillRollers();
+  let rrz;
+  addEventListener('resize', () => { clearTimeout(rrz); rrz = setTimeout(fillRollers, 150); });
+  if (belt && window.INSTITUTIONS){
+    belt.innerHTML = INSTITUTIONS.map(i =>
+      `<a class="inst" href="${i.url}" target="_blank" rel="noopener"><img src="${i.img}" alt="${i.name} logo"><div class="nm">${i.name}</div></a>`
+    ).join('');
+    if (!reduced){
+      belt.innerHTML += belt.innerHTML;
+      const rollers = document.querySelector('.rollers');
+      let pos = 0, wheel = 0, last = null, paused = false;
+      belt.addEventListener('pointerover', e => { paused = !!e.target.closest('.inst'); });
+      belt.addEventListener('pointerout', () => { paused = false; });
+      requestAnimationFrame(function step(now){
+        if (last != null && !paused){
+          const dt = Math.min((now - last) / 1000, .1);
+          pos = (pos + dt / 30 * 50) % 50;           // half the track per 30s
+          wheel = (wheel - dt / 1.1 * 360) % 360;    // one wheel turn per 1.1s
+          belt.style.transform = `translateX(${-pos}%)`;
+          if (rollers) rollers.style.setProperty('--wheel', wheel + 'deg');
+        }
+        last = now;
+        requestAnimationFrame(step);
+      });
+    }
+  }
+}
 </script>
 </body>
 </html>

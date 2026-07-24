@@ -11,7 +11,6 @@
     ['leaderboard.html', 'Leaderboard'],
     ['games.html', 'Games'],
     ['runs.html', 'Runs'],
-    ['trajectory.html', 'Random'],
     ['blogs.html', 'Blogs'],
     ['about.html', 'About us'],
   ];
