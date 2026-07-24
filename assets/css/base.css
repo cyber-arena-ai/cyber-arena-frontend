@@ -26,7 +26,7 @@ body::after{content:"";position:fixed;inset:0;pointer-events:none;opacity:.05;z-
    (there the nav sits in .topbar, which carries these styles itself, so this
    selector deliberately skips it). Bleeds past the wrap/body side padding. */
 body > .wrap > .nav{position:sticky;top:0;z-index:30;
-  margin:-22px calc(50% - 50vw) 6px;padding:14px calc(50vw - 50%) 6px;
+  margin:-22px calc(50% - 50vw) 0;padding:14px calc(50vw - 50%) 12px;
   background:rgba(247,243,236,.86);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}
 .brand{font-weight:900;font-size:20px;letter-spacing:-.5px;text-transform:uppercase;text-decoration:none;color:var(--ink)}
 .brand em{color:var(--pink);font-style:normal}
