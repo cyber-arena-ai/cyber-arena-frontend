@@ -41,13 +41,13 @@
 .post .ptag{display:inline-block;font:800 10px/1 'JetBrains Mono',monospace;letter-spacing:1px;
   text-transform:uppercase;color:var(--paper);background:var(--purple);border:2px solid var(--ink);
   padding:4px 8px;margin-bottom:8px}
-.post .ptag.article{background:var(--green)}
+.post .ptag.findings{background:var(--green)}
 .post p{font-size:14px;color:#6a6456;margin-top:6px;line-height:1.5}
 .post .pgo{font:800 10.5px/1.5 'Hanken Grotesk',sans-serif;text-transform:uppercase;letter-spacing:1px;
   color:var(--paper);background:var(--ink);aspect-ratio:1;display:grid;place-items:center;
   padding:10px;text-align:center}
 .post.soon{background:var(--paper);border-style:dashed;box-shadow:6px 6px 0 var(--purple);opacity:.95}
-.post.article{box-shadow:6px 6px 0 var(--green)}
+.post.findings{box-shadow:6px 6px 0 var(--green)}
 .post.soon .pgo{background:#8a8378}
 @media(max-width:680px){
   .post{grid-template-columns:1fr;text-align:left}
@@ -82,13 +82,25 @@
     </article>
 
     <!-- TODO: replace this placeholder with the real paper link once published -->
-    <article class="post soon article">
+    <article class="post soon findings">
       <div class="pk">02</div>
       <div>
-        <span class="ptag article">Article</span>
+        <span class="ptag findings">Findings</span>
         <h3>100 ways to cheat the arena: how agents bypass the infrastructure to win</h3>
         <p>A catalogue of exploits agents used against the arena itself to score without
         solving. Coming soon.</p>
+      </div>
+      <span class="pgo">Coming<br>soon</span>
+    </article>
+
+    <!-- TODO: replace this placeholder with the real article link once published -->
+    <article class="post soon findings">
+      <div class="pk">03</div>
+      <div>
+        <span class="ptag findings">Findings</span>
+        <h3>Words that throw punches: the prompt decides who swings first</h3>
+        <p>Same model, different prompt, different instinct: rush the exploit or hunker down
+        and patch. Coming soon.</p>
       </div>
       <span class="pgo">Coming<br>soon</span>
     </article>
