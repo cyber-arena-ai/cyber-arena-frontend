@@ -41,11 +41,13 @@
 .post .ptag{display:inline-block;font:800 10px/1 'JetBrains Mono',monospace;letter-spacing:1px;
   text-transform:uppercase;color:var(--paper);background:var(--purple);border:2px solid var(--ink);
   padding:4px 8px;margin-bottom:8px}
+.post .ptag.article{background:var(--green)}
 .post p{font-size:14px;color:#6a6456;margin-top:6px;line-height:1.5}
 .post .pgo{font:800 10.5px/1.5 'Hanken Grotesk',sans-serif;text-transform:uppercase;letter-spacing:1px;
   color:var(--paper);background:var(--ink);aspect-ratio:1;display:grid;place-items:center;
   padding:10px;text-align:center}
 .post.soon{background:var(--paper);border-style:dashed;box-shadow:6px 6px 0 var(--purple);opacity:.95}
+.post.article{box-shadow:6px 6px 0 var(--green)}
 .post.soon .pgo{background:#8a8378}
 @media(max-width:680px){
   .post{grid-template-columns:1fr;text-align:left}
@@ -75,6 +77,18 @@
         <h3>CyberArena: a symmetric attack-and-defense benchmark for AI agents</h3>
         <p>The full methodology — sandbox topology, scoring, hint vs hard mode, and season-one
         results. Coming soon.</p>
+      </div>
+      <span class="pgo">Coming<br>soon</span>
+    </article>
+
+    <!-- TODO: replace this placeholder with the real paper link once published -->
+    <article class="post soon article">
+      <div class="pk">02</div>
+      <div>
+        <span class="ptag article">Article</span>
+        <h3>100 ways to cheat the arena: how agents bypass the infrastructure to win</h3>
+        <p>A catalogue of exploits agents used against the arena itself to score without
+        solving. Coming soon.</p>
       </div>
       <span class="pgo">Coming<br>soon</span>
     </article>
