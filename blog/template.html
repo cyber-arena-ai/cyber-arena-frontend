@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CyberArena — Blog post template</title>
+<meta name="description" content="Component reference and starting skeleton for CyberArena blog posts.">
+<meta name="robots" content="noindex">
+<meta name="theme-color" content="#F7F3EC">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@500;600;700;800;900&family=JetBrains+Mono:wght@400;600&display=swap">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer">
+<link rel="stylesheet" href="../assets/css/base.css">
+<link rel="stylesheet" href="../assets/css/blog.css">
+</head>
+<body>
+<div class="wrap">
+  <nav class="nav" id="site-nav"></nav>
+  <script src="../assets/js/chrome.js"></script>
+
+  <!-- Page header, in the order every post uses it:
+       .mast h1  = the post TYPE, matching its tag on blogs.html ("Findings",
+                   "Technical report"). Not the word "Blog".
+       .headline = the post title, plain. No <mark>, no highlight, full width.
+       .byline   = who wrote it, centred. Names only — no model, no sample
+                   counts; those belong in the setup paragraph and in Limits.
+       There is no dek. The title carries the claim. -->
+  <div class="mast findings">
+    <div class="kicker">From the arena</div>
+    <h1>Findings</h1>
+    <div class="kicker" style="text-align:right">CyberArena</div>
+  </div>
+
+  <div class="headline">
+    <h2>Post title in sentence case, stating the finding</h2>
+  </div>
+  <div class="byline">
+    <span>2077AI Research</span><span class="dot"></span>
+    <a href="https://github.com/Hope7Happiness" target="_blank" rel="noopener">Hope7Happiness</a>
+  </div>
+
+  <div class="post">
+
+    <div class="callout info">
+      <span class="t">How to use this file</span>
+      <p>Copy this page, delete the sections you do not need, and write into the skeleton. Every
+      component below is defined in <code>assets/css/blog.css</code>, which all posts share. Do not
+      add per-post <code>&lt;style&gt;</code> blocks: if a post needs something new, add it to
+      <code>blog.css</code> and render an example here so the next post finds it.</p>
+      <p>House rules for the prose. Sentence case in headings. Straight quotes. Colons and periods
+      instead of em dashes. No metaphors that do not carry information. State the number, then say
+      what it means.</p>
+    </div>
+
+    <h4>The three-stage spine</h4>
+    <p>
+      Every findings post runs on the same argument: what is broken, what we changed, what the change
+      bought. Open with the flow so a reader who stops after ten seconds still leaves with the shape
+      of it, then repeat the stage number on each section header.
+    </p>
+
+    <ol class="flow">
+      <li>
+        <span class="k">Problem</span>
+        <p>The failure, stated as a measurement rather than an impression. One number belongs here.</p>
+      </li>
+      <li>
+        <span class="k">Intervention</span>
+        <p>What changed, and explicitly what was held fixed. A reader should be able to rebuild it.</p>
+      </li>
+      <li>
+        <span class="k">Evidence</span>
+        <p>What the change moved, with the sample size visible and the comparison that settles it named.</p>
+      </li>
+    </ol>
+
+    <div class="stage b"><span class="n">01</span><h2>Problem</h2><span class="sub">What is broken</span></div>
+    <p>
+      Body copy is 17px at 1.7 line height and runs the full 1000px column. Use
+      <strong>bold</strong> for the claim a skimming reader should catch and <code>monospace</code>
+      for identifiers, commands, and field names. Keep paragraphs to four or five sentences.
+      Lists sit narrower (<code>--list</code>); plots and tables narrower still
+      (<code>--fig</code>), centred on the same axis.
+    </p>
+
+    <p class="lead-in">
+      A lead-in holds the question the post answers, or the single sentence you want quoted.
+    </p>
+
+    <h3>An h3 opens a block inside a stage</h3>
+    <p>
+      Use h3 when a stage has two or more distinct moves. Use the mono h4 below it for a label that
+      is closer to a caption than a heading.
+    </p>
+
+    <h4>An h4 labels a sub-point</h4>
+    <p>It sits tight against the paragraph that follows so the two read as one unit.</p>
+
+    <ul class="plain">
+      <li>Plain lists take <code>ul.plain</code>. Use them for unordered facts.</li>
+      <li>Use <code>ol.principles</code> instead when the order carries meaning.</li>
+    </ul>
+
+    <ol class="principles">
+      <li><strong>Ranked first.</strong> The numbered list is for priorities and procedures, where
+      position one outranks position two.</li>
+      <li><strong>Ranked second.</strong> Bold the label, then explain it in one sentence.</li>
+      <li><strong>Ranked third.</strong> Three to five items. Past that, use a table.</li>
+    </ol>
+
+    <h4>Stat tiles</h4>
+    <p>Put the headline numbers where a reader lands, not only inside the charts.</p>
+
+    <div class="kpis">
+      <div class="kpi b"><div class="v">40.0<small>%</small></div><div class="l">Idle time, baseline</div></div>
+      <div class="kpi a"><div class="v">0.1<small>%</small></div><div class="l">Idle time, after</div></div>
+      <div class="kpi"><div class="v">20</div><div class="l">Decided matches</div></div>
+      <div class="kpi a"><div class="v">65<small>%</small></div><div class="l">Head-to-head win rate</div></div>
+    </div>
+
+    <h4>Evidence cards</h4>
+    <p>Three across on desktop, stacked on mobile. Add <code>class="a"</code> to theme a card to
+    arm 1 instead of arm 2.</p>
+
+    <div class="cards">
+      <div class="card">
+        <div class="chal">challenge-name</div>
+        <span class="tag">Category · detail</span>
+        <p class="quote">"A verbatim quote from the transcript. Never paraphrase inside quote marks."</p>
+        <div class="cmd"><span class="prompt">$</span><span>sleep 125</span><span class="dur">2 min idle</span></div>
+      </div>
+      <div class="card">
+        <div class="chal">challenge-name</div>
+        <span class="tag">Category · detail</span>
+        <p class="quote">"Inline <code>tool_name</code> renders unstyled inside a quote."</p>
+        <div class="cmd"><span class="prompt">$</span><span>sleep 170</span><span class="dur">3 min idle</span></div>
+      </div>
+      <div class="card a">
+        <div class="chal">challenge-name</div>
+        <span class="tag">Arm 1 variant</span>
+        <p class="quote">"The same card themed to the other arm, for side-by-side contrast."</p>
+        <div class="cmd"><span class="prompt">$</span><span>curl -s target/flag</span><span class="dur">0.3 s</span></div>
+      </div>
+    </div>
+
+    <div class="stage a"><span class="n">02</span><h2>Intervention</h2><span class="sub">What changed</span></div>
+
+    <h4>Callouts</h4>
+    <div class="callout warn">
+      <span class="t">Caveat</span>
+      A warn callout carries a limitation the reader needs before they read the next number: unequal
+      sample sizes, a metric that does not mean what its name suggests, a result that did not replicate.
+    </div>
+    <div class="callout ok">
+      <span class="t">Held fixed</span>
+      An ok callout confirms the controls. In a comparison post, list here everything that was
+      identical across arms.
+    </div>
+
+    <h4>Assembly diagram</h4>
+    <p>
+      For anything composed from parts: a prompt built from layers, a pipeline built from stages, a
+      payload built from blocks. Keep the top-to-bottom order of the source blocks identical to the
+      order inside the payload. Mark the blocks that are yours with <code>class="a"</code>.
+    </p>
+
+    <figure>
+      <div class="fig-frame">
+        <div class="assembly">
+          <div class="parts">
+            <div class="part" tabindex="0">
+              <span class="pt">Provided</span>
+              <b>Block you did not author</b>
+              <span class="meta">fixed / identical in both arms</span>
+            </div>
+            <div class="part a" tabindex="0">
+              <span class="pt">Layer 1</span>
+              <b>The shared half of your change</b>
+              <span class="meta">written once / every case</span>
+            </div>
+            <div class="part a" tabindex="0">
+              <span class="pt">Layer 2</span>
+              <b>The per-case half</b>
+              <span class="meta">one per case / swapped in</span>
+            </div>
+          </div>
+          <div class="join" aria-hidden="true"></div>
+          <div class="payload">
+            <div class="pv pv-0">
+              <span class="pt">What actually ships</span>
+              <ol>
+                <li>provided block</li>
+                <li>L1 &middot; shared</li>
+                <li>L2 &middot; this case</li>
+              </ol>
+              <span class="meta">one artifact, assembled per run</span>
+              <span class="hint">Hover a block to read it</span>
+            </div>
+            <div class="pv pv-1">
+              <span class="pt">Provided &middot; abridged</span>
+<pre><span class="c">// .pv-N previews .part:nth-child(N)</span>
+Keep every snippet under 42
+columns so it never scrolls.
+
+<span class="k">span.c</span>  dimmed comment
+<span class="k">span.k</span>  highlighted token</pre>
+              <span class="meta">not ours / unchanged</span>
+            </div>
+            <div class="pv pv-2">
+              <span class="pt">Layer 1 &middot; abridged</span>
+<pre><span class="c">// abridge, never invent</span>
+Paste real text, cut it down,
+and say "abridged" in the
+label so a reader never takes
+a paraphrase for a quote.</pre>
+              <span class="meta">shared across every case</span>
+            </div>
+            <div class="pv pv-3">
+              <span class="pt">Layer 2 &middot; shape</span>
+<pre><span class="c">// when content varies per case</span>
+show the SHAPE, not a made-up
+instance:
+
+field ......  what goes here
+field ......  what goes here</pre>
+              <span class="meta">swapped per case</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <figcaption><b>How the standing prompt is assembled</b>: say in the caption which blocks are yours,
+        so the diagram cannot overclaim. Hovering or tabbing to a block previews it on the right;
+        with nothing hovered the panel shows the assembled result.</figcaption>
+    </figure>
+
+    <h4>Citations</h4>
+    <p>
+      Mark the claim with <code>&lt;a class="cite"&gt;</code> pointing at the entry's
+      <code>id</code>, and give the entry a matching link back. Both directions
+      resolve: the marker jumps down to the source<a class="cite" href="#ref-1" id="cite-1">1</a>,
+      and the return arrow in the list jumps back to the sentence that cited it. Cite the primary
+      source rather than a summary of it<a class="cite" href="#ref-2" id="cite-2">2</a>, and cite a
+      number only where a reader would otherwise have to take it on
+      trust<a class="cite" href="#ref-3" id="cite-3">3</a>.
+    </p>
+
+    <h4>Code and configuration</h4>
+    <pre class="code"><span class="c"># the change under test, quoted exactly</span>
+priorities:
+  - <span class="hl">never_idle</span>      <span class="c"># ending a turn to wait is not an option</span>
+  - cheapest_first
+  - keep_state_in_view</pre>
+
+    <blockquote class="pull">
+      A pull quote carries a line from the source material that is worth stopping for.
+      <cite>Baseline prompt, v1</cite>
+    </blockquote>
+
+    <div class="stage"><span class="n">03</span><h2>Evidence</h2><span class="sub">What it bought</span></div>
+
+    <h4>Composition: stacked bar</h4>
+    <p>For "where does the whole go", where the parts sum to 100%.</p>
+
+    <figure>
+      <div class="fig-frame">
+        <div class="stack">
+          <div class="k">Baseline</div>
+          <div class="stackbar">
+            <span style="width:22.9%;background:var(--arm1);opacity:.85">22.9%</span>
+            <span style="width:2.1%;background:#8a8a90"></span>
+            <span style="width:40%;background:var(--arm2)">40.0% idle</span>
+            <span class="lt" style="width:35%;background:#d9d7cf">35.0%</span>
+          </div>
+          <div class="k">Arm 1</div>
+          <div class="stackbar">
+            <span style="width:61.4%;background:var(--arm1)">61.4% active</span>
+            <span style="width:2%;background:#8a8a90"></span>
+            <span style="width:0.1%;background:var(--arm2)"></span>
+            <span class="lt" style="width:36.5%;background:#d9d7cf">36.5%</span>
+          </div>
+        </div>
+        <div class="legend">
+          <span><span class="sw" style="background:#2540FF"></span>Active work</span>
+          <span><span class="sw" style="background:#8a8a90"></span>Futile churn</span>
+          <span><span class="sw" style="background:#FF3D7F"></span>Idle</span>
+          <span><span class="sw" style="background:#d9d7cf"></span>Thinking</span>
+        </div>
+      </div>
+      <figcaption><b>How each arm spends its time</b>: the caption states what the reader should take from the chart, and names the sample
+        it came from.</figcaption>
+    </figure>
+
+    <h4>Magnitude: horizontal bars</h4>
+    <p>For "which is bigger". Set each <code>.fill</code> width inline as a percentage of the largest value.</p>
+
+    <figure>
+      <div class="fig-frame">
+        <div class="barlist">
+          <div class="row b">
+            <span class="k">Baseline</span>
+            <span class="track"><span class="fill" style="width:100%"></span></span>
+            <span class="v">4.4</span>
+          </div>
+          <div class="row a">
+            <span class="k">Arm 1</span>
+            <span class="track"><span class="fill" style="width:92.5%"></span></span>
+            <span class="v">4.1</span>
+          </div>
+        </div>
+      </div>
+      <figcaption><b>Flags captured per run</b>: sample data. When two bars are this close, say so in the caption instead of letting
+        the chart imply a gap.</figcaption>
+    </figure>
+
+    <h4>Trend: inline SVG</h4>
+    <p>
+      Anything the CSS plots cannot express is hand-written SVG inside the same
+      <code>.fig-frame</code>. Keep the <code>viewBox</code> wide (roughly 640&times;220), give it a
+      <code>role="img"</code> and an <code>aria-label</code> that states the values, and use the
+      token colors so it matches the rest of the page.
+    </p>
+
+    <figure>
+      <div class="fig-frame">
+        <svg viewBox="0 0 640 220" role="img" aria-label="Cumulative captures by round. Baseline reaches 4 by round 5; arm 1 reaches 7.">
+          <!-- gridlines -->
+          <g stroke="#e4ddcd" stroke-width="1">
+            <line x1="46" y1="30"  x2="620" y2="30"/>
+            <line x1="46" y1="75"  x2="620" y2="75"/>
+            <line x1="46" y1="120" x2="620" y2="120"/>
+            <line x1="46" y1="165" x2="620" y2="165"/>
+          </g>
+          <line x1="46" y1="180" x2="620" y2="180" stroke="#1A1A1A" stroke-width="2"/>
+          <!-- y labels -->
+          <g font-family="'JetBrains Mono'" font-size="10" font-weight="600" fill="#8a8378" text-anchor="end">
+            <text x="38" y="34">8</text><text x="38" y="79">6</text>
+            <text x="38" y="124">4</text><text x="38" y="169">2</text>
+          </g>
+          <!-- x labels -->
+          <g font-family="'JetBrains Mono'" font-size="10" font-weight="600" fill="#8a8378" text-anchor="middle">
+            <text x="46"  y="199">R1</text><text x="190" y="199">R2</text><text x="334" y="199">R3</text>
+            <text x="478" y="199">R4</text><text x="620" y="199">R5</text>
+          </g>
+          <!-- baseline series -->
+          <polyline points="46,180 190,157 334,157 478,135 620,112" fill="none"
+                    stroke="#FF3D7F" stroke-width="3" stroke-linejoin="round"/>
+          <g fill="#FF3D7F" stroke="#1A1A1A" stroke-width="1.5">
+            <circle cx="46" cy="180" r="4.5"/><circle cx="190" cy="157" r="4.5"/>
+            <circle cx="334" cy="157" r="4.5"/><circle cx="478" cy="135" r="4.5"/>
+            <circle cx="620" cy="112" r="4.5"/>
+          </g>
+          <!-- arm 1 series -->
+          <polyline points="46,157 190,112 334,90 478,67 620,45" fill="none"
+                    stroke="#2540FF" stroke-width="3" stroke-linejoin="round"/>
+          <g fill="#2540FF" stroke="#1A1A1A" stroke-width="1.5">
+            <circle cx="46" cy="157" r="4.5"/><circle cx="190" cy="112" r="4.5"/>
+            <circle cx="334" cy="90" r="4.5"/><circle cx="478" cy="67" r="4.5"/>
+            <circle cx="620" cy="45" r="4.5"/>
+          </g>
+          <!-- direct labels, in place of a legend -->
+          <text x="612" y="36" font-family="'Hanken Grotesk'" font-size="12" font-weight="800"
+                fill="#2540FF" text-anchor="end">Arm 1</text>
+          <text x="612" y="130" font-family="'Hanken Grotesk'" font-size="12" font-weight="800"
+                fill="#FF3D7F" text-anchor="end">Baseline</text>
+        </svg>
+      </div>
+      <figcaption><b>Cumulative captures by round</b>: sample data. Label series directly at the line end where there is room. Reserve the
+        legend row for charts with four or more series.</figcaption>
+    </figure>
+
+    <h4>Two figures side by side</h4>
+    <p>Wrap a pair in <code>.fig-grid</code> when they are read together. They stack under 760px.</p>
+
+    <div class="fig-grid">
+      <figure>
+        <div class="fig-frame">
+          <div class="barlist">
+            <div class="row a"><span class="k">Arm 1</span><span class="track"><span class="fill" style="width:100%"></span></span><span class="v">61</span></div>
+            <div class="row b"><span class="k">Baseline</span><span class="track"><span class="fill" style="width:72%"></span></span><span class="v">44</span></div>
+          </div>
+        </div>
+        <figcaption><b>Left panel</b>: pair two figures in <code>.fig-grid</code> when they are read together.</figcaption>
+      </figure>
+      <figure>
+        <div class="fig-frame">
+          <div class="barlist">
+            <div class="row a"><span class="k">Arm 1</span><span class="track"><span class="fill" style="width:65%"></span></span><span class="v">13</span></div>
+            <div class="row b"><span class="k">Baseline</span><span class="track"><span class="fill" style="width:35%"></span></span><span class="v">7</span></div>
+          </div>
+        </div>
+        <figcaption><b>Right panel</b>: they stack into one column under 760px.</figcaption>
+      </figure>
+    </div>
+
+    <h4>Tables</h4>
+    <p>
+      The table is the right form once there are more than two numbers per row. Right-align numbers,
+      give them <code>td.num</code> for tabular figures, and mark arms with
+      <code>.cell-a</code> / <code>.cell-b</code>. The caption states the takeaway, not the contents.
+    </p>
+
+    <div class="table-wrap">
+      <table>
+        <caption>Where the time goes, as a share of agent wall clock</caption>
+        <thead>
+          <tr><th>Arm</th><th>Active work</th><th>Futile churn</th><th>Idle</th><th>Thinking</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><span class="cell-b">Baseline</span></td><td class="num">22.9%</td><td class="num">2.1%</td><td class="num">40.0%</td><td class="num">35.0%</td></tr>
+          <tr><td><span class="cell-a">Arm 1</span></td><td class="num">61.4%</td><td class="num">2.0%</td><td class="num">0.1%</td><td class="num">36.5%</td></tr>
+          <tr class="total"><td>Change</td><td class="num">+38.5</td><td class="num">&minus;0.1</td><td class="num">&minus;39.9</td><td class="num">+1.5</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="stage"><span class="n">04</span><h2>Limits</h2><span class="sub">What this does not show</span></div>
+    <p>
+      Close every findings post with the limits, before the conclusion rather than after it. List the
+      sample sizes, the conditions that were not varied, and the claims the data does not support.
+      A reader who finds an unstated limitation stops trusting the stated numbers.
+    </p>
+    <p class="note">
+      Footnote text uses <code>p.note</code>. Put the exact run counts, dates, and commit or job ids here.
+    </p>
+
+    <!-- References close the post, after Limits. No stage number: they are not
+         a move in the argument. Each <li> id matches an a.cite href above. -->
+    <div class="stage"><h2>References</h2><span class="sub">Sources</span></div>
+    <ol class="refs">
+      <li id="ref-1">
+        Author, <cite>Title of the primary source</cite>. Publisher, 2026.
+        <a href="https://example.com/paper" target="_blank" rel="noopener">example.com/paper</a>
+        <a class="back" href="#cite-1" aria-label="Back to citation 1">&#8617;</a>
+      </li>
+      <li id="ref-2">
+        Author, <cite>A second source, cited once</cite>. Conference proceedings, 2025.
+        <a class="back" href="#cite-2" aria-label="Back to citation 2">&#8617;</a>
+      </li>
+      <li id="ref-3">
+        Internal run set, <cite>job ids and dates</cite>. Reachable from the Runs archive.
+        <a href="../runs.html">the Runs archive</a>
+        <a class="back" href="#cite-3" aria-label="Back to citation 3">&#8617;</a>
+      </li>
+    </ol>
+
+  </div><!-- /.post -->
+
+  <footer class="footer" id="site-footer"></footer>
+</div>
+
+</body>
+</html>

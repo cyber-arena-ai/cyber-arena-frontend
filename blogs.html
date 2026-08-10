@@ -34,8 +34,12 @@
 <style>
 /* Blogs — writing from the arena. Placeholder cards until posts land. */
 .posts{display:grid;grid-template-columns:1fr;gap:16px;margin-top:30px}
+/* a live card is an <a>, a placeholder an <article>; base.css has no global
+   link reset (each component does its own), so without this the linked card
+   renders blue and underlined */
 .post{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:20px;
-  border:3px solid var(--ink);background:var(--paper2);padding:20px 22px;box-shadow:6px 6px 0 var(--ink)}
+  border:3px solid var(--ink);background:var(--paper2);padding:20px 22px;box-shadow:6px 6px 0 var(--ink);
+  color:inherit;text-decoration:none}
 .post .pk{font:800 40px/1 'Hanken Grotesk',sans-serif;color:var(--ink);font-variant-numeric:tabular-nums}
 .post h3{font-size:24px;font-weight:900;letter-spacing:-.5px;line-height:1.05}
 .post .ptag{display:inline-block;font:800 10px/1 'JetBrains Mono',monospace;letter-spacing:1px;
@@ -43,9 +47,16 @@
   padding:4px 8px;margin-bottom:8px}
 .post .ptag.findings{background:var(--green)}
 .post p{font-size:14px;color:#6a6456;margin-top:6px;line-height:1.5}
+/* fixed square so the arrow on a live post and the "coming soon" label on a
+   placeholder are the same size — content-sized boxes came out 68 vs 51 */
 .post .pgo{font:800 10.5px/1.5 'Hanken Grotesk',sans-serif;text-transform:uppercase;letter-spacing:1px;
-  color:var(--paper);background:var(--ink);aspect-ratio:1;display:grid;place-items:center;
-  padding:10px;text-align:center}
+  color:var(--paper);background:var(--ink);border:2px solid var(--ink);
+  width:68px;height:68px;display:grid;place-items:center;
+  padding:10px;text-align:center;flex:none}
+.post .pgo .arw{width:26px;height:26px;vertical-align:0}
+/* a live card's button wears its own type colour, matching the .ptag and the
+   card's drop shadow; :not(.soon) keeps placeholders grey regardless of order */
+.post.findings:not(.soon) .pgo{background:var(--green)}
 .post.soon{background:var(--paper);border-style:dashed;box-shadow:6px 6px 0 var(--purple);opacity:.95}
 .post.findings{box-shadow:6px 6px 0 var(--green)}
 .post.soon .pgo{background:#8a8378}
@@ -93,17 +104,16 @@
       <span class="pgo">Coming<br>soon</span>
     </article>
 
-    <!-- TODO: re-link blog/prompt-decides.html once the post is ready to publish -->
-    <article class="post soon findings">
+    <a class="post findings" href="blog/prompt-decides.html">
       <div class="pk">03</div>
       <div>
         <span class="ptag findings">Findings</span>
-        <h3>Words that throw punches: the prompt decides who swings first</h3>
-        <p>Same model, different prompt, different instinct: rush the exploit or hunker down
-        and patch. Coming soon.</p>
+        <h3>Same model, two prompts: instructions decided who won</h3>
+        <p>One prompt told the agent it could pace itself, and it spent 40% of every match
+        idle. The replacement won 13 of 20 head-to-head matches against it.</p>
       </div>
-      <span class="pgo">Coming<br>soon</span>
-    </article>
+      <span class="pgo"><i class="arw" aria-hidden="true"></i></span>
+    </a>
   </div>
 
   <footer class="footer" id="site-footer"></footer>

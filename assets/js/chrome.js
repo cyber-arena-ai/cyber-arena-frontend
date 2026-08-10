@@ -14,10 +14,20 @@
     ['blogs.html', 'Blogs'],
     ['about.html', 'About us'],
   ];
-  const page = location.pathname.split('/').pop() || 'index.html';
-  const brand = '<a class="brand" href="index.html">Cyber<em>Arena</em></a>';
+  // Everything the chrome links to lives at the site root, but pages can sit
+  // one level down (blog/*.html). Derive the root from this script's own src
+  // rather than hardcoding a domain, so the same chrome works at the site
+  // root, from blog/, on localhost, and on any preview deploy.
+  const src = (document.currentScript && document.currentScript.src) || '';
+  const ROOT = src.replace(/assets\/js\/chrome\.js(\?.*)?$/, '');
+
+  const path = location.pathname;
+  const page = path.split('/').pop() || 'index.html';
+  // a post under blog/ is still "Blogs" as far as the nav is concerned
+  const active = /\/blog\//.test(path) ? 'blogs.html' : page;
+  const brand = `<a class="brand" href="${ROOT}index.html">Cyber<em>Arena</em></a>`;
   const navlinks = `<span class="navlinks">${LINKS.map(([href, label]) =>
-    `<a href="${href}"${href === page ? ' class="active"' : ''}>${label}</a>`).join('')}</span>`;
+    `<a href="${ROOT}${href}"${href === active ? ' class="active"' : ''}>${label}</a>`).join('')}</span>`;
 
   function fillNav(){
     const nav = document.getElementById('site-nav');
@@ -50,7 +60,7 @@
     const icon = document.createElement('link');
     icon.rel = 'icon';
     icon.type = 'image/svg+xml';
-    icon.href = 'assets/img/favicon.svg';
+    icon.href = ROOT + 'assets/img/favicon.svg';
     document.head.appendChild(icon);
   }
 

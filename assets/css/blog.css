@@ -1,0 +1,354 @@
+/* CyberArena — shared blog-post styles (Riso Zine).
+   Every post under blog/ links base.css and then this file, so all posts read
+   as one publication. blog/template.html is the living reference: it renders
+   one of everything defined below.
+
+   Two-arm theming: --arm1 is whatever is under test, --arm2 is what it
+   replaces. A post that compares nothing can ignore both. */
+
+:root{
+  --arm1:var(--blue);
+  --arm2:var(--pink);
+  --arm1-soft:rgba(37,64,255,.10);
+  --arm2-soft:rgba(255,61,127,.12);
+  --hard:6px 6px 0 var(--ink);
+  --hard-s:5px 5px 0 var(--ink);
+}
+
+/* ── article column ──────────────────────────────────────────────
+   The post fills .wrap (1000px): prose, callouts, lists, stage headers, cards
+   and tiles all run the full page width, level with the masthead rule.
+
+   Plots and tables are the exception. They get --fig and are centred on the
+   same axis, because a two-bar chart stretched across the whole page is
+   mostly empty track. Tune that one number here and nowhere else. */
+.post{--fig:880px;--list:760px;max-width:none;margin:0}
+.post > figure, .post > .fig-grid, .post > .table-wrap{
+  max-width:var(--fig);margin-left:auto;margin-right:auto}
+/* lists read as a block inside the prose, so they sit narrower than the
+   paragraphs but keep the same left edge */
+.post > ul.plain, .post > ol.principles, .post > ol.refs{max-width:var(--list)}
+
+/* the post title runs the full column: base.css caps .headline h2 at 840px
+   for the data pages, which would leave a post title short of the masthead */
+.headline h2{max-width:none}
+
+/* ── post type identity ──────────────────────────────────────────
+   .mast h1 carries the post TYPE and is drawn as the same filled stamp its
+   .ptag wears on blogs.html, so the page a reader lands on matches the card
+   they clicked. A coloured drop shadow behind the letterforms was the first
+   attempt: at weight 900 with tight tracking the offset copy reads as mud,
+   so the fill carries the colour instead and the shadow goes back to ink.
+   Tracking is loosened from base.css's -1.5px because reversed type needs
+   the air. Tag the masthead with the slug: <div class="mast findings">, and
+   add a slug here whenever blogs.html gains a new .ptag colour. */
+.mast{--type:var(--purple)}          /* technical report, the default */
+.mast.findings{--type:var(--green)}
+.mast h1{font-size:34px;background:var(--type);color:var(--paper);
+  box-shadow:9px 9px 0 var(--ink);padding:7px 18px 9px;letter-spacing:-.5px}
+
+.byline{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:10px;
+  margin-top:18px;font:600 11px/1.4 'JetBrains Mono',monospace;letter-spacing:.5px;
+  text-transform:uppercase;color:var(--mut)}
+.byline .dot{width:4px;height:4px;border-radius:50%;background:var(--mut);flex:none}
+.byline a{color:var(--ink);text-decoration:underline;text-underline-offset:3px;
+  text-decoration-thickness:2px;text-decoration-color:var(--arm1)}
+
+/* ── prose ───────────────────────────────────────────────────────── */
+.post p{font-size:17px;line-height:1.7;margin:16px 0;color:#2b2a27}
+.post p strong{font-weight:800}
+.post a{color:var(--arm1);text-underline-offset:3px}
+.post code{font:600 13.5px/1 'JetBrains Mono',monospace;background:var(--paper2);
+  border:1px solid var(--line);padding:1px 5px}
+.post ul.plain{margin:16px 0;padding-left:20px}
+.post ul.plain li{font-size:16.5px;line-height:1.65;color:#2b2a27;margin:8px 0}
+
+/* ── title scale ─────────────────────────────────────────────────── */
+/* h2 is owned by .stage (below). h3 opens a block inside a stage, h4 labels a
+   sub-point. Sentence case everywhere; the uppercase treatments are the mono
+   kickers, not the headings. */
+.post h3{font-size:22px;font-weight:900;letter-spacing:-.5px;line-height:1.15;
+  margin:34px 0 2px;color:var(--ink)}
+.post h4{font:800 12px/1.3 'JetBrains Mono',monospace;letter-spacing:1.2px;text-transform:uppercase;
+  color:var(--mut);margin:26px 0 -6px}
+.post h3 + p, .post h4 + p{margin-top:10px}
+
+/* ── stage header: the numbered spine of a post ──────────────────── */
+.stage{display:flex;align-items:flex-end;gap:14px;flex-wrap:wrap;
+  border-bottom:3px solid var(--ink);padding-bottom:10px;margin:48px 0 4px}
+.stage .n{font:800 12px/1 'JetBrains Mono',monospace;letter-spacing:1px;
+  color:var(--paper);background:var(--ink);padding:8px 9px;flex:none}
+.stage h2{font-size:27px;font-weight:900;letter-spacing:-.7px;line-height:1}
+.stage .sub{margin-left:auto;font:700 11px/1.4 'Hanken Grotesk',sans-serif;
+  text-transform:uppercase;letter-spacing:1.2px;color:var(--mut);text-align:right}
+.stage.a .n{background:var(--arm1)}
+.stage.b .n{background:var(--arm2)}
+
+/* ── mind flow: the post's argument in three moves ───────────────── */
+.flow{list-style:none;display:grid;grid-template-columns:repeat(3,1fr);gap:24px;
+  margin:32px 0 8px;padding:0;counter-reset:fs}
+.flow li{position:relative;border:3px solid var(--ink);background:var(--paper2);
+  box-shadow:var(--hard-s);padding:22px 16px 18px}
+.flow li::before{counter-increment:fs;content:"0" counter(fs);position:absolute;top:-3px;left:-3px;
+  font:800 11px/1 'JetBrains Mono',monospace;letter-spacing:1px;
+  color:var(--paper);background:var(--ink);padding:6px 8px}
+/* arrow sitting in the gap, pointing at the next step */
+.flow li + li::after{content:"";position:absolute;left:-19px;top:50%;transform:translateY(-50%);
+  width:0;height:0;border:7px solid transparent;border-left-color:var(--ink)}
+.flow .k{display:block;font:900 17px/1.15 'Hanken Grotesk',sans-serif;letter-spacing:-.4px;margin-bottom:8px}
+.flow p{font-size:14px;line-height:1.55;color:#4a463f;margin:0}
+.flow li:nth-child(1) .k{color:var(--arm2)}
+.flow li:nth-child(3) .k{color:var(--arm1)}
+
+/* ── pull statement / callouts ───────────────────────────────────── */
+.lead-in{font-weight:700;font-size:20px;line-height:1.42;color:var(--ink);
+  border-left:6px solid var(--arm1);background:var(--paper2);padding:14px 20px;margin:26px 0}
+.callout{border:3px solid var(--ink);border-left-width:10px;background:var(--paper2);
+  box-shadow:var(--hard-s);padding:16px 20px;margin:26px 0;font-size:15.5px;line-height:1.62;color:#2b2a27}
+.callout .t{display:block;font:800 11px/1 'JetBrains Mono',monospace;letter-spacing:1.2px;
+  text-transform:uppercase;color:var(--mut);margin-bottom:9px}
+.callout.warn{border-left-color:var(--arm2)}
+.callout.info{border-left-color:var(--purple)}
+.callout.ok{border-left-color:var(--green)}
+.callout p{font-size:15.5px;line-height:1.62;margin:10px 0 0}
+.callout p:first-of-type{margin-top:0}
+.note{font-size:13px;line-height:1.55;color:var(--mut);margin-top:-4px}
+
+blockquote.pull{border-left:6px solid var(--arm1);background:var(--paper2);margin:28px 0;
+  padding:18px 24px;font:700 21px/1.4 'Hanken Grotesk',sans-serif;letter-spacing:-.3px;color:var(--ink)}
+blockquote.pull cite{display:block;margin-top:12px;font:600 11px/1.4 'JetBrains Mono',monospace;
+  letter-spacing:.8px;text-transform:uppercase;color:var(--mut);font-style:normal}
+
+/* ── ranked list ─────────────────────────────────────────────────── */
+ol.principles{list-style:none;margin:18px 0;padding:0;counter-reset:p}
+ol.principles li{position:relative;padding:14px 0 14px 48px;border-top:2px solid var(--line);
+  font-size:16px;line-height:1.6;color:#2b2a27}
+ol.principles li:first-child{border-top:0}
+ol.principles li strong{font-weight:800}
+ol.principles li::before{counter-increment:p;content:counter(p);position:absolute;left:0;top:12px;
+  width:30px;height:30px;display:grid;place-items:center;
+  font:800 14px/1 'JetBrains Mono',monospace;color:var(--paper);background:var(--arm1);border:2px solid var(--ink)}
+
+/* ── prompt assembly: authored blocks stacking into one payload ───
+   Left column is the source blocks, cascading right so they read as a stack
+   of sheets; right column is what the stack flattens into. Order top-to-bottom
+   matches the order inside the payload, so nothing has to be mentally flipped.
+   Theme a block with .a / .b to mark it as one of the two arms. */
+.assembly{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:20px}
+.parts{display:grid;gap:10px}
+.part{border:3px solid var(--ink);background:var(--paper2);box-shadow:5px 5px 0 var(--ink);
+  padding:11px 14px 12px}
+.part:nth-child(2){margin-left:18px}
+.part:nth-child(3){margin-left:36px}
+.part.a{box-shadow:5px 5px 0 var(--arm1)}
+.part.b{box-shadow:5px 5px 0 var(--arm2)}
+.part .pt,.payload .pt{display:block;font:800 9.5px/1 'JetBrains Mono',monospace;
+  letter-spacing:1.2px;text-transform:uppercase;color:var(--mut);margin-bottom:7px}
+.part b{display:block;font:800 15px/1.2 'Hanken Grotesk',sans-serif;letter-spacing:-.2px}
+.part .meta,.payload .meta{display:block;margin-top:6px;
+  font:600 11px/1.4 'JetBrains Mono',monospace;color:var(--mut)}
+.join{justify-self:center;width:0;height:0;border:9px solid transparent;border-left-color:var(--ink)}
+.payload{border:3px solid var(--ink);background:var(--ink);box-shadow:6px 6px 0 var(--arm1);
+  padding:14px 16px 15px;color:var(--paper)}
+.payload .pt,.payload .meta{color:#8f8a7c}
+.payload ol{list-style:none;counter-reset:pl;margin:0;padding:0}
+.payload li{counter-increment:pl;position:relative;padding:7px 0 7px 26px;
+  border-top:1px solid #3b3b3b;font:600 13px/1.45 'JetBrains Mono',monospace}
+.payload li:first-child{border-top:0}
+.payload li::before{content:counter(pl);position:absolute;left:0;top:7px;
+  font:800 11px/1.6 'JetBrains Mono',monospace;color:#8f8a7c}
+.payload pre{margin:0;overflow-x:auto;white-space:pre;
+  font:600 11.5px/1.65 'JetBrains Mono',monospace;color:#d8d3c6}
+.payload pre .c{color:#8f8a7c}
+.payload pre .k{color:#8fa5ff}
+
+/* Hovering (or keyboard-focusing) a source block previews that block's text in
+   the payload panel; with nothing hovered the panel shows the assembled
+   result. Every .pv sits in the same grid cell, so the panel is sized by its
+   tallest state once and never resizes as previews swap. Where :has() is
+   unsupported the default state simply stays put, which is the whole message. */
+.payload{display:grid}
+.payload > .pv{grid-area:1/1;visibility:hidden}
+.payload > .pv-0{visibility:visible}
+.assembly:has(.part:is(:hover,:focus-visible)) > .payload > .pv-0{visibility:hidden}
+.assembly:has(.part:nth-child(1):is(:hover,:focus-visible)) > .payload > .pv-1,
+.assembly:has(.part:nth-child(2):is(:hover,:focus-visible)) > .payload > .pv-2,
+.assembly:has(.part:nth-child(3):is(:hover,:focus-visible)) > .payload > .pv-3{visibility:visible}
+/* Affordance for the preview. The hint lives inside .pv-0, so it is visible
+   exactly while nothing is hovered and removes itself the moment it has been
+   acted on. Hidden outright where hovering is impossible. */
+.payload .hint{display:flex;align-items:center;gap:9px;margin-top:14px;
+  padding-top:12px;border-top:1px solid #3b3b3b;
+  font:800 10px/1 'JetBrains Mono',monospace;letter-spacing:1.1px;
+  text-transform:uppercase;color:#8fa5ff}
+.payload .hint::before{content:"";flex:none;width:0;height:0;
+  border:6px solid transparent;border-right-color:#8fa5ff;
+  animation:nudge-x 1.6s ease-in-out infinite}
+@keyframes nudge-x{0%,100%{transform:translateX(0)}  50%{transform:translateX(-5px)}}
+@keyframes nudge-y{0%,100%{transform:translateY(0)}  50%{transform:translateY(-5px)}}
+@media(hover:none){.payload .hint{display:none}}
+@media(prefers-reduced-motion:reduce){.payload .hint::before{animation:none}}
+
+.part{cursor:pointer;transition:transform .08s,box-shadow .08s}
+.part:is(:hover,:focus-visible){outline:none;transform:translate(-2px,-2px);
+  box-shadow:8px 8px 0 var(--ink)}
+.part.a:is(:hover,:focus-visible){box-shadow:8px 8px 0 var(--arm1)}
+.part.b:is(:hover,:focus-visible){box-shadow:8px 8px 0 var(--arm2)}
+@media(prefers-reduced-motion:reduce){.part{transition:none}}
+
+/* ── evidence cards (quote + the command that produced it) ───────── */
+.cards{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin:26px 0 8px}
+.card{display:flex;flex-direction:column;border:3px solid var(--ink);background:var(--paper2);
+  box-shadow:6px 6px 0 var(--arm2);padding:16px 16px 18px}
+.card.a{box-shadow:6px 6px 0 var(--arm1)}
+.card .chal{display:flex;align-items:center;gap:8px;font:800 13px/1 'Hanken Grotesk',sans-serif;letter-spacing:-.2px}
+.card .chal::before{content:"";width:9px;height:9px;background:var(--arm2);border:2px solid var(--ink);flex:none}
+.card.a .chal::before{background:var(--arm1)}
+.card .tag{align-self:flex-start;margin:10px 0 12px;font:800 10px/1 'JetBrains Mono',monospace;
+  letter-spacing:1px;text-transform:uppercase;color:var(--paper);background:var(--arm2);
+  border:2px solid var(--ink);padding:4px 8px}
+.card.a .tag{background:var(--arm1)}
+.card .quote{flex:1;font-style:italic;font-size:14px;line-height:1.5;color:#4a463f;margin:0 0 14px}
+.card code{background:none;border:0;padding:0;font-family:'JetBrains Mono',monospace;font-style:normal}
+.card .cmd{display:flex;align-items:baseline;gap:8px;font:600 13px/1.4 'JetBrains Mono',monospace;
+  color:var(--paper);background:var(--ink);padding:10px 12px;overflow-x:auto}
+.card .cmd .prompt{color:var(--arm2);user-select:none}
+.card.a .cmd .prompt{color:#7d90ff}
+.card .cmd .dur{margin-left:auto;font:700 11px/1 'Hanken Grotesk',sans-serif;letter-spacing:.3px;
+  color:#ffb3c9;white-space:nowrap}
+.card.a .cmd .dur{color:#b9c4ff}
+
+/* ── stat tiles ──────────────────────────────────────────────────── */
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:16px;margin:26px 0}
+.kpi{border:3px solid var(--ink);background:var(--paper2);box-shadow:var(--hard-s);padding:16px 18px 18px}
+.kpi .v{font:900 36px/1 'Hanken Grotesk',sans-serif;letter-spacing:-1.4px;font-variant-numeric:tabular-nums}
+.kpi .v small{font-size:18px;font-weight:800;letter-spacing:-.4px}
+.kpi .l{font:700 10.5px/1.45 'JetBrains Mono',monospace;letter-spacing:1px;text-transform:uppercase;
+  color:var(--mut);margin-top:9px}
+.kpi.a{box-shadow:5px 5px 0 var(--arm1)} .kpi.a .v{color:var(--arm1)}
+.kpi.b{box-shadow:5px 5px 0 var(--arm2)} .kpi.b .v{color:var(--arm2)}
+
+/* ── figures ──────────────────────────────────────────────────────
+   A frame, then one caption under it. Tables label themselves above with
+   <caption>; figures label themselves below, inside the figcaption, which is
+   the ordinary publishing convention and saves a line of chrome per figure.
+   Keep the frame tight: a wide box around thin marks is the one thing that
+   makes these read as filler next to the tables and tiles. */
+figure{margin:26px 0}
+.fig-frame{border:3px solid var(--ink);background:var(--paper2);box-shadow:var(--hard);
+  padding:18px clamp(14px,2.5vw,20px)}
+figure svg{width:100%;height:auto;display:block}
+/* A figure carries no separate title. The caption opens with the title in
+   bold, then a colon, then what the reader should take from it:
+   "<b>Title</b>: what it shows." One line of chrome instead of two. */
+figcaption{font-size:13px;line-height:1.55;color:var(--mut);margin-top:10px}
+figcaption b{font-weight:800;color:var(--ink)}
+.fig-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;align-items:start;margin:26px 0}
+.fig-grid figure{margin:0}
+.legend{display:flex;flex-wrap:wrap;gap:8px 18px;margin-top:14px;padding-top:12px;
+  border-top:1px solid var(--line);font:600 11.5px/1 'JetBrains Mono',monospace;color:#4a463f}
+.legend span{display:inline-flex;align-items:center;gap:7px}
+.legend .sw{width:11px;height:11px;border:1.5px solid var(--ink);flex:none}
+
+/* horizontal bar plot (CSS — set .fill{width} inline as a percentage of the
+   largest value). Rows are ruled like table rows so a multi-row plot and a
+   table have the same rhythm. */
+.barlist{display:grid}
+.barlist .row{display:grid;grid-template-columns:minmax(84px,auto) 1fr auto;align-items:center;
+  gap:16px;padding:9px 0}
+.barlist .row+.row{border-top:1px solid var(--line)}
+.barlist .k{font:700 13px/1.3 'Hanken Grotesk',sans-serif}
+.barlist .track{height:42px;background:var(--paper);border:2px solid var(--ink)}
+/* .fill is a <span> in a plain block, so it needs blockifying — as an inline
+   box its width/height are ignored and the track renders empty. */
+.barlist .fill{display:block;height:100%;background:var(--arm1)}
+.barlist .row.b .fill{background:var(--arm2)}
+.barlist .v{font:800 16px/1 'JetBrains Mono',monospace;font-variant-numeric:tabular-nums;
+  min-width:42px;text-align:right}
+.barlist .row.a .v{color:var(--arm1)}
+.barlist .row.b .v{color:var(--arm2)}
+
+/* stacked composition bar (each span carries an inline width, summing to 100) */
+.stack{display:grid;gap:6px}
+.stack .k{font:700 12.5px/1 'Hanken Grotesk',sans-serif}
+.stack .stackbar+.k{margin-top:12px}
+.stackbar{display:flex;height:52px;border:2px solid var(--ink);overflow:hidden}
+.stackbar span{display:grid;place-items:center;font:800 12px/1 'Hanken Grotesk',sans-serif;
+  color:var(--paper);white-space:nowrap;overflow:hidden;min-width:0}
+.stackbar span.lt{color:#6a6a70}
+
+/* ── tables ──────────────────────────────────────────────────────── */
+.table-wrap{overflow-x:auto;margin:26px 0}
+table{width:100%;border-collapse:collapse;background:var(--paper2);border:3px solid var(--ink);
+  box-shadow:var(--hard)}
+caption{caption-side:top;text-align:left;font:800 12px/1.45 'JetBrains Mono',monospace;
+  letter-spacing:.8px;text-transform:uppercase;color:var(--mut);margin-bottom:10px}
+th,td{padding:11px 16px;text-align:right}
+th:first-child,td:first-child{text-align:left}
+thead th{font:800 11px/1.3 'JetBrains Mono',monospace;letter-spacing:.5px;text-transform:uppercase;
+  color:var(--ink);border-bottom:3px solid var(--ink)}
+tbody td{font-size:15px}
+tbody tr+tr td{border-top:1px solid var(--line)}
+tbody tr.total td{font-weight:800;border-top:3px solid var(--ink)}
+td.num{font-family:'JetBrains Mono',monospace;font-variant-numeric:tabular-nums;font-size:14px}
+.cell-a{color:var(--arm1);font-weight:800}
+.cell-b{color:var(--arm2);font-weight:800}
+
+/* ── citations ───────────────────────────────────────────────────
+   A superscript marker in the prose and a numbered list at the foot of the
+   post. Both directions link: the marker jumps to its entry, the entry's
+   return arrow jumps back to where it was cited. scroll-margin clears the
+   sticky nav so a jumped-to target is not hidden under it. */
+a.cite{font:800 10px/1 'JetBrains Mono',monospace;vertical-align:super;
+  text-decoration:none;color:var(--paper);background:var(--arm1);
+  padding:2px 4px;margin-left:2px;scroll-margin-top:90px}
+a.cite:hover,a.cite:focus{background:var(--ink)}
+
+ol.refs{list-style:none;counter-reset:r;margin:18px 0 0;padding:0}
+ol.refs li{counter-increment:r;position:relative;padding:12px 0 12px 42px;
+  border-top:1px solid var(--line);font-size:14px;line-height:1.6;color:#4a463f;
+  scroll-margin-top:90px}
+ol.refs li:first-child{border-top:0}
+ol.refs li::before{content:"[" counter(r) "]";position:absolute;left:0;top:13px;
+  font:800 12px/1 'JetBrains Mono',monospace;color:var(--arm1)}
+ol.refs li:target{background:var(--arm1-soft)}
+ol.refs cite{font-style:normal;font-weight:800;color:var(--ink)}
+ol.refs a{color:var(--ink);text-underline-offset:3px}
+ol.refs a.back{text-decoration:none;color:var(--mut);margin-left:8px;
+  font:700 13px/1 'JetBrains Mono',monospace}
+ol.refs a.back:hover{color:var(--arm1)}
+
+/* ── code block ──────────────────────────────────────────────────── */
+pre.code{background:var(--ink);color:#f0ece2;border:3px solid var(--ink);box-shadow:var(--hard);
+  padding:16px 18px;overflow-x:auto;margin:26px 0;
+  font:600 13px/1.65 'JetBrains Mono',monospace;white-space:pre}
+pre.code .c{color:#8f8a7c}
+pre.code .hl{color:#8fa5ff}
+
+/* ── responsive ──────────────────────────────────────────────────── */
+/* base.css gives .wrap no horizontal padding. Post frames now run the full
+   wrap width, so between 760px and the 1000px cap their 6px offset shadow
+   would clip against the viewport. blog.css only loads on posts, so scoping
+   the gutter here leaves the other pages alone. */
+@media(max-width:1012px){ .wrap{padding:0 12px} }
+
+@media(max-width:760px){
+  .mast h1{font-size:26px;padding:5px 14px 7px;box-shadow:7px 7px 0 var(--ink)}
+  .flow{grid-template-columns:1fr;gap:26px}
+  .flow li + li::after{left:50%;top:-20px;transform:translateX(-50%);
+    border-left-color:transparent;border-top-color:var(--ink)}
+  .cards{grid-template-columns:1fr}
+  .fig-grid{grid-template-columns:1fr}
+  .assembly{grid-template-columns:1fr;gap:14px}
+  .join{border-left-color:transparent;border-top-color:var(--ink)}
+  /* stacked layout: the blocks are now above the panel, so the hint points up */
+  .payload .hint::before{border-right-color:transparent;border-bottom-color:#8fa5ff;
+    animation-name:nudge-y}
+  .part:nth-child(2){margin-left:10px}
+  .part:nth-child(3){margin-left:20px}
+  .stage{gap:10px}
+  .stage h2{font-size:22px}
+  .stage .sub{margin-left:0;text-align:left;flex-basis:100%}
+  .barlist .row{grid-template-columns:1fr auto;gap:8px}
+  .barlist .k{grid-column:1/-1}
+}
