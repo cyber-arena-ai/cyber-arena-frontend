@@ -1,7 +1,7 @@
 // Games — the challenge arena. Probes the warehouse registry (index.json) and
 // renders every challenge as a card. No hardcoded list; add a YAML + rebuild the
 // index and it shows up here automatically.
-import { loadJSON, loadHarnesses, esc, setActiveNav, api } from './util.js';
+import { loadJSON, loadHarnesses, esc, setActiveNav, renderPager, api } from './util.js';
 import { reg } from './config.js';
 
 setActiveNav('games.html');
@@ -82,7 +82,18 @@ function renderGrid(list) {
   grid.innerHTML = list.length ? list.map(card).join('') : `<p class="empty">No challenges match.</p>`;
   setPeeks();
 }
-renderGrid(chals);
+
+/* ---- paging over the (filtered) catalogue ---- */
+const PAGE = 12;
+let shown = chals, page = 1;
+function draw(scroll = false) {
+  const pages = Math.max(1, Math.ceil(shown.length / PAGE));
+  page = Math.min(page, pages);
+  renderGrid(shown.slice((page - 1) * PAGE, page * PAGE));
+  renderPager(document.getElementById('pager'), page, pages, p => { page = p; draw(true); });
+  if (scroll) document.querySelector('.sech').scrollIntoView({ behavior: 'smooth' });
+}
+draw();
 // title wrap (and thus banner height) shifts with fonts + column width
 if (document.fonts?.ready) document.fonts.ready.then(setPeeks);
 let rz; window.addEventListener('resize', () => { clearTimeout(rz); rz = setTimeout(setPeeks, 150); });
@@ -112,7 +123,9 @@ document.querySelectorAll('#filt button').forEach(b => b.onclick = () => {
   document.querySelectorAll('#filt button').forEach(x => x.classList.remove('on'));
   b.classList.add('on');
   const f = b.dataset.f;
-  renderGrid(f === 'all' ? chals : chals.filter(c => (c.tags || []).includes(f)));
+  shown = f === 'all' ? chals : chals.filter(c => (c.tags || []).includes(f));
+  page = 1;
+  draw();
 });
 
 /* ---- match history (from the midend; challenge slug == run.name) ---- */

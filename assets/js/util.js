@@ -98,6 +98,25 @@ export const fmtTime = s => `${Math.floor(s/60)}:${String(Math.round(s)%60).padS
 export const esc = s => String(s).replace(/[&<>]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
 export const initials = m => m.split(/[-\s]/)[0].slice(0,2).toUpperCase();
 
+// page buttons for a paged list (runs archive, games grid) — hidden when one
+// page; long ranges condense to 1 … n-1 n n+1 … last. `go(p)` re-renders.
+export function renderPager(el, page, pages, go){
+  if(pages <= 1){ el.innerHTML = ''; return; }
+  const want = new Set([1, pages, page - 1, page, page + 1]);
+  const nums = [];
+  let prev = 0;
+  for(let p = 1; p <= pages; p++){
+    if(!want.has(p)) continue;
+    if(p - prev > 1) nums.push(`<span class="gap">…</span>`);
+    nums.push(`<button data-p="${p}" class="${p === page ? 'on' : ''}">${p}</button>`);
+    prev = p;
+  }
+  el.innerHTML = `<button data-p="${page - 1}" ${page === 1 ? 'disabled' : ''} aria-label="Previous page">←</button>
+    ${nums.join('')}
+    <button data-p="${page + 1}" ${page === pages ? 'disabled' : ''} aria-label="Next page">→</button>`;
+  el.querySelectorAll('button[data-p]').forEach(b => b.onclick = () => go(+b.dataset.p));
+}
+
 // mark the current page's nav link
 export function setActiveNav(page){
   document.querySelectorAll('.navlinks a').forEach(a=>{

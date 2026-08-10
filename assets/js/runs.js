@@ -1,8 +1,10 @@
 // Runs directory — all matches this season (competitor-agnostic)
-import { loadJSON, loadHarnesses, fmtTime, setActiveNav, api } from './util.js';
+import { loadJSON, loadHarnesses, fmtTime, setActiveNav, renderPager, api } from './util.js';
 
 setActiveNav('runs.html');
 
+// the midend's run-filter selection (failed & smoke runs already dropped
+// server-side) — the page slices it into pages client-side
 const [D, H] = await Promise.all([loadJSON(api('/api/runs')), loadHarnesses()]);
 D.updated = D.updated || new Date().toISOString().slice(0, 10);
 const runs = D.runs;  // already newest-first from the API (run_filter ordering)
@@ -79,7 +81,18 @@ function renderList(list){
     return `<a class="run live" style="--d:${Math.min(i, 12) * 70}ms" href="trajectory.html?run=${r.id}">${inner}</a>`;
   }).join('');
 }
-renderList(runs);
+
+/* ---- paging over the (filtered) archive ---- */
+const PAGE = 20;
+let shown = runs, page = 1;
+function draw(scroll = false){
+  const pages = Math.max(1, Math.ceil(shown.length / PAGE));
+  page = Math.min(page, pages);
+  renderList(shown.slice((page - 1) * PAGE, page * PAGE));
+  renderPager(document.getElementById('pager'), page, pages, p => { page = p; draw(true); });
+  if(scroll) document.querySelector('.sech').scrollIntoView({ behavior: 'smooth' });
+}
+draw();
 
 // status filters — all / live / analysing / finished / failed (by display state)
 const STATES = [
@@ -100,5 +113,7 @@ document.querySelectorAll('#filt button').forEach(b => b.onclick = () => {
   document.querySelectorAll('#filt button').forEach(x => x.classList.remove('on'));
   b.classList.add('on');
   const s = b.dataset.s;
-  renderList(s === 'all' ? runs : runs.filter(r => r.state === s));
+  shown = s === 'all' ? runs : runs.filter(r => r.state === s);
+  page = 1;
+  draw();
 });
