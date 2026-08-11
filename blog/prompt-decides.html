@@ -50,7 +50,7 @@
   <div class="post">
 
     <p>
-      CyberArena runs a security game between two AI agents. Each agent defends its own copy of a
+      CyberArena runs a security game between two AI agents.<a class="cite" href="#ref-1" id="cite-1">1</a> Each agent defends its own copy of a
       service while attacking the opponent's copy. Hidden flags sit inside both services, and the
       agent that submits more captured flags wins. Flags rotate on a timer, so a capture scores once
       and then expires.
@@ -142,7 +142,7 @@
 
     <div class="stage a"><span class="n">02</span><h2>Intervention</h2><span class="sub">Two layers, nothing else</span></div>
     <p>
-      We deleted the pacing language and replaced the whole prompt with two layers.
+      We deleted the pacing language and replaced the whole prompt with two layers.<a class="cite" href="#ref-2" id="cite-2">2</a>
     </p>
 
     <h3>Layer 1: a standing policy, identical for every challenge</h3>
@@ -422,7 +422,7 @@ weak points   where they tend
     <p>
       Both agents ran the same model, with the same tools, against the same opponent, on the same
       clock. The instruction text was the only variable, and it moved the head-to-head win rate from
-      35% to 65%.
+      35% to 65%.<a class="cite" href="#ref-3" id="cite-3">3</a>
     </p>
     <p>
       The practical reading is that idle time is a property of the prompt rather than of the model.
@@ -430,6 +430,31 @@ weak points   where they tend
       telling the agent that resting was allowed, combined with the absence of anything telling it
       what to do instead. Both halves mattered, and both are cheap to fix.
     </p>
+
+    <div class="stage"><h2>References</h2><span class="sub">Sources</span></div>
+    <ol class="refs">
+      <li id="ref-1">
+        A. K. Zhang, N. Perry, R. Dulepet, J. Ji, C. Menders, J. W. Lin, et al.,
+        <cite>Cybench: A Framework for Evaluating Cybersecurity Capabilities and Risks of Language Models</cite>.
+        arXiv:2408.08926 (2024); ICLR 2025.
+        <a href="https://arxiv.org/abs/2408.08926" target="_blank" rel="noopener">arxiv.org/abs/2408.08926</a>
+        <a class="back" href="#cite-1" aria-label="Back to citation 1">&#8617;</a>
+      </li>
+      <li id="ref-2">
+        S. Yao, J. Zhao, D. Yu, N. Du, I. Shafran, K. Narasimhan, Y. Cao,
+        <cite>ReAct: Synergizing Reasoning and Acting in Language Models</cite>.
+        arXiv:2210.03629 (2022); ICLR 2023.
+        <a href="https://arxiv.org/abs/2210.03629" target="_blank" rel="noopener">arxiv.org/abs/2210.03629</a>
+        <a class="back" href="#cite-2" aria-label="Back to citation 2">&#8617;</a>
+      </li>
+      <li id="ref-3">
+        R. Turtayev, A. Petrov, D. Volkov, D. Volk,
+        <cite>Hacking CTFs with Plain Agents</cite>.
+        arXiv:2412.02776 (2024).
+        <a href="https://arxiv.org/abs/2412.02776" target="_blank" rel="noopener">arxiv.org/abs/2412.02776</a>
+        <a class="back" href="#cite-3" aria-label="Back to citation 3">&#8617;</a>
+      </li>
+    </ol>
 
   </div><!-- /.post -->
 
