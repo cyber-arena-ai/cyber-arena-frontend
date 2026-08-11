@@ -27,6 +27,18 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer">
 <link rel="stylesheet" href="../assets/css/base.css">
 <link rel="stylesheet" href="../assets/css/blog.css">
+<style>
+  /* Citation markers + Related-work list for this post (approved placements). */
+  .post sup.cite{font-family:'JetBrains Mono',monospace;font-size:.62em;font-weight:600;margin-left:1px}
+  .post sup.cite a{color:var(--arm1,#2540FF);text-decoration:none}
+  .post sup.cite a:hover{text-decoration:underline}
+  .post .refs{margin:2.6rem 0 0;padding-top:1.3rem;border-top:1px solid rgba(0,0,0,.12)}
+  .post .refs h3{font-family:'Hanken Grotesk',sans-serif;font-size:.82rem;letter-spacing:.06em;text-transform:uppercase;color:#6b6862;margin:0 0 .9rem}
+  .post .refs ol{margin:0;padding-left:1.5rem}
+  .post .refs li{font-size:.84rem;line-height:1.55;color:#3a3833;margin:0 0 .7rem}
+  .post .refs li a{color:var(--arm1,#2540FF);text-decoration:none;font-family:'JetBrains Mono',monospace;font-size:.92em}
+  .post .refs li a:hover{text-decoration:underline}
+</style>
 </head>
 <body>
 <div class="wrap">
@@ -50,7 +62,7 @@
   <div class="post">
 
     <p>
-      CyberArena runs a security game between two AI agents. Each agent defends its own copy of a
+      CyberArena runs a security game between two AI agents.<sup class="cite" id="cite-1"><a href="#ref-1">1</a></sup> Each agent defends its own copy of a
       service while attacking the opponent's copy. Hidden flags sit inside both services, and the
       agent that submits more captured flags wins. Flags rotate on a timer, so a capture scores once
       and then expires.
@@ -142,7 +154,7 @@
 
     <div class="stage a"><span class="n">02</span><h2>Intervention</h2><span class="sub">Two layers, nothing else</span></div>
     <p>
-      We deleted the pacing language and replaced the whole prompt with two layers.
+      We deleted the pacing language and replaced the whole prompt with two layers.<sup class="cite" id="cite-2"><a href="#ref-2">2</a></sup>
     </p>
 
     <h3>Layer 1: a standing policy, identical for every challenge</h3>
@@ -422,7 +434,7 @@ weak points   where they tend
     <p>
       Both agents ran the same model, with the same tools, against the same opponent, on the same
       clock. The instruction text was the only variable, and it moved the head-to-head win rate from
-      35% to 65%.
+      35% to 65%.<sup class="cite" id="cite-3"><a href="#ref-3">3</a></sup>
     </p>
     <p>
       The practical reading is that idle time is a property of the prompt rather than of the model.
@@ -430,6 +442,23 @@ weak points   where they tend
       telling the agent that resting was allowed, combined with the absence of anything telling it
       what to do instead. Both halves mattered, and both are cheap to fix.
     </p>
+
+    <section class="refs" aria-label="References">
+      <h3>Related work</h3>
+      <ol>
+        <li id="ref-1">A. K. Zhang, N. Perry, R. Dulepet, J. Ji, C. Menders, J. W. Lin, et al.
+          &ldquo;Cybench: A Framework for Evaluating Cybersecurity Capabilities and Risks of Language
+          Models.&rdquo; arXiv:2408.08926 (2024); ICLR 2025.
+          <a href="https://arxiv.org/abs/2408.08926" target="_blank" rel="noopener">arxiv.org/abs/2408.08926</a></li>
+        <li id="ref-2">S. Yao, J. Zhao, D. Yu, N. Du, I. Shafran, K. Narasimhan, Y. Cao.
+          &ldquo;ReAct: Synergizing Reasoning and Acting in Language Models.&rdquo; arXiv:2210.03629
+          (2022); ICLR 2023.
+          <a href="https://arxiv.org/abs/2210.03629" target="_blank" rel="noopener">arxiv.org/abs/2210.03629</a></li>
+        <li id="ref-3">R. Turtayev, A. Petrov, D. Volkov, D. Volk.
+          &ldquo;Hacking CTFs with Plain Agents.&rdquo; arXiv:2412.02776 (2024).
+          <a href="https://arxiv.org/abs/2412.02776" target="_blank" rel="noopener">arxiv.org/abs/2412.02776</a></li>
+      </ol>
+    </section>
 
   </div><!-- /.post -->
 
