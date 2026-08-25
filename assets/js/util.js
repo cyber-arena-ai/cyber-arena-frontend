@@ -3,8 +3,8 @@ import { api } from './config.js';
 
 export { api, API_BASE } from './config.js';
 
-export async function loadJSON(path){
-  const res = await fetch(path);
+export async function loadJSON(path, init){
+  const res = await fetch(path, init);
   if(!res.ok) throw new Error(`Failed to load ${path}: ${res.status}`);
   return res.json();
 }
