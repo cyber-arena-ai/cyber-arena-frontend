@@ -6,10 +6,14 @@ import { reg } from './config.js';
 
 setActiveNav('games.html');
 
-const D = await loadJSON(reg('/index.json'));
+// no-cache: the registry is served by jsDelivr with max-age=604800, so a cached
+// index would hide newly added challenges for a week. Revalidate every load.
+const D = await loadJSON(reg('/index.json'), { cache: 'no-cache' });
 const chals = D.challenges || [];
 
-const coverURL = c => reg('/' + (c.cover?.image || `covers/${c.slug}.png`));
+// ?v=<index build date>: covers keep their filename when redrawn, so without a
+// version token the browser serves its week-old copy of the previous artwork.
+const coverURL = c => reg('/' + (c.cover?.image || `covers/${c.slug}.webp`)) + `?v=${D.generated}`;
 const avatarURL = c => reg('/avatar/' + c.contributor + '.png');
 const originLabel = t => (t === 'ctf' ? 'CTF' : t === 'real-world' ? 'REAL-WORLD' : '');
 
