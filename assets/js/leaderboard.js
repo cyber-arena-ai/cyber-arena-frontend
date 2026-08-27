@@ -1,8 +1,10 @@
 // Leaderboard — standings published by CAMPAIGNS.
 //
-// The midend is a RELAY. It caches nothing about a ranking — it keeps a routing
-// table of campaign ids and endpoints, and asks the campaign itself for
-// everything else. A campaign (cyber-arena-deploy/campaign/) is a persistent
+// The midend is a RELAY. It persists nothing about a ranking — it keeps a
+// routing table of campaign ids and endpoints, and asks the campaign itself for
+// everything else, behind a short-TTL response cache. A cached copy served
+// while the campaign is unreachable arrives marked `stale`, and is shown as
+// such: a held ranking must never be presented as a current one. A campaign (cyber-arena-deploy/campaign/) is a persistent
 // process beside the midend: it pulls the run list, applies its own selection
 // and algorithm, and serves the result over loopback. So every field on this
 // page is the campaign's own word, read live — including its name. That is the point: a ranking is one campaign's opinion, named and
@@ -57,7 +59,7 @@ if(!campaigns.length){
     picker.innerHTML = campaigns.map(c =>
       `<button data-c="${c.id}" class="${c.id === current.id ? 'on' : ''}${c.online ? '' : ' off'}"
          title="${esc(c.online ? (c.description || '') : (c.error || 'not responding'))}"
-        >${esc(c.name || c.id)} <b>${c.online ? c.entries : '—'}</b></button>`
+        >${esc(c.name || c.id)}${c.stale ? ' <i class="pstale" title="cached; the campaign is not answering">·</i>' : ''} <b>${c.online ? c.entries : '—'}</b></button>`
     ).join('');
     picker.querySelectorAll('button').forEach(b => b.onclick = () => {
       current = campaigns.find(c => c.id === b.dataset.c);
@@ -154,6 +156,8 @@ function meta(d){
     <div class="lb-facts">
       ${s.runs_used != null ? `<span><b>${s.runs_used}</b> of ${s.runs_total} runs ranked</span>` : ''}
       <span>ranked <b>${ago(d.ranked_at)}</b></span>
+      ${d.stale ? `<span class="lb-stale" title="${esc(d.stale_reason || 'campaign unreachable')}">
+        cached — the campaign stopped answering ${Math.round(d.stale_age_s)}s ago</span>` : ''}
     </div>
     ${notes ? `<ul class="lb-notes">${notes}</ul>` : ''}
   </div>`;

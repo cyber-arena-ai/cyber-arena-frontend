@@ -47,6 +47,10 @@
 .lb .prov-tag{font-family:'Hanken Grotesk';font-weight:800;font-size:9px;text-transform:uppercase;letter-spacing:.6px;
   color:#8a8378;border:1.5px solid #cfc7b7;padding:1px 5px;margin-left:8px;vertical-align:1px}
 
+/* a cached copy served while the campaign is unreachable — never silent */
+.lb-stale{color:#c2740f;font-weight:700}
+.filt button .pstale{font-style:normal;color:#e08a1e;font-weight:900}
+
 /* a registered campaign that is not answering — listed, not hidden */
 .filt button.off{border-color:#bcb4a4;color:#9a9282;border-style:dashed}
 .filt button.off.on{background:#8a8378;color:var(--paper);border-color:#8a8378}
