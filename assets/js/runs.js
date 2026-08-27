@@ -5,7 +5,10 @@ setActiveNav('runs.html');
 
 // the midend's run-filter selection (failed & smoke runs already dropped
 // server-side) — the page slices it into pages client-side
-const [D, H] = await Promise.all([loadJSON(api('/api/runs')), loadHarnesses()]);
+// nofail=1: the archive is about games that were actually played. Matches
+// that failed outright are dropped server-side; `unavailable` ones are kept
+// — those ran, we just could not rebuild the thread.
+const [D, H] = await Promise.all([loadJSON(api('/api/runs?nofail=1')), loadHarnesses()]);
 D.updated = D.updated || new Date().toISOString().slice(0, 10);
 const runs = D.runs;  // already newest-first from the API (run_filter ordering)
 
@@ -104,7 +107,6 @@ const STATES = [
   { key: 'pending',         label: 'pending' },
   { key: 'unavailable',     label: 'unavailable' },
   { key: 'analysis_failed', label: 'analysis failed' },
-  { key: 'failed',          label: 'failed' },
 ];
 const count = k => k === 'all' ? runs.length : runs.filter(r => r.state === k).length;
 document.getElementById('filt').innerHTML = STATES
