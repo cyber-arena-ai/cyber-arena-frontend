@@ -1,10 +1,11 @@
 // Leaderboard — standings published by CAMPAIGNS.
 //
-// The midend ranks nothing and stores no ranking. A campaign
-// (cyber-arena-deploy/campaign/) is a persistent process beside the midend: it
-// pulls the run list, applies its own selection and algorithm, and serves the
-// result over loopback, which the midend proxies on request. This page lists
-// what is registered and lets the reader choose whose standings to read. That is the point: a ranking is one campaign's opinion, named and
+// The midend is a RELAY. It caches nothing about a ranking — it keeps a routing
+// table of campaign ids and endpoints, and asks the campaign itself for
+// everything else. A campaign (cyber-arena-deploy/campaign/) is a persistent
+// process beside the midend: it pulls the run list, applies its own selection
+// and algorithm, and serves the result over loopback. So every field on this
+// page is the campaign's own word, read live — including its name. That is the point: a ranking is one campaign's opinion, named and
 // comparable, not an unattributed number handed down by the server.
 //
 // The table is GENERIC. Each campaign declares its own `columns`, so a new
@@ -40,17 +41,23 @@ if(!campaigns.length){
     match archive and publish their results here. None has registered yet, so there is
     nothing to show. This page stays deliberately blank rather than inventing a ranking.</div></div>`;
 } else {
-  // ?campaign=<id> makes a particular campaign's standings linkable
+  // ?campaign=<id> makes a particular campaign's standings linkable.
+  // Default to one that is actually answering — landing on an offline campaign
+  // when a working one exists would read as "the leaderboard is broken".
   const want = new URLSearchParams(location.search).get('campaign');
-  let current = campaigns.find(c => c.id === want) || campaigns[0];
+  let current = campaigns.find(c => c.id === want)
+             || campaigns.find(c => c.online) || campaigns[0];
 
   dek.innerHTML = `<b>${campaigns.length} ${campaigns.length === 1 ? 'campaign' : 'campaigns'}</b>`
     + ` · each ranks the archive its own way — pick whose standings to read.`;
 
   const paintPicker = () => {
+    // an offline campaign has no name to show — the midend does not keep one —
+    // so it is listed by id and visibly marked, not hidden
     picker.innerHTML = campaigns.map(c =>
-      `<button data-c="${c.id}" class="${c.id === current.id ? 'on' : ''}"
-         title="${esc(c.description || '')}">${esc(c.name || c.id)} <b>${c.entries}</b></button>`
+      `<button data-c="${c.id}" class="${c.id === current.id ? 'on' : ''}${c.online ? '' : ' off'}"
+         title="${esc(c.online ? (c.description || '') : (c.error || 'not responding'))}"
+        >${esc(c.name || c.id)} <b>${c.online ? c.entries : '—'}</b></button>`
     ).join('');
     picker.querySelectorAll('button').forEach(b => b.onclick = () => {
       current = campaigns.find(c => c.id === b.dataset.c);
@@ -81,10 +88,11 @@ async function show(id){
       const det = payload?.detail;
       const c = det?.campaign;
       board.innerHTML = `<div class="notice"><span class="tag">offline</span>
-        <div><b>${esc(c?.name || id)}</b> is registered but not responding.
-        ${c?.entries ? `Its last ranking had <b>${c.entries}</b> entrants,
-          ${c.source?.runs_used != null ? `over ${c.source.runs_used} of ${c.source.runs_total} runs,` : ''}
-          computed ${esc(ago(c.ranked_at))}.` : 'It had not published a ranking yet.'}
+        <div><b>${esc(id)}</b> is registered but not responding, so there is no
+        ranking to show. The midend relays this campaign rather than caching it,
+        so nothing is served while it is down — deliberately, since a remembered
+        ranking would go quietly wrong.
+        ${c?.last_seen ? ` Last heard from <b>${esc(ago(c.last_seen))}</b>.` : ''}
         <br><span class="lb-err">${esc(det?.error || `HTTP ${res.status}`)}</span></div></div>`;
       return;
     }
