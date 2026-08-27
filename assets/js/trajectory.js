@@ -124,8 +124,9 @@ function sysMsg(e){
   const who = e.by==='team1' ? t1.label : t2.label;
   const victim = e.victim==='team1' ? t1.label : t2.label;
   if(e.k==='steal'){
-    if(e.reason==='DUPLICATE')
-      return `<div class="sys dup" data-kind="event" data-mm-type="dup" data-mm-team="${e.by}">${who} re-submitted a stolen flag — duplicate, no points · ${fmtTime(e.t)}</div>`;
+    // any rejection reason (UNKNOWN | OWN | DUPLICATE | WRONG_PHASE | ERROR) — no points
+    if(e.accepted === false)
+      return `<div class="sys dup" data-kind="event" data-mm-type="dup" data-mm-team="${e.by}">${who} submitted a flag — rejected${e.reason ? ` (${esc(e.reason.toLowerCase().replace(/_/g,' '))})` : ''}, no points · ${fmtTime(e.t)}</div>`;
     return `<div class="sys steal ${e.by}" data-kind="event" data-mm-type="capture" data-mm-team="${e.by}"
               title="${fmtTime(e.t)} — ${who} captured ${victim}'s flag">
               <b><i class="fa-solid fa-flag"></i> ${who}</b> captured <b>${victim}'s</b> flag<span class="tm">${fmtTime(e.t)} · +1 flag</span></div>`;
@@ -169,7 +170,7 @@ document.getElementById('mmlegend').innerHTML = `
   <span><i class="s" style="background:${HH.team1.color};border-color:var(--ink)"></i>${t1.label} capture</span>
   <span><i class="s" style="background:${HH.team2.color};border-color:var(--ink)"></i>${t2.label} capture</span>
   <span><i class="s g"></i>service patch</span>
-  <span><i class="s d"></i>duplicate</span>
+  <span><i class="s d"></i>rejected submission</span>
   <span><i class="s" style="border:0;border-top:2px solid #c3b9a3;width:14px;height:0"></i>round start</span>`;
 
 const minimaps = [...document.querySelectorAll('.minimap')];
@@ -322,12 +323,13 @@ function paintAnBtn(st){
   const n = st.attempts || 0, max = st.max_attempts || 0;
   if(st.status === 'not_triggered'){
     anBtn.hidden = false; anBtn.disabled = false;
-    anBtn.innerHTML = '<i class="fa-solid fa-magnifying-glass-chart"></i>';
+    anBtn.textContent = 'analyse';
     anBtn.title = n ? `run post-match analysis — retry ${n}/${max}` : 'run post-match analysis';
   } else if(st.status === 'working_on'){
+    // the same button, greyed out — it is still the analyse action, just busy
     anBtn.hidden = false; anBtn.disabled = true;
-    anBtn.innerHTML = '<i class="fa-solid fa-hourglass-half fa-spin"></i>';
-    anBtn.title = 'working on';
+    anBtn.textContent = 'working on';
+    anBtn.title = 'analysis in progress';
   } else {
     anBtn.hidden = true;                    // ready | analysis_failure | not_available
   }
