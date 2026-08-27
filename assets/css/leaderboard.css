@@ -1,6 +1,7 @@
-/* Leaderboard — campaign picker + a generic standings table.
-   The table is driven by whatever `columns` a campaign declares, so these rules
-   must not assume a fixed set of stats. */
+/* Leaderboard — champion lead block + ranked list, driven by whatever `columns`
+   a campaign declares. The original design hardcoded wins/losses/flags; these
+   rules must not assume any particular stat, only that there are a few short
+   numbers per entrant. */
 
 .notice{display:flex;align-items:center;gap:14px;margin:16px 0 4px;padding:12px 16px;background:var(--paper);border:3px solid var(--ink);box-shadow:5px 5px 0 var(--pink);font-weight:600;font-size:14px;line-height:1.45;color:var(--ink)}
 .notice .tag{flex:none;align-self:flex-start;font-family:'Hanken Grotesk';font-weight:900;font-size:12px;text-transform:uppercase;letter-spacing:1px;color:var(--paper);background:var(--pink);padding:4px 10px;transform:rotate(-3deg)}
@@ -15,55 +16,70 @@
 .lb-facts{display:flex;gap:18px;flex-wrap:wrap;font-size:12px;color:#7a7468;margin:9px 2px 0;font-weight:600}
 .lb-facts b{color:var(--ink);font-weight:800}
 
-/* --- the table --- */
-.lb-wrap{overflow-x:auto;margin:16px 0 6px}          /* wide tables scroll, page never does */
-.lb{width:100%;border-collapse:collapse;border:3px solid var(--ink);background:var(--paper);min-width:560px}
-.lb th{font-family:'Hanken Grotesk';font-weight:800;font-size:10.5px;text-transform:uppercase;letter-spacing:1px;color:#7a7468;
-  text-align:right;padding:10px 12px;border-bottom:3px solid var(--ink);white-space:nowrap}
-.lb td{padding:11px 12px;text-align:right;border-bottom:2px solid #e6dfd2;font-family:'JetBrains Mono',monospace;font-size:13px;color:#4a443c}
-.lb tbody tr:last-child td{border-bottom:0}
-.lb .c-rank{width:44px;text-align:center;font-family:'Hanken Grotesk';font-weight:900;font-size:17px;color:var(--ink)}
-.lb .c-ent{text-align:left;white-space:nowrap}
-.lb .c-score{white-space:nowrap}
-
-.lb tr.top .c-rank{color:var(--blue)}
-.lb tr.top td{background:#fbf8f2}
-
-/* entrant cell — same duo disc + harness badge vocabulary as the runs archive */
-.lb .duo{display:inline-block;width:11px;height:11px;border-radius:50%;border:1.5px solid var(--ink);vertical-align:-1px;margin-right:7px}
-.lb .lb-model{font-weight:600;color:var(--ink)}
-.lb .hb{font-style:normal;font-weight:700;font-size:9px;letter-spacing:.5px;color:#8a8378;border:1.5px solid #cfc7b7;
-  border-radius:3px;padding:1px 4px;margin-left:6px;vertical-align:1px}
-
-/* score + its bar */
-.lb .sc{font-weight:600;color:var(--ink)}
-.lb .scbar{display:inline-block;width:62px;height:7px;border:1.5px solid var(--ink);margin-left:9px;vertical-align:0;background:var(--paper)}
-.lb .scbar i{display:block;height:100%}
-
-/* an entrant with too few matches to mean anything — ranked, but visibly so */
-.lb tr.prov td{color:#8f8879;background:repeating-linear-gradient(135deg,transparent 0 6px,rgba(0,0,0,.022) 6px 12px)}
-.lb tr.prov .lb-model{color:#6f6857}
-.lb .prov-tag{font-family:'Hanken Grotesk';font-weight:800;font-size:9px;text-transform:uppercase;letter-spacing:.6px;
-  color:#8a8378;border:1.5px solid #cfc7b7;padding:1px 5px;margin-left:8px;vertical-align:1px}
-
 /* a cached copy served while the campaign is unreachable — never silent */
 .lb-stale{color:#c2740f;font-weight:700}
 .filt button .pstale{font-style:normal;color:#e08a1e;font-weight:900}
-
-/* a registered campaign that is not answering — listed, not hidden */
+/* a registered campaign that is not answering */
 .filt button.off{border-color:#bcb4a4;color:#9a9282;border-style:dashed}
 .filt button.off.on{background:#8a8378;color:var(--paper);border-color:#8a8378}
-
 .lb-err{display:inline-block;margin-top:5px;font-family:'JetBrains Mono',monospace;font-size:11px;color:#8a8378}
-.notice .tag.offline,.lb-off .tag{background:#8a8378}
-
 .lb-loading{font-size:13px;color:#7a7468;padding:18px 2px}
+
+/* --- champion --- */
+.lead{display:grid;grid-template-columns:auto 1fr;gap:24px;align-items:center;background:var(--blue);color:var(--paper);padding:24px 28px;margin:16px 0 8px;position:relative;overflow:hidden}
+.lead:empty{display:none}
+.lead .big{font-size:120px;font-weight:900;line-height:.8;text-shadow:6px 6px 0 var(--pink)}
+.lead .who{font-size:34px;font-weight:900;text-transform:uppercase;letter-spacing:-1px}
+.lead .org{font-weight:600;font-size:15px;opacity:.9;text-transform:uppercase;letter-spacing:1px}
+.lead .stamp{position:absolute;top:18px;right:24px;border:3px solid var(--paper);color:var(--paper);font-weight:900;font-size:13px;padding:5px 12px;transform:rotate(8deg);letter-spacing:1px}
+.lead .nums{display:flex;gap:26px;margin-top:10px;flex-wrap:wrap}
+.lead .nums b{display:block;font-size:26px}
+.lead .nums span{font-size:12px;text-transform:uppercase;letter-spacing:1px;opacity:.85}
+/* the campaign's own score reads first and largest — the stats are its evidence */
+.lead .nums .score b{font-size:34px}
+.lead .nums .score{padding-right:22px;margin-right:4px;border-right:2px solid rgba(255,255,255,.35)}
+/* nobody cleared the match minimum: the leader is flagged, not crowned */
+.lead.prov{background:#8a8378 !important}
+.lead.prov .big{text-shadow:6px 6px 0 rgba(0,0,0,.22)}
+
+.lead:not(.in){opacity:0}
+.lead.in,.row{animation:floatin .55s cubic-bezier(.2,.7,.3,1) backwards;animation-delay:var(--d,0s)}
+@keyframes floatin{from{opacity:0;transform:translateY(22px)}to{opacity:1;transform:none}}
+@media(prefers-reduced-motion:reduce){.lead.in,.row{animation:none}}
+
+/* --- the rest of the field --- */
+.row{display:grid;grid-template-columns:60px 1fr auto auto;align-items:center;gap:18px;padding:14px 6px;border-bottom:2px solid var(--ink)}
+.row .n{font-size:34px;font-weight:900;font-variant-numeric:tabular-nums}
+.row .nm{font-size:21px;font-weight:800}
+.hchip{display:inline-block;vertical-align:2px;font-size:10px;font-weight:800;letter-spacing:.5px;color:var(--paper);padding:2px 6px;margin-right:9px;border:2px solid var(--ink)}
+.row .nm em{font-style:normal;font-weight:600;font-size:13px;display:block;color:#7a7468;text-transform:uppercase;letter-spacing:.5px}
+.row .elo{font-size:24px;font-weight:900}
+.row:hover{background:rgba(37,64,255,.06)}
+
+/* campaign-declared stats: a compact strip, one pair per column */
+.row .stats{display:flex;gap:14px;text-align:right}
+.row .stats b{display:block;font-size:16px;font-weight:800;font-variant-numeric:tabular-nums;color:#4a443c}
+.row .stats span{display:block;font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.7px;color:#9a9282}
+
+/* too few matches to mean anything — ranked, but visibly so */
+.row.prov{background:repeating-linear-gradient(135deg,transparent 0 6px,rgba(0,0,0,.022) 6px 12px)}
+.row.prov .nm,.row.prov .elo{color:#8f8879}
+.prov-tag{font-style:normal;font-family:'Hanken Grotesk';font-weight:800;font-size:9px;text-transform:uppercase;letter-spacing:.6px;
+  color:#8a8378;border:1.5px solid #cfc7b7;padding:1px 5px;margin-left:8px;vertical-align:3px}
+.lead .stamp .prov-tag{border-color:var(--paper);color:var(--paper)}
 
 .readmore{text-align:center;margin-top:26px}
 .readmore a{font-family:'Hanken Grotesk';font-weight:800;font-size:15px;color:var(--paper);background:var(--ink);text-decoration:none;padding:10px 18px;display:inline-block;box-shadow:4px 4px 0 var(--blue)}
 .readmore a:hover{box-shadow:4px 4px 0 var(--pink)}
 
-@media (max-width:640px){
-  .lb th,.lb td{padding:9px 8px;font-size:12px}
-  .lb .scbar{display:none}
+@media(max-width:860px){
+  .row{grid-template-columns:46px 1fr auto;gap:12px}
+  .row .stats{display:none}          /* the score still ranks; stats need width */
+}
+@media(max-width:680px){
+  .lead{grid-template-columns:1fr}
+  .lead .big{font-size:80px}
+  .lead .nums{gap:16px}
+  .lead .nums .score{border-right:0;padding-right:0}
+  .row .nm{font-size:18px}
 }

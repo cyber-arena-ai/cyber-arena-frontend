@@ -19,6 +19,10 @@ setActiveNav('leaderboard.html');
 const dek = document.getElementById('dek');
 const picker = document.getElementById('campaigns');
 const board = document.getElementById('board');
+const lead = document.getElementById('lead');
+const rows = document.getElementById('rows');
+const clearBoard = () => { lead.innerHTML = ''; lead.className = 'lead';
+                           lead.style.background = ''; rows.innerHTML = ''; };
 
 const [list, H] = await Promise.all([
   loadJSON(api('/api/campaigns')).catch(() => ({ campaigns: [] })),
@@ -79,6 +83,7 @@ function esc(s){ return String(s ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<
 
 async function show(id){
   board.innerHTML = `<p class="lb-loading">Loading ${esc(id)}…</p>`;
+  clearBoard();
 
   // The ranking is fetched live from the campaign process, so "registered but
   // not answering" is a real state with its own 503 — report it as that,
@@ -113,39 +118,69 @@ async function show(id){
   // A registered campaign that has not published a ranking yet is a real state,
   // not an error — say so instead of rendering an empty table.
   if(!entries.length){
+    clearBoard();
     board.innerHTML = meta(d) + `<div class="notice"><span class="tag">pending</span>
       <div><b>${esc(d.name || id)}</b> is registered but has not published a ranking yet.</div></div>`;
     return;
   }
 
-  const head = `<tr><th class="c-rank">#</th><th class="c-ent">Entrant</th>
-    <th class="c-score">Rate</th>${cols.map(c => `<th>${esc(c.label || c.key)}</th>`).join('')}</tr>`;
+  board.innerHTML = meta(d);
 
-  const rows = entries.map(e => {
-    // identity is resolved HERE, from the harness table — the campaign only ever
-    // publishes the raw <model x harness> pair
-    const t = e.entrant || {};
-    const h = H.get(t);
-    const duo = H.duoCSS(t);
-    const pct = Math.max(0, Math.min(100, Math.round((e.score ?? 0) * 100)));
-    return `<tr class="${e.provisional ? 'prov' : ''}${e.rank === 1 ? ' top' : ''}">
-      <td class="c-rank">${e.rank ?? ''}</td>
-      <td class="c-ent">
-        <span class="duo" style="background:${duo}"></span>
-        <span class="lb-model">${esc(e.label || t.model || '?')}</span>
-        <i class="hb" title="${esc(h.fullName)}">${esc(h.shortName)}</i>
-        ${e.provisional ? `<span class="prov-tag" title="too few matches to be meaningful — ranked below everyone who cleared the bar">provisional</span>` : ''}
-      </td>
-      <td class="c-score">
-        <span class="sc">${esc(e.score_label ?? pct + '%')}</span>
-        <span class="scbar"><i style="width:${pct}%;background:${h.color}"></i></span>
-      </td>
-      ${cols.map(c => `<td>${esc((e.stats || {})[c.key] ?? '—')}</td>`).join('')}
-    </tr>`;
+  // Identity is resolved HERE, from the harness table — the campaign only ever
+  // publishes the raw <model x harness> pair.
+  const idLine = h => [h.fullName, h.org].filter(Boolean).join(' · ');
+  const statCells = e => cols.map(c =>
+    `<div><b>${esc((e.stats || {})[c.key] ?? '—')}</b><span>${esc(c.label || c.key)}</span></div>`
+  ).join('');
+
+  // --- champion block ---
+  const L = entries[0], hL = H.get(L.entrant || {});
+  // Sorting puts provisional entrants last, so a provisional leader means NOBODY
+  // cleared the match minimum. Crowning them "champion" on one or two games would
+  // be exactly the overclaim the ranking is built to avoid — say what it is.
+  const stamp = L.provisional
+    ? `PROVISIONAL · ${esc(hL.shortName)}`
+    : `CHAMPION · ${esc(hL.shortName)}`;
+  lead.className = `lead in${L.provisional ? ' prov' : ''}`;
+  lead.style.background = H.duoCSS(L.entrant || {});   // wears both halves of the combo
+  lead.innerHTML = `
+    <div class="big">1</div>
+    <div>
+      <div class="stamp">${stamp}</div>
+      <div class="who">${esc(L.label || L.entrant?.model || '?')}</div>
+      <div class="org">${esc(idLine(hL))}</div>
+      <div class="nums">
+        <div class="score"><b>${esc(L.score_label ?? '')}</b><span>${esc(scoreLabel(d))}</span></div>
+        ${statCells(L)}
+      </div>
+    </div>`;
+
+  // --- the rest of the field ---
+  rows.innerHTML = entries.slice(1).map((e, i) => {
+    const t = e.entrant || {}, h = H.get(t);
+    return `
+    <div class="row${e.provisional ? ' prov' : ''}" style="--d:${Math.min(i, 12) * 70}ms">
+      <div class="n">${e.rank ?? ''}</div>
+      <div class="nm">
+        <span class="hchip" style="background:${H.duoCSS(t)}" title="${esc(h.fullName)}">${esc(h.shortName)}</span>${esc(e.label || t.model || '?')}
+        ${e.provisional ? `<i class="prov-tag" title="too few matches to be meaningful — ranked below everyone who cleared the bar">provisional</i>` : ''}
+        <em>${esc(idLine(h))}</em>
+      </div>
+      <div class="elo">${esc(e.score_label ?? '')}</div>
+      <div class="stats">${statCells(e)}</div>
+    </div>`;
   }).join('');
+}
 
-  board.innerHTML = meta(d) + `<div class="lb-wrap"><table class="lb">
-    <thead>${head}</thead><tbody>${rows}</tbody></table></div>`;
+// The score's own name comes from the campaign's algorithm line — it is not
+// always a win rate, and labelling every campaign's number "Rate" would be a lie
+// the moment one ranks by something else.
+function scoreLabel(d){
+  const a = String(d.algorithm || '').toLowerCase();
+  if(a.includes('win rate')) return 'Win rate';
+  if(a.includes('elo')) return 'ELO';
+  if(a.includes('points')) return 'Points';
+  return 'Score';
 }
 
 // What a reader needs in order to trust the number: how it was computed, over
