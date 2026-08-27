@@ -24,6 +24,13 @@ if(!runId){
 const [D, H] = await Promise.all([loadJSON(api(`/api/runs/${runId}/trajectory`)), loadHarnesses()]);
 const t1 = D.teams.team1, t2 = D.teams.team2;
 
+// A `solo` run has ONE agent. The orchestrator still fills the opposing seat —
+// with an `idle` placeholder carrying no harness, no turns and no tokens — but
+// it is NOT a competitor, so nothing on this page may present it as one: no
+// scoreboard side, no time budget, no minimap, no analysis card, and no
+// win/draw verdict against it.
+const isSolo = D.mode === 'solo';
+
 // resolve each team to its <model × harness> identity for names/labels only.
 // With just two teams on this page, theming stays on the stock theme colors —
 // --t1/--t2 default to --blue/--pink in the CSS; harness identity is textual.
@@ -39,7 +46,8 @@ const llabel = D.winner === 'team1' ? t2.label : t1.label;
 
 document.getElementById('mastcat').textContent = D.category;
 document.getElementById('mastname').textContent = D.name;
-document.title = `${D.name}: ${t1.label} vs ${t2.label} · CyberArena`;
+document.title = isSolo ? `${D.name}: ${t1.label} solo · CyberArena`
+                       : `${D.name}: ${t1.label} vs ${t2.label} · CyberArena`;
 document.getElementById('dateline').textContent = D.date;
 
 // defeated team: its own team color, struck through by a slightly (randomly)
@@ -55,7 +63,17 @@ const cname = key => `<span style="color:${HH[key].color}">${(key === 'team1' ? 
 // winner is null while a match is live — show a "live · X vs Y" headline then
 const leader = D.score.team1 === D.score.team2 ? null
   : (D.score.team1 > D.score.team2 ? 'team1' : 'team2');
-if(D.status === 'failed'){
+const captured = (D.attack_flags?.team1 || 0) > 0;
+if(isSolo){
+  // no opponent => no "def." and no "draw"; the result is whether it captured
+  const live = D.status === 'running'
+    ? `<mark style="background:${HH.team1.color}">LIVE</mark> ` : '';
+  document.getElementById('hl').innerHTML = D.status === 'failed' || D.status === 'running'
+    ? `${live}${cname('team1')} <em>solo run</em>`
+    : captured
+      ? `<mark style="background:${HH.team1.color}">${t1.label}</mark> captured solo`
+      : `${cname('team1')} <em>solo run</em> — no capture`;
+} else if(D.status === 'failed'){
   document.getElementById('hl').innerHTML =
     `${cname('team1')} <em>vs</em> ${cname('team2')}`;
 } else if(!D.winner){
@@ -71,11 +89,11 @@ if(D.status === 'failed'){
 }
 
 function side(team, key, cls){
-  const w = D.winner === key;
+  const w = isSolo ? (key === 'team1' && captured) : D.winner === key;
   // identity line = the full combo: model · harness
   const md = [team.model, HH[key].fullName].filter(Boolean).join(' · ');
   return `<div class="side ${cls} ${w?'win':''}">
-    ${w?'<div class="stampwin">Winner</div>':''}
+    ${w?`<div class="stampwin">${isSolo ? 'Captured' : 'Winner'}</div>`:''}
     <div class="nm">${team.label}</div><div class="md">${md}</div>
     <div class="pts">${D.score[key]}</div>
     <div class="br"><i class="fa-solid fa-flag"></i> ${D.attack_flags[key]} captured · ${D.defense_patches[key]} patched</div></div>`;
@@ -96,7 +114,7 @@ if(mhost && M){
   };
   mhost.innerHTML = `<div class="mhead">Time budget · <b class="mt-think-t">thinking</b> / <b class="mt-tool-t">tool exec</b> / <b class="mt-un-t">idle+untracked</b>`
     + `<span class="msub">thinking = Σ model-inference latency · tool = Σ tool exec · wall = game duration${Object.values(M).some(m=>m.overlap)?' · *concurrent API calls overlap wall':''}</span></div>`
-    + mrow('team1',t1) + mrow('team2',t2);
+    + mrow('team1',t1) + (isSolo ? '' : mrow('team2',t2));
 }
 
 /* ---- chat thread ---- */
@@ -124,14 +142,16 @@ function bubble(turn){
 }
 function sysMsg(e){
   const who = e.by==='team1' ? t1.label : t2.label;
-  const victim = e.victim==='team1' ? t1.label : t2.label;
+  // solo: the flag belongs to the challenge service, not to the idle seat —
+  // "captured idle's flag" would name the placeholder as a victim
+  const victim = isSolo ? null : (e.victim==='team1' ? t1.label : t2.label);
   if(e.k==='steal'){
     // any rejection reason (UNKNOWN | OWN | DUPLICATE | WRONG_PHASE | ERROR) — no points
     if(e.accepted === false)
       return `<div class="sys dup" data-kind="event" data-mm-type="dup" data-mm-team="${e.by}">${who} submitted a flag — rejected${e.reason ? ` (${esc(e.reason.toLowerCase().replace(/_/g,' '))})` : ''}, no points · ${fmtTime(e.t)}</div>`;
     return `<div class="sys steal ${e.by}" data-kind="event" data-mm-type="capture" data-mm-team="${e.by}"
-              title="${fmtTime(e.t)} — ${who} captured ${victim}'s flag">
-              <b><i class="fa-solid fa-flag"></i> ${who}</b> captured <b>${victim}'s</b> flag<span class="tm">${fmtTime(e.t)} · +1 flag</span></div>`;
+              title="${fmtTime(e.t)} — ${who} captured ${victim ? `${victim}'s` : 'the'} flag">
+              <b><i class="fa-solid fa-flag"></i> ${who}</b> captured ${victim ? `<b>${victim}'s</b>` : 'the'} flag<span class="tm">${fmtTime(e.t)} · +1 flag</span></div>`;
   }
   return `<div class="patchwrap" data-kind="event" data-mm-type="patch" data-mm-team="${e.by}" title="${fmtTime(e.t)} — ${who} patched">
             <span class="sys patch"><i class="fa-solid fa-wrench"></i> ${who} patched the service · ${fmtTime(e.t)}</span></div>`;
@@ -165,12 +185,18 @@ if(D.parse_failed){
 /* ---- per-team minimaps ---- */
 document.getElementById('mmh1').textContent = HH.team1.shortName;
 document.getElementById('mmh1').title = `${t1.label} · ${HH.team1.fullName}`;
-document.getElementById('mmh2').textContent = HH.team2.shortName;
-document.getElementById('mmh2').title = `${t2.label} · ${HH.team2.fullName}`;
+// solo: the idle seat has no track to scrub — drop its minimap entirely rather
+// than render an empty lane that reads as an opponent who did nothing
+if(isSolo){
+  document.querySelector('.minimap[data-team="team2"]')?.remove();
+} else {
+  document.getElementById('mmh2').textContent = HH.team2.shortName;
+  document.getElementById('mmh2').title = `${t2.label} · ${HH.team2.fullName}`;
+}
 
 document.getElementById('mmlegend').innerHTML = `
   <span><i class="s" style="background:${HH.team1.color};border-color:var(--ink)"></i>${t1.label} capture</span>
-  <span><i class="s" style="background:${HH.team2.color};border-color:var(--ink)"></i>${t2.label} capture</span>
+  ${isSolo ? '' : `<span><i class="s" style="background:${HH.team2.color};border-color:var(--ink)"></i>${t2.label} capture</span>`}
   <span><i class="s g"></i>service patch</span>
   <span><i class="s d"></i>rejected submission</span>
   <span><i class="s" style="border:0;border-top:2px solid #c3b9a3;width:14px;height:0"></i>round start</span>`;
@@ -258,7 +284,13 @@ statusBadge();
 
 /* ---- rebuild scoreboard/headline (used by live updates) ---- */
 function refreshBoard(){
-  document.getElementById('board').innerHTML =
+  const board = document.getElementById('board');
+  if(isSolo){
+    board.style.gridTemplateColumns = '1fr';   // .board is 1fr/80px/1fr for a duel
+    board.innerHTML = side(t1,'team1','t1');
+    return;
+  }
+  board.innerHTML =
     side(t1,'team1','t1') + `<div class="mid">vs</div>` + side(t2,'team2','t2');
 }
 
@@ -421,7 +453,7 @@ async function renderAnalysis(pre){
   // one card per module — the panel is a grid of riso cards, not one block
   const card = (cls, title, body) =>
     body ? `<article class="an-card ${cls}"><h4>${title}</h4>${body}</article>` : '';
-  const utilBars = util('team1') + util('team2');
+  const utilBars = util('team1') + (isSolo ? '' : util('team2'));
 
   const panel = document.createElement('section');
   panel.className = 'analysis';
@@ -433,7 +465,7 @@ async function renderAnalysis(pre){
         ${a.headline ? `<span class="lede-div"></span><p class="lede-details">${esc(a.headline)}</p>` : ''}
       </article>` : ''}
       ${card('t1', `${t1.label} — failed attacks ${CLS_KEY}`, `<ul class="an-list">${outcomeRows('team1')}</ul>`)}
-      ${card('t2', `${t2.label} — failed attacks ${CLS_KEY}`, `<ul class="an-list">${outcomeRows('team2')}</ul>`)}
+      ${isSolo ? '' : card('t2', `${t2.label} — failed attacks ${CLS_KEY}`, `<ul class="an-list">${outcomeRows('team2')}</ul>`)}
       ${flagRows ? card('wide', 'Accepted flags — intended?', `<ul class="an-list flags">${flagRows}</ul>`) : ''}
       ${utilBars ? card('wide', `Time utilization <span class="an-key">productive / low-value / idle</span>`, utilBars) : ''}
       ${a.conversion ? card('note', 'Conversion', `<p>${esc(a.conversion)}</p>`) : ''}
