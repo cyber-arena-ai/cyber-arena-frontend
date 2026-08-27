@@ -4,11 +4,12 @@ import { loadJSON, loadHarnesses, fmtTime, setActiveNav, renderPager, api } from
 setActiveNav('runs.html');
 
 // The API returns every run by default; the page pages client-side over the
-// whole list, so D.count and the rendered rows always agree. nofail=1 drops
-// matches that failed outright: the archive is about games that were actually
-// played. `unavailable` runs are kept — those ran, we just could not rebuild
-// the thread from the artifact.
-const [D, H] = await Promise.all([loadJSON(api('/api/runs?nofail=1')), loadHarnesses()]);
+// whole list, so D.count and the rendered rows always agree.
+//   nofail=1   drop matches that never happened
+//   withtraj=1 drop runs with no readable thread — `unavailable` (the backend
+//              GC'd the artifact before we parsed it) and `pending`
+// Together: matches that were played AND can be opened.
+const [D, H] = await Promise.all([loadJSON(api('/api/runs?nofail=1&withtraj=1')), loadHarnesses()]);
 D.updated = D.updated || new Date().toISOString().slice(0, 10);
 const runs = D.runs;  // already newest-first from the API
 

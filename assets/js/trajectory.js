@@ -6,10 +6,12 @@ setActiveNav('trajectory.html');
 const params = new URLSearchParams(location.search);
 let runId = params.get('run');
 
-// "Random Match": no ?run given -> pick a random match from the run list
+// "Random Match": no ?run given -> pick from runs that were played AND have
+// a thread to show (withtraj=1) — otherwise most picks land on an
+// `unavailable` match whose artifact was GC'd before we could parse it.
 if(!runId){
   try {
-    const pool = (await loadJSON(api('/api/runs?nofail=1'))).runs || [];
+    const pool = (await loadJSON(api('/api/runs?nofail=1&withtraj=1'))).runs || [];
     if(pool.length) runId = pool[Math.floor(Math.random() * pool.length)].id;
   } catch { /* fall through to the message below */ }
 }
