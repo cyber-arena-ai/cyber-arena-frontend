@@ -358,8 +358,7 @@ async function anPollUntilSettled(){
 if(anBtn) anBtn.addEventListener('click', async () => {
   paintAnBtn({ status: 'working_on' });
   try {
-    const res = await fetch(api(`/api/runs/${runId}/analysis`), { method: 'POST' });
-    const st = await res.json();
+    const st = await loadJSON(api(`/api/runs/${runId}/analysis`), { method: 'POST' });
     paintAnBtn(st);
     if(st.status === 'working_on') return anPollUntilSettled();
     renderAnalysis(st);
@@ -370,6 +369,12 @@ async function renderAnalysis(pre){
   // D.analysis is the copy embedded in the trajectory — a cache hit with no
   // `status` field of its own, so tag it ready before the switch below.
   let a = pre || (D.analysis ? { ...D.analysis, status: 'ready' } : null);
+  // Only a finished+succeeded match can ever have an analysis. Asking about a
+  // live, failed or unparseable one is a guaranteed `not_available` round-trip.
+  if(!a && (D.status !== 'finished' || !D.succeeded || D.parse_failed)){
+    paintAnBtn({ status: 'not_available' });
+    return;
+  }
   if(!a) a = await anState();
   paintAnBtn(a);
   if(a.status === 'working_on') { anPollUntilSettled(); return; }

@@ -81,9 +81,9 @@
 .filt button.on b{opacity:.85}
 .filt button.live{border-color:var(--pink);color:var(--pink)}
 .filt button.live.on{background:var(--pink);color:var(--paper)}
-.filt button.analysing{border-color:#e08a1e;color:#c2740f}
-.filt button.analysing.on{background:#e08a1e;color:var(--paper)}
+.filt button.pending{border-color:#e08a1e;color:#c2740f}
+.filt button.pending.on{background:#e08a1e;color:var(--paper)}
 .filt button.analysis_failed{border-color:#b0472e;color:#b0472e}
 .filt button.analysis_failed.on{background:#b0472e;color:var(--paper)}
-.filt button.failed{border-color:#8a8378;color:#8a8378}
-.filt button.failed.on{background:#8a8378;color:var(--paper)}
+.filt button.unavailable{border-color:#8a8378;color:#8a8378}
+.filt button.unavailable.on{background:#8a8378;color:var(--paper)}
