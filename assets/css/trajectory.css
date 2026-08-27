@@ -215,3 +215,10 @@
 .an-btn[hidden]{display:none}
 .an-btn .fa-spin{animation-duration:1.6s}
 @media(max-width:560px){.an-btn{width:38px;height:38px;font-size:15px}}
+
+/* ---- unparseable run: the thread cannot be reconstructed ---- */
+.thread-unavailable{border:2px dashed var(--mut);padding:26px 22px;margin:8px 0;
+  background:var(--paper2);color:var(--ink)}
+.thread-unavailable h3{font-weight:900;font-size:19px;letter-spacing:-.3px;margin-bottom:8px}
+.thread-unavailable p{font-size:14.5px;line-height:1.55;max-width:60ch}
+.thread-unavailable .tu-note{margin-top:10px;color:var(--mut);font-size:13px}

@@ -147,7 +147,17 @@ function renderItem(item){
   return h + (item.kind==='event' ? sysMsg(item) : bubble(item));
 }
 const chat = document.getElementById('chat');
-chat.innerHTML = D.feed.map(renderItem).join('');
+// A run the midend could not parse still returns a schema-valid trajectory, but
+// an empty one. Say so — an empty thread otherwise reads as "nothing happened".
+if(D.parse_failed){
+  chat.innerHTML = `<div class="thread-unavailable">
+    <h3>Thread unavailable</h3>
+    <p>This match ran, but its trajectory could not be reconstructed${D.parse_error ? ` — ${esc(D.parse_error)}` : ''}.</p>
+    <p class="tu-note">The match record above is from the backend job. The turn-by-turn thread needs the run artifact, which is missing or unreadable.</p>
+  </div>`;
+} else {
+  chat.innerHTML = D.feed.map(renderItem).join('');
+}
 
 /* ---- per-team minimaps ---- */
 document.getElementById('mmh1').textContent = HH.team1.shortName;
@@ -250,7 +260,10 @@ function refreshBoard(){
 }
 
 /* ---- live streaming (in-flight matches) ---- */
-if(D.status === 'running'){
+// never stream into a placeholder: the midend does not write placeholders for
+// live runs, so this pairing should not occur — but appending turns underneath
+// an "unavailable" notice would be incoherent if it ever did.
+if(D.status === 'running' && !D.parse_failed){
   // ?since = what we already rendered, so the stream sends only NEW turns
   const es = new EventSource(api(`/api/runs/${runId}/stream?since=${D.feed.length}`));
   let rebuildTimer = null;
