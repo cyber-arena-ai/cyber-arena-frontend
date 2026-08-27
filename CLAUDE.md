@@ -19,7 +19,7 @@ read the repo root [../CLAUDE.md](../CLAUDE.md).
 | File | Module | Purpose |
 |---|---|---|
 | `index.html` | *(none — inline)* | **Homepage / explainer.** Self-contained marketing page. Fetches **nothing**. |
-| `leaderboard.html` | `assets/js/leaderboard.js` | Season standings of entrants (⟨model × harness⟩ pairs). |
+| `leaderboard.html` | `assets/js/leaderboard.js` | **Empty** — title and nav only. The derived standings were removed; see the repo root CLAUDE.md §4. |
 | `runs.html` | `assets/js/runs.js` | Match archive (results ledger); rows link into a match thread. |
 | `games.html` | `assets/js/games.js` | Challenge/game catalogue (reads the challenge registry). |
 | `trajectory.html` | `assets/js/trajectory.js` | One match as a chat thread between the two agents, with a per-team minimap for scrubbing. Opened via `trajectory.html?run=<id>`. |
@@ -51,7 +51,7 @@ API, not bundled `data/*.json`.
 - **`REGISTRY_BASE`** → the public challenge-warehouse repo, served via jsDelivr CDN by default;
   override with `?reg=<base>`. Used by the Games page. Helper: `reg('/index.json')`.
 
-Use `api('/api/...')` to build midend URLs. Endpoints used: `/api/harnesses`, `/api/leaderboard`,
+Use `api('/api/...')` to build midend URLs. Endpoints used: `/api/harnesses`,
 `/api/runs`, `/api/runs/{id}/trajectory`, `/api/runs/{id}/analysis`, and the SSE
 `/api/runs/{id}/stream` for live matches. A match is opened by job **id**:
 `trajectory.html?run=<id>`.
