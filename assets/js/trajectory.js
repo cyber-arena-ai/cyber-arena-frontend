@@ -267,7 +267,10 @@ function refreshBoard(){
 // live runs, so this pairing should not occur — but appending turns underneath
 // an "unavailable" notice would be incoherent if it ever did.
 if(D.status === 'running' && !D.parse_failed){
-  // ?since = what we already rendered, so the stream sends only NEW turns
+    // ?since = what we already rendered, so the FIRST connect sends only new
+    // turns. On a RECONNECT the browser re-requests this same url with `since`
+    // frozen at page-load, so resumption rides on the SSE event id instead:
+    // the server stamps each feed frame with its index and honours Last-Event-ID.
   const es = new EventSource(api(`/api/runs/${runId}/stream?since=${D.feed.length}`));
   let rebuildTimer = null;
   const scheduleRebuild = () => {           // coalesce a burst of appends into one rebuild
@@ -299,7 +302,13 @@ if(D.status === 'running' && !D.parse_failed){
     // reload to pull the frozen + analyzed match
     setTimeout(() => location.reload(), 1500);
   });
-  es.onerror = () => es.close();
+  es.onerror = () => {
+    // Don't kill the stream on a transient drop — EventSource retries by
+    // itself, and Last-Event-ID makes the retry resume rather than replay, so
+    // a blip no longer costs the rest of the match. Give up only once the
+    // browser has (readyState CLOSED, e.g. the run 404s).
+    if(es.readyState === EventSource.CLOSED) es.close();
+  };
 }
 
 /* ---- analysis panel (finished + succeeded) ---- */
