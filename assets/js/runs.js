@@ -3,11 +3,13 @@ import { loadJSON, loadHarnesses, fmtTime, setActiveNav, renderPager, api } from
 
 setActiveNav('runs.html');
 
-// The API returns every run newest-first; the page slices it into pages
-// client-side. nofail=1 drops matches that failed outright — the archive is
-// about games that were actually played. `unavailable` runs are kept: those
-// ran, we just could not rebuild the thread.
-const [D, H] = await Promise.all([loadJSON(api('/api/runs?nofail=1')), loadHarnesses()]);
+// limit=0 = every run. The page pages client-side and prints D.count in the
+// masthead, so a truncated payload would show "313 matches" above a 200-row
+// list — and silently hide the oldest runs, which are exactly the unavailable
+// ones. nofail=1 drops matches that failed outright: the archive is about games
+// that were actually played. `unavailable` runs are kept — those ran, we just
+// could not rebuild the thread.
+const [D, H] = await Promise.all([loadJSON(api('/api/runs?nofail=1&limit=0')), loadHarnesses()]);
 D.updated = D.updated || new Date().toISOString().slice(0, 10);
 const runs = D.runs;  // already newest-first from the API
 
