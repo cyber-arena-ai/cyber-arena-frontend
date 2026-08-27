@@ -14,7 +14,6 @@
   color:var(--paper);background:var(--ink);padding:3px 8px}
 .lb-facts{display:flex;gap:18px;flex-wrap:wrap;font-size:12px;color:#7a7468;margin:9px 2px 0;font-weight:600}
 .lb-facts b{color:var(--ink);font-weight:800}
-.lb-notes{margin:8px 0 0;padding-left:18px;font-size:12px;line-height:1.6;color:#7a7468}
 
 /* --- the table --- */
 .lb-wrap{overflow-x:auto;margin:16px 0 6px}          /* wide tables scroll, page never does */

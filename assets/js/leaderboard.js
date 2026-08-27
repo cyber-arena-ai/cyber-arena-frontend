@@ -37,6 +37,7 @@ const ago = iso => {
 };
 
 if(!campaigns.length){
+  dek.style.display = '';
   dek.innerHTML = `<b>No campaigns registered.</b>`;
   board.innerHTML = `<div class="notice"><span class="tag">empty</span>
     <div>Standings are produced by <b>campaigns</b> — ranking processes that read the
@@ -50,8 +51,9 @@ if(!campaigns.length){
   let current = campaigns.find(c => c.id === want)
              || campaigns.find(c => c.online) || campaigns[0];
 
-  dek.innerHTML = `<b>${campaigns.length} ${campaigns.length === 1 ? 'campaign' : 'campaigns'}</b>`
-    + ` · each ranks the archive its own way — pick whose standings to read.`;
+  // no dek here: the picker directly below is self-explanatory. The element stays
+  // for the no-campaigns case, hidden while there is something to show.
+  dek.style.display = 'none';
 
   const paintPicker = () => {
     // an offline campaign has no name to show — the midend does not keep one —
@@ -150,7 +152,9 @@ async function show(id){
 // how much of the archive, what was left out, and how stale it is.
 function meta(d){
   const s = d.source || {};
-  const notes = (d.notes || []).map(n => `<li>${esc(n)}</li>`).join('');
+  // `d.notes` (the campaign's per-filter exclusion breakdown) is deliberately not
+  // rendered — the facts line's "N of M runs ranked" carries the same point. It
+  // remains in the API for anyone who wants the detail.
   return `<div class="lb-meta">
     <div class="lb-algo"><span class="tag">how</span>${esc(d.algorithm || '—')}</div>
     <div class="lb-facts">
@@ -159,6 +163,5 @@ function meta(d){
       ${d.stale ? `<span class="lb-stale" title="${esc(d.stale_reason || 'campaign unreachable')}">
         cached — the campaign stopped answering ${Math.round(d.stale_age_s)}s ago</span>` : ''}
     </div>
-    ${notes ? `<ul class="lb-notes">${notes}</ul>` : ''}
   </div>`;
 }
