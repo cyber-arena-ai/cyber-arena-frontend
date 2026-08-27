@@ -295,13 +295,66 @@ function analysisFailedNote(){
      <p class="an-fail-note">Deep analysis could not be produced for this match after repeated attempts. The match thread below is complete.</p>`;
   document.getElementById('metrics').after(panel);
 }
-async function renderAnalysis(){
-  let a = D.analysis;
-  if(!a && D.succeeded && !D.analysis_failed){
-    try { a = await loadJSON(api(`/api/runs/${runId}/analysis`)); } catch { return; }
+/* Analysis is MANUAL. The midend FSM decides what the button does:
+     not_triggered    -> square button, clickable  ("run analysis")
+     working_on       -> grey, disabled            ("working on")
+     ready            -> hidden, panel renders
+     analysis_failure -> hidden, fail note renders
+     not_available    -> hidden (live or failed match)                  */
+const anBtn = document.getElementById('an-btn');
+const AN_POLL_MS = 3000;
+
+function paintAnBtn(st){
+  if(!anBtn) return;
+  const n = st.attempts || 0, max = st.max_attempts || 0;
+  if(st.status === 'not_triggered'){
+    anBtn.hidden = false; anBtn.disabled = false;
+    anBtn.innerHTML = '<i class="fa-solid fa-magnifying-glass-chart"></i>';
+    anBtn.title = n ? `run post-match analysis — retry ${n}/${max}` : 'run post-match analysis';
+  } else if(st.status === 'working_on'){
+    anBtn.hidden = false; anBtn.disabled = true;
+    anBtn.innerHTML = '<i class="fa-solid fa-hourglass-half fa-spin"></i>';
+    anBtn.title = 'working on';
+  } else {
+    anBtn.hidden = true;                    // ready | analysis_failure | not_available
   }
-  if(D.analysis_failed || a?.status === 'failed'){ analysisFailedNote(); return; }
-  if(!a || a.status === 'pending' || a.error) return;
+}
+
+async function anState(){
+  try { return await loadJSON(api(`/api/runs/${runId}/analysis`), { cache: 'no-store' }); }
+  catch { return { status: 'not_available' }; }
+}
+
+// Poll while the midend is working, then render whatever it settled on.
+async function anPollUntilSettled(){
+  for(;;){
+    await new Promise(r => setTimeout(r, AN_POLL_MS));
+    const st = await anState();
+    paintAnBtn(st);
+    if(st.status !== 'working_on'){ renderAnalysis(st); return; }
+  }
+}
+
+if(anBtn) anBtn.addEventListener('click', async () => {
+  paintAnBtn({ status: 'working_on' });
+  try {
+    const res = await fetch(api(`/api/runs/${runId}/analysis`), { method: 'POST' });
+    const st = await res.json();
+    paintAnBtn(st);
+    if(st.status === 'working_on') return anPollUntilSettled();
+    renderAnalysis(st);
+  } catch { paintAnBtn({ status: 'not_triggered' }); }
+});
+
+async function renderAnalysis(pre){
+  // D.analysis is the copy embedded in the trajectory — a cache hit with no
+  // `status` field of its own, so tag it ready before the switch below.
+  let a = pre || (D.analysis ? { ...D.analysis, status: 'ready' } : null);
+  if(!a) a = await anState();
+  paintAnBtn(a);
+  if(a.status === 'working_on') { anPollUntilSettled(); return; }
+  if(a.status === 'analysis_failure'){ analysisFailedNote(); return; }
+  if(!a || a.status !== 'ready' || a.error) return;
 
   // A/B/C = WHY an attack failed (rubric §2). Hover for the meaning.
   const CLS_MEAN = {
