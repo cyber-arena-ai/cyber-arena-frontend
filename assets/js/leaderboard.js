@@ -1,9 +1,10 @@
 // Leaderboard — standings published by CAMPAIGNS.
 //
-// The midend ranks nothing. A campaign (cyber-arena-deploy/campaign/) pulls the
-// run list, applies its own selection and algorithm, and publishes the result;
-// this page lists what is registered and lets the reader choose whose standings
-// to read. That is the point: a ranking is one campaign's opinion, named and
+// The midend ranks nothing and stores no ranking. A campaign
+// (cyber-arena-deploy/campaign/) is a persistent process beside the midend: it
+// pulls the run list, applies its own selection and algorithm, and serves the
+// result over loopback, which the midend proxies on request. This page lists
+// what is registered and lets the reader choose whose standings to read. That is the point: a ranking is one campaign's opinion, named and
 // comparable, not an unattributed number handed down by the server.
 //
 // The table is GENERIC. Each campaign declares its own `columns`, so a new
@@ -67,10 +68,32 @@ function esc(s){ return String(s ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<
 
 async function show(id){
   board.innerHTML = `<p class="lb-loading">Loading ${esc(id)}…</p>`;
+
+  // The ranking is fetched live from the campaign process, so "registered but
+  // not answering" is a real state with its own 503 — report it as that,
+  // naming what the campaign last managed, rather than as a generic failure or
+  // (worse) an empty leaderboard that looks like nobody has played.
   let d;
-  try { d = await loadJSON(api(`/api/campaigns/${encodeURIComponent(id)}`)); }
-  catch { board.innerHTML = `<div class="notice"><span class="tag">error</span>
-    <div>Could not load <b>${esc(id)}</b>.</div></div>`; return; }
+  try {
+    const res = await fetch(api(`/api/campaigns/${encodeURIComponent(id)}`));
+    const payload = await res.json().catch(() => null);
+    if(!res.ok){
+      const det = payload?.detail;
+      const c = det?.campaign;
+      board.innerHTML = `<div class="notice"><span class="tag">offline</span>
+        <div><b>${esc(c?.name || id)}</b> is registered but not responding.
+        ${c?.entries ? `Its last ranking had <b>${c.entries}</b> entrants,
+          ${c.source?.runs_used != null ? `over ${c.source.runs_used} of ${c.source.runs_total} runs,` : ''}
+          computed ${esc(ago(c.ranked_at))}.` : 'It had not published a ranking yet.'}
+        <br><span class="lb-err">${esc(det?.error || `HTTP ${res.status}`)}</span></div></div>`;
+      return;
+    }
+    d = payload;
+  } catch {
+    board.innerHTML = `<div class="notice"><span class="tag">error</span>
+      <div>Could not reach the midend to load <b>${esc(id)}</b>.</div></div>`;
+    return;
+  }
 
   const entries = d.entries || [];
   const cols = d.columns || [];
@@ -122,7 +145,7 @@ function meta(d){
     <div class="lb-algo"><span class="tag">how</span>${esc(d.algorithm || '—')}</div>
     <div class="lb-facts">
       ${s.runs_used != null ? `<span><b>${s.runs_used}</b> of ${s.runs_total} runs ranked</span>` : ''}
-      <span>updated <b>${ago(d.ranked_at || d.updated_at)}</b></span>
+      <span>ranked <b>${ago(d.ranked_at)}</b></span>
     </div>
     ${notes ? `<ul class="lb-notes">${notes}</ul>` : ''}
   </div>`;

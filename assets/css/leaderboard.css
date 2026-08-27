@@ -47,6 +47,9 @@
 .lb .prov-tag{font-family:'Hanken Grotesk';font-weight:800;font-size:9px;text-transform:uppercase;letter-spacing:.6px;
   color:#8a8378;border:1.5px solid #cfc7b7;padding:1px 5px;margin-left:8px;vertical-align:1px}
 
+.lb-err{display:inline-block;margin-top:5px;font-family:'JetBrains Mono',monospace;font-size:11px;color:#8a8378}
+.notice .tag.offline,.lb-off .tag{background:#8a8378}
+
 .lb-loading{font-size:13px;color:#7a7468;padding:18px 2px}
 
 .readmore{text-align:center;margin-top:26px}
