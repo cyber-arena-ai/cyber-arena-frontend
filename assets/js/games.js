@@ -136,7 +136,7 @@ document.querySelectorAll('#filt button').forEach(b => b.onclick = () => {
 let _runs;   // undefined=not fetched, null=fetch failed, [] / [...] = loaded
 async function allRuns() {
   if (_runs !== undefined) return _runs;
-  try { _runs = (await loadJSON(api('/api/runs?limit=0'))).runs || []; }
+  try { _runs = (await loadJSON(api('/api/runs?limit=0&nofail=1'))).runs || []; }
   catch { _runs = null; }
   return _runs;
 }

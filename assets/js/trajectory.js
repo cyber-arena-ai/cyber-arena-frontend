@@ -9,7 +9,7 @@ let runId = params.get('run');
 // "Random Match": no ?run given -> pick a random match from the run list
 if(!runId){
   try {
-    const pool = (await loadJSON(api('/api/runs'))).runs || [];
+    const pool = (await loadJSON(api('/api/runs?nofail=1'))).runs || [];
     if(pool.length) runId = pool[Math.floor(Math.random() * pool.length)].id;
   } catch { /* fall through to the message below */ }
 }
