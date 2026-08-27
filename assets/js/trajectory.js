@@ -323,13 +323,18 @@ function paintAnBtn(st){
   const n = st.attempts || 0, max = st.max_attempts || 0;
   if(st.status === 'not_triggered'){
     anBtn.hidden = false; anBtn.disabled = false;
-    anBtn.textContent = 'analyse';
-    anBtn.title = n ? `run post-match analysis — retry ${n}/${max}` : 'run post-match analysis';
+    // n > 0 means an attempt already failed. Say so — silently reverting to
+    // "analyse" reads as though the click never registered.
+    anBtn.textContent = n ? `retry ${n}/${max}` : 'analyse';
+    anBtn.title = n ? `the last analysis attempt failed — ${max - n} left`
+                    : 'run post-match analysis';
+    anBtn.classList.toggle('an-retry', n > 0);
   } else if(st.status === 'working_on'){
     // the same block, greyed and unclickable — same action, just running
     anBtn.hidden = false; anBtn.disabled = true;
     anBtn.textContent = 'analysing';
     anBtn.title = 'analysis in progress';
+    anBtn.classList.remove('an-retry');
   } else {
     anBtn.hidden = true;                    // ready | analysis_failure | not_available
   }

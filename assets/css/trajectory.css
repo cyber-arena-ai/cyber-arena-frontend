@@ -217,6 +217,8 @@
 /* working_on — "analysing": same block, greyed and unpressable */
 .an-btn:disabled{border-color:var(--mut);color:var(--mut);background:var(--paper);
   box-shadow:3px 3px 0 var(--mut);cursor:default;transform:none}
+.an-btn.an-retry{border-color:var(--pink);color:var(--pink);box-shadow:3px 3px 0 var(--pink)}
+.an-btn.an-retry:hover:not(:disabled){box-shadow:5px 5px 0 var(--pink)}
 .an-btn[hidden]{display:none}
 @media(max-width:560px){.headline{gap:12px}
   .an-btn{font-size:12px;padding:7px 14px;box-shadow:2px 2px 0 var(--ink)}
