@@ -326,9 +326,9 @@ function paintAnBtn(st){
     anBtn.textContent = 'analyse';
     anBtn.title = n ? `run post-match analysis — retry ${n}/${max}` : 'run post-match analysis';
   } else if(st.status === 'working_on'){
-    // the same button, greyed out — it is still the analyse action, just busy
+    // the same block, greyed and unclickable — same action, just running
     anBtn.hidden = false; anBtn.disabled = true;
-    anBtn.textContent = 'working on';
+    anBtn.textContent = 'analysing';
     anBtn.title = 'analysis in progress';
   } else {
     anBtn.hidden = true;                    // ready | analysis_failure | not_available

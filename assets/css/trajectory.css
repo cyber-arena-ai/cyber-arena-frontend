@@ -201,19 +201,26 @@
 .unum{font:600 11px/1 'JetBrains Mono',monospace;color:#4a4436}
 @media(max-width:680px){.an-cards{grid-template-columns:1fr}.urow{grid-template-columns:1fr auto}}
 
-/* ---- manual analysis trigger — sits at the RIGHT end of the verdict line ----
+/* ---- manual analysis trigger — square block at the RIGHT end of the verdict
+   line. Hard offset shadow + press-to-collapse, matching .nav-burger / .gcard.
    States mirror the midend FSM (GET /api/runs/{id}/analysis .status):
-     not_triggered -> "analyse", clickable    working_on -> same button, greyed
+     not_triggered -> "analyse", clickable    working_on -> "analysing", greyed
      ready | analysis_failure | not_available -> hidden                       */
 .headline{display:flex;align-items:baseline;justify-content:space-between;gap:20px}
-.an-btn{flex:0 0 auto;align-self:center;font-family:inherit;font-weight:700;
+.an-btn{flex:0 0 auto;align-self:center;font-family:inherit;font-weight:800;
   font-size:13px;letter-spacing:.4px;text-transform:lowercase;white-space:nowrap;
-  background:none;color:var(--ink);border:2px solid var(--ink);border-radius:30px;
-  padding:6px 16px;cursor:pointer;transition:background .12s,color .12s}
-.an-btn:hover:not(:disabled){background:var(--ink);color:var(--paper)}
-.an-btn:disabled{border-color:var(--mut);color:var(--mut);background:none;cursor:default}
+  background:var(--paper2);color:var(--ink);border:2px solid var(--ink);border-radius:0;
+  box-shadow:3px 3px 0 var(--ink);padding:8px 18px;cursor:pointer;
+  transition:transform .12s ease, box-shadow .12s ease, background .12s, color .12s}
+.an-btn:hover:not(:disabled){transform:translate(-1px,-1px);box-shadow:5px 5px 0 var(--ink)}
+.an-btn:active:not(:disabled){transform:translate(2px,2px);box-shadow:1px 1px 0 var(--ink)}
+/* working_on — "analysing": same block, greyed and unpressable */
+.an-btn:disabled{border-color:var(--mut);color:var(--mut);background:var(--paper);
+  box-shadow:3px 3px 0 var(--mut);cursor:default;transform:none}
 .an-btn[hidden]{display:none}
-@media(max-width:560px){.headline{gap:12px}.an-btn{font-size:12px;padding:5px 13px}}
+@media(max-width:560px){.headline{gap:12px}
+  .an-btn{font-size:12px;padding:7px 14px;box-shadow:2px 2px 0 var(--ink)}
+  .an-btn:disabled{box-shadow:2px 2px 0 var(--mut)}}
 
 /* ---- unparseable run: the thread cannot be reconstructed ---- */
 .thread-unavailable{border:2px dashed var(--mut);padding:26px 22px;margin:8px 0;
