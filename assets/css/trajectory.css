@@ -230,3 +230,26 @@
 .thread-unavailable h3{font-weight:900;font-size:19px;letter-spacing:-.3px;margin-bottom:8px}
 .thread-unavailable p{font-size:14.5px;line-height:1.55;max-width:60ch}
 .thread-unavailable .tu-note{margin-top:10px;color:var(--mut);font-size:13px}
+
+/* ---- per-round board: flag outcome + service health, every round ---- */
+.rounds{margin:22px 0 4px}
+.rounds .rhead{display:flex;align-items:baseline;gap:10px;font-size:12px;font-weight:700;
+  text-transform:uppercase;letter-spacing:1px;border-bottom:3px solid var(--ink);padding-bottom:6px}
+.rounds .rhead .svc{font-family:'JetBrains Mono',monospace;font-weight:500;
+  text-transform:none;letter-spacing:0;color:#6f6657}
+.rtable{width:100%;border-collapse:collapse;margin-top:0}
+.rtable th,.rtable td{border-bottom:2px solid #d9d3c6;padding:9px 10px;text-align:left;vertical-align:top}
+.rtable th{font-size:10px;text-transform:uppercase;letter-spacing:1px;color:#6f6657;font-weight:700}
+.rtable td.rn{font-family:'JetBrains Mono',monospace;font-weight:700;width:52px}
+.rtable tr td.tm{border-left:5px solid transparent;font-weight:700;width:24%}
+.rtable tr td.tm.t1{border-left-color:var(--t1,var(--blue))}
+.rtable tr td.tm.t2{border-left-color:var(--t2,var(--pink))}
+.rtable td.num{font-family:'JetBrains Mono',monospace;font-size:12px}
+.pill{display:inline-block;font-size:10px;font-weight:700;text-transform:uppercase;
+  letter-spacing:.5px;padding:2px 7px;border:2px solid var(--ink);margin-right:5px}
+.pill.ok{background:var(--green);color:var(--paper);border-color:var(--green)}
+.pill.bad{background:var(--ink);color:var(--paper)}
+.pill.warn{background:var(--paper);color:var(--ink);border-style:dashed}
+.pill.mut{border-color:#c3b9a3;color:#6f6657}
+.rtable .cap{font-size:11px;color:#6f6657;font-family:'JetBrains Mono',monospace}
+.rounds .rnote{font-size:11px;color:#6f6657;margin-top:8px}

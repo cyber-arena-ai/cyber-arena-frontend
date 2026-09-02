@@ -294,6 +294,89 @@ function refreshBoard(){
     side(t1,'team1','t1') + `<div class="mid">vs</div>` + side(t2,'team2','t2');
 }
 
+/* ---- per-round board -------------------------------------------------
+   One row per (round x team): what happened to that team's own flag, and how
+   its service held up. Both halves span every round and every service, because
+   a match can carry several challenges and a challenge several flag stores.
+   Absent for runs parsed before the midend produced this table (and for runs
+   whose artifact was GC'd, which can never have it) — so the section hides
+   itself rather than drawing an empty frame. */
+function renderRounds(){
+  const host = document.getElementById('rounds');
+  const PR = D.per_round;
+  if(!host) return;
+  if(!PR || !PR.teams || !PR.rounds?.length){ host.innerHTML = ''; return; }
+
+  const teamKeys = isSolo ? ['team1'] : ['team1','team2'];
+  // round 0 is the pre-game plant, before ROUND_START 1 — not a played round
+  const rounds = PR.rounds.filter(r => r > 0);
+  if(!rounds.length){ host.innerHTML = ''; return; }
+  const services = PR.services || [];
+
+  const flagCell = (cell) => {
+    if(!cell) return `<span class="pill mut">no data</span>`;
+    const out = [];
+    if(cell.lost === true)      out.push(`<span class="pill bad">${esc(cell.status)}</span>`);
+    else if(cell.status)        out.push(`<span class="pill ok">held</span>`);
+    else if(cell.planted)       out.push(`<span class="pill mut">planted</span>`);
+    // a read-precondition tamper is keyed on `repair`, never on `status`:
+    // status can read PRESENT again after a successful repair
+    if(cell.tampered)           out.push(`<span class="pill warn">tampered</span>`);
+    const caps = (cell.captures || []).filter(c => c.scored).length;
+    const tries = (cell.captures || []).length;
+    if(tries) out.push(`<span class="cap">${caps}/${tries} captured</span>`);
+    return out.join(' ') || `<span class="pill mut">—</span>`;
+  };
+
+  const svcCell = (s) => {
+    if(!s) return `<span class="pill mut">no data</span>`;
+    const cls = s.failed ? 'warn' : 'ok';
+    const bits = [`<span class="pill ${cls}">${s.uptime_pct ?? '—'}%</span>`,
+                  `<span class="cap">${s.passed}/${s.probes} probes</span>`];
+    if(s.worst_level) bits.push(`<span class="cap">worst: ${esc(s.worst_level)}</span>`);
+    if(s.restarts)    bits.push(`<span class="cap">${s.restarts} restart${s.restarts>1?'s':''}</span>`);
+    if(s.final === 'down') bits.unshift(`<span class="pill bad">down</span>`);
+    return bits.join(' ');
+  };
+
+  const rows = [];
+  for(const svc of services){
+    for(const r of rounds){
+      for(const tk of teamKeys){
+        const half = PR.teams[tk] || {};
+        const stores = ((half.flags || {})[r] || {})[svc] || {};
+        const keys = Object.keys(stores);
+        const svcStat = ((half.service || {})[r] || {})[svc];
+        // one row per flag store, so several flags in one service stay visible
+        const storeKeys = keys.length ? keys : [''];
+        storeKeys.forEach((sk, i) => {
+          rows.push(`<tr>
+            <td class="rn">${i === 0 ? 'R' + r : ''}</td>
+            <td class="tm ${tk === 'team1' ? 't1' : 't2'}">${
+              i === 0 ? esc((tk === 'team1' ? t1 : t2).label) : ''}</td>
+            <td class="num">${keys.length > 1 ? esc(sk) : ''}</td>
+            <td>${flagCell(stores[sk])}</td>
+            <td>${i === 0 ? svcCell(svcStat) : ''}</td>
+          </tr>`);
+        });
+      }
+    }
+  }
+
+  host.innerHTML = `
+    <div class="rhead"><span>Round board</span>
+      <span class="svc">${services.map(esc).join(' · ')}</span></div>
+    <table class="rtable">
+      <thead><tr><th>round</th><th>team</th><th>store</th>
+        <th>own flag</th><th>service health</th></tr></thead>
+      <tbody>${rows.join('')}</tbody>
+    </table>
+    <div class="rnote">Own flag is the defender's copy — a capture reads it, it does not
+      remove it, so a stolen flag still reads <b>held</b>. Health is measured per probe
+      (process / tcp / http / checker), not per event.</div>`;
+}
+renderRounds();
+
 /* ---- live streaming (in-flight matches) ---- */
 // never stream into a placeholder: the midend does not write placeholders for
 // live runs, so this pairing should not occur — but appending turns underneath

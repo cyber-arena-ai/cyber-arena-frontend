@@ -1,5 +1,5 @@
 // Runs directory — all matches this season (competitor-agnostic)
-import { loadJSON, loadHarnesses, fmtTime, setActiveNav, renderPager, api } from './util.js';
+import { loadJSON, loadHarnesses, fmtTime, esc, setActiveNav, renderPager, api } from './util.js';
 
 setActiveNav('runs.html');
 
@@ -104,7 +104,7 @@ function renderList(list){
       <div class="rdate">${dateLabel(r.date, r.time)}</div>
       <div>
         <div class="rname">${r.name}${r.category ? ` <span class="badge ${r.category.toLowerCase()}">${r.category}</span>` : ''} ${modeTag(r)}${statusTag(r)}</div>
-        <div class="rmeta">${r.challenge} · ${r.rounds} rounds · ${fmtTime(r.duration_s)}</div>
+        <div class="rmeta">${r.challenge} · ${r.rounds} rounds · ${fmtTime(r.duration_s)}${r.campaign ? ` · <span class="cmp" title="commissioned by the ${esc(r.campaign.type)} campaign &quot;${esc(r.campaign.id)}&quot;">${esc(r.campaign.id)}</span>` : ''}</div>
         <div class="rvs">${ent(r.teams.team1, h1, d1, 'c1')}${solo
           ? ` <span class="vs">solo run</span>`
           : ` <span class="vs">vs</span> ${ent(r.teams.team2, h2, d2, 'c2')}`}</div>
@@ -145,11 +145,44 @@ document.getElementById('filt').innerHTML = STATES
   .map((s, i) => `<button data-s="${s.key}" class="${s.key} ${i === 0 ? 'on' : ''}">${s.label} <b>${count(s.key)}</b></button>`)
   .join('');
 
+// The two filters compose: status is the row's display state, campaign is who
+// commissioned it. A run submitted by hand has no campaign at all.
+let fState = 'all', fCampaign = 'all';
+function applyFilters(){
+  shown = runs.filter(r =>
+    (fState === 'all' || r.state === fState) &&
+    (fCampaign === 'all'
+      || (fCampaign === 'none' ? !r.campaign : r.campaign?.id === fCampaign)));
+  page = 1;
+  draw();
+}
+
 document.querySelectorAll('#filt button').forEach(b => b.onclick = () => {
   document.querySelectorAll('#filt button').forEach(x => x.classList.remove('on'));
   b.classList.add('on');
-  const s = b.dataset.s;
-  shown = s === 'all' ? runs : runs.filter(r => r.state === s);
-  page = 1;
-  draw();
+  fState = b.dataset.s;
+  applyFilters();
 });
+
+// Campaign filter — only rendered when a campaign actually commissioned
+// something in this archive, so a deploy that runs none never sees the control.
+const campaigns = new Map();
+for(const r of runs) if(r.campaign?.id) campaigns.set(r.campaign.id, r.campaign);
+const host = document.getElementById('cfilt');
+if(host && campaigns.size){
+  const n = id => runs.filter(r => r.campaign?.id === id).length;
+  const hand = runs.filter(r => !r.campaign).length;
+  host.innerHTML = '<span class="cflabel">campaign</span>'
+    + `<button data-c="all" class="on">all <b>${runs.length}</b></button>`
+    + [...campaigns.values()].map(c =>
+        `<button data-c="${esc(c.id)}" title="${esc(c.type || 'campaign')}">`
+        + `${esc(c.id)} <b>${n(c.id)}</b></button>`).join('')
+    + (hand ? `<button data-c="none" title="submitted by hand, not by a campaign">`
+              + `ad-hoc <b>${hand}</b></button>` : '');
+  host.querySelectorAll('button').forEach(b => b.onclick = () => {
+    host.querySelectorAll('button').forEach(x => x.classList.remove('on'));
+    b.classList.add('on');
+    fCampaign = b.dataset.c;
+    applyFilters();
+  });
+}

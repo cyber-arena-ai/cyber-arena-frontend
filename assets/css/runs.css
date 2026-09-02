@@ -87,3 +87,12 @@
 .filt button.analysis_failed.on{background:#b0472e;color:var(--paper)}
 .filt button.unavailable{border-color:#8a8378;color:#8a8378}
 .filt button.unavailable.on{background:#8a8378;color:var(--paper)}
+
+/* campaign badge — a match commissioned by a campaign instance, not by hand */
+.rmeta .cmp{font-family:'JetBrains Mono',monospace;font-size:10px;
+  border:2px solid var(--ink);padding:1px 5px;margin-left:2px;white-space:nowrap}
+
+/* campaign filter — a second, composing axis next to the status tags */
+.cfilt{margin-left:14px;display:inline-flex;align-items:center;gap:6px;flex-wrap:wrap}
+.cfilt .cflabel{font-size:10px;text-transform:uppercase;letter-spacing:1px;color:#6f6657}
+.cfilt button{font-family:'JetBrains Mono',monospace;font-size:11px}
