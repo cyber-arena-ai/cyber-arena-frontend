@@ -157,9 +157,9 @@ function runRow(r, H) {
   const w = r.winner;
   const s1 = `<b class="${w === 'team1' ? 'win' : ''}">${r.score?.team1 ?? '–'}</b>`;
   const s2 = `<b class="${w === 'team2' ? 'win' : ''}">${r.score?.team2 ?? '–'}</b>`;
-  const state = r.state === 'live'
+  const state = r.display === 'live'
     ? `<span class="hstate live"><i class="fa-solid fa-circle"></i> live</span>`
-    : r.state === 'failed' ? `<span class="hstate failed">failed</span>` : '';
+    : r.display === 'failed' ? `<span class="hstate failed">failed</span>` : '';
   return `<a class="hrow" href="trajectory.html?run=${r.id}">
     <span class="hdate">${dLabel(r.date)}</span>
     <span class="hvs">${esc(teamLabel(H, t1))} <em>vs</em> ${esc(teamLabel(H, t2))}</span>

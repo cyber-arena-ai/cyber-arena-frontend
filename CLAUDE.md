@@ -177,7 +177,7 @@ display weights, subtle paper grain. Defined in [`assets/css/base.css`](assets/c
   from `/api/harnesses`.
 - Pages are small ES modules over a shared `util.js` (+ `config.js`); page CSS extends `base.css`.
 - **Match thread additions:** a live (`status:"running"`) match streams new feed items over SSE and
-  updates the scoreboard; finished+succeeded matches show a post-match **analysis panel**
+  updates the scoreboard; matches whose `outcome` is `succeeded` show a post-match **analysis panel**
   (attack-outcome A/B/C, intended-vs-cheat flags, time-utilization).
 
 ---

@@ -244,7 +244,7 @@
 .rblegend span{display:flex;align-items:center;gap:5px}
 .rblegend .k{width:9px;height:12px;border:2px solid var(--ink);display:inline-block}
 .rblegend .k.flag{background:var(--ink)}
-.rblegend .k.svc{background:repeating-linear-gradient(135deg,var(--ink) 0 2px,transparent 2px 4px)}
+.rblegend .k.svc{background:var(--green)}
 .rblegend .rbhint{margin-left:auto}
 
 /* one line per team: label, then a segment per round */
@@ -254,29 +254,34 @@
   border-left:5px solid transparent;align-self:center;overflow-wrap:anywhere}
 .rbline.t1 .rbteam{border-left-color:var(--t1,var(--blue))}
 .rbline.t2 .rbteam{border-left-color:var(--t2,var(--pink))}
-.rbsegs{display:flex;justify-content:flex-start;gap:6px;overflow-x:auto;padding-bottom:2px}
-.rbseg{flex:1 1 0;min-width:30px;max-width:96px;display:flex;flex-direction:column;
-  align-items:center;gap:3px}
+.rbsegs{display:flex;gap:10px;overflow-x:auto;padding-bottom:2px}
+.rbseg{flex:1 1 0;min-width:54px;display:flex;flex-direction:column;
+  align-items:stretch;gap:3px}
 
 /* offense marker — what this team took off the opponent that round */
 .rbseg .rbcap{height:12px;font-size:10px;font-weight:700;line-height:12px;
-  font-family:'JetBrains Mono',monospace}
+  text-align:center;font-family:'JetBrains Mono',monospace}
 .rbline.t1 .rbcap{color:var(--t1,var(--blue))}
 .rbline.t2 .rbcap{color:var(--t2,var(--pink))}
 
 /* a bar is a TRACK (the round happened) + a fill (how much of it held), so 0%
    still shows its slot instead of vanishing */
-.rbbars{display:flex;align-items:flex-end;gap:4px;height:44px;width:100%;max-width:58px}
-.rbbar{position:relative;flex:1 1 0;min-width:9px;max-width:24px;height:100%;
+.rbbars{display:flex;align-items:flex-end;gap:5px;height:56px;width:100%}
+.rbbar{position:relative;flex:1 1 0;height:100%;
   border:2px solid var(--ink);background:var(--paper);display:block}
+/* the service reading, inside its own fill or just above it */
+.rbbar b{position:absolute;left:0;right:0;text-align:center;font-size:10px;
+  font-weight:700;font-family:'JetBrains Mono',monospace;line-height:13px}
+.rbbar b.in{margin-bottom:-15px;color:var(--paper)}
+.rbbar b.out{margin-bottom:1px;color:#6f6657}
 .rbbar i{position:absolute;left:0;right:0;bottom:0;display:block}
 .rbline.t1 .rbbar.flag i{background:var(--t1,var(--blue))}
 .rbline.t2 .rbbar.flag i{background:var(--t2,var(--pink))}
-.rbbar.svc i{background:repeating-linear-gradient(135deg,var(--ink) 0 2px,transparent 2px 4px)}
+.rbbar.svc i{background:var(--green)}
 .rbbar.tamp{border-style:dashed}                 /* tampered, then repaired */
 .rbbar.down{box-shadow:0 3px 0 var(--ink)}       /* service ended down */
 .rbbar.nd{border-style:dotted;border-color:#c3b9a3}   /* no measure for this round */
-.rbseg .rbnum{font-size:10px;font-weight:700;color:#6f6657;
+.rbseg .rbnum{font-size:10px;font-weight:700;color:#6f6657;text-align:center;
   font-family:'JetBrains Mono',monospace}
 
 .rounds .rnote{font-size:11px;color:#6f6657;margin-top:8px}

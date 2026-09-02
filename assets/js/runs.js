@@ -52,11 +52,12 @@ const dateLabel = (d, t) => {
   return `<b>${MONTHS[+m-1]} ${+day}</b>${t || ''}`;
 };
 const statusTag = r => {
-  if(r.state === 'live')            return `<span class="stag live-tag"><i class="fa-solid fa-circle"></i> LIVE</span>`;
-  if(r.state === 'pending')         return `<span class="stag ana-tag" title="the midend has not parsed this run yet"><i class="fa-solid fa-hourglass-half"></i> pending</span>`;
-  if(r.state === 'unavailable')     return `<span class="stag anafail-tag" title="this run could not be parsed — its artifact is missing or unreadable">unavailable</span>`;
-  if(r.state === 'analysis_failed') return `<span class="stag anafail-tag" title="deep analysis gave up after retries">analysis failed</span>`;
-  if(r.state === 'failed')          return `<span class="stag fail-tag">failed</span>`;
+  if(r.display === 'live')            return `<span class="stag live-tag"><i class="fa-solid fa-circle"></i> LIVE</span>`;
+  if(r.display === 'pending')         return `<span class="stag ana-tag" title="the backend has this queued — no result yet"><i class="fa-solid fa-hourglass-half"></i> pending</span>`;
+  if(r.display === 'unavailable')     return `<span class="stag anafail-tag" title="this run could not be parsed — its artifact is missing or unreadable">unavailable</span>`;
+  if(r.display === 'canceled')        return `<span class="stag fail-tag" title="stopped before it could finish — any score it shows is whatever the board held when it was killed">cancelled</span>`;
+  if(r.display === 'analysis_failed') return `<span class="stag anafail-tag" title="deep analysis gave up after retries">analysis failed</span>`;
+  if(r.display === 'failed')          return `<span class="stag fail-tag">failed</span>`;
   return '';
 };
 // only flag hint mode (agents got the vuln hint); hard mode is the default and
@@ -110,7 +111,7 @@ function renderList(list){
           : ` <span class="vs">vs</span> ${ent(r.teams.team2, h2, d2, 'c2')}`}</div>
       </div>
       <div class="rscore">${scoreHTML(r, h1, h2)}</div>
-      <div class="rwin">${(solo || r.winner) ? winTag(r, hw, win === 'team2' ? d2 : d1) : ''}<span class="rounds">${r.state === 'live' ? 'watch live' : 'view thread'}</span></div>
+      <div class="rwin">${(solo || r.winner) ? winTag(r, hw, win === 'team2' ? d2 : d1) : ''}<span class="rounds">${r.display === 'live' ? 'watch live' : 'view thread'}</span></div>
       <div class="rgo"><i class="arw"></i></div>`;
     // stagger the float-in, capped so long ?limit=0 lists don't crawl
     return `<a class="run live" style="--d:${Math.min(i, 12) * 70}ms" href="trajectory.html?run=${r.id}">${inner}</a>`;
@@ -137,9 +138,10 @@ const STATES = [
   { key: 'finished',        label: 'finished' },
   { key: 'pending',         label: 'pending' },
   { key: 'unavailable',     label: 'unavailable' },
+  { key: 'canceled', label: 'cancelled' },
   { key: 'analysis_failed', label: 'analysis failed' },
 ];
-const count = k => k === 'all' ? runs.length : runs.filter(r => r.state === k).length;
+const count = k => k === 'all' ? runs.length : runs.filter(r => r.display === k).length;
 document.getElementById('filt').innerHTML = STATES
   .filter(s => s.key === 'all' || count(s.key) > 0)   // only show tags that exist
   .map((s, i) => `<button data-s="${s.key}" class="${s.key} ${i === 0 ? 'on' : ''}">${s.label} <b>${count(s.key)}</b></button>`)
@@ -150,7 +152,7 @@ document.getElementById('filt').innerHTML = STATES
 let fState = 'all', fCampaign = 'all';
 function applyFilters(){
   shown = runs.filter(r =>
-    (fState === 'all' || r.state === fState) &&
+    (fState === 'all' || r.display === fState) &&
     (fCampaign === 'all'
       || (fCampaign === 'none' ? !r.campaign : r.campaign?.id === fCampaign)));
   page = 1;

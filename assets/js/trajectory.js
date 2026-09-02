@@ -65,12 +65,12 @@ const cname = key => `<span style="color:${HH[key].color}">${(key === 'team1' ? 
 const captured = (D.attack_flags?.team1 || 0) > 0;
 if(isSolo){
   // no opponent => no "def." and no "draw"; the result is whether it captured
-  document.getElementById('hl').innerHTML = D.status === 'failed' || D.status === 'running'
+  document.getElementById('hl').innerHTML = D.outcome === 'failed' || D.outcome === 'running'
     ? `${cname('team1')} <em>solo run</em>`
     : captured
       ? `<mark style="background:${HH.team1.color}">${t1.label}</mark> captured solo`
       : `${cname('team1')} <em>solo run</em> — no capture`;
-} else if(D.status === 'failed'){
+} else if(D.outcome === 'failed'){
   document.getElementById('hl').innerHTML =
     `${cname('team1')} <em>vs</em> ${cname('team2')}`;
 } else if(!D.winner){
@@ -269,7 +269,7 @@ document.querySelectorAll('.filt button').forEach(b => b.onclick = () => {
 /* ---- status badge ---- */
 function statusBadge(){
   const el = document.getElementById('mastcat');
-  const s = D.status;
+  const s = D.outcome;
   const chip = s === 'running' ? '<span class="live-chip"><i class="fa-solid fa-circle"></i> LIVE</span>'
     : s === 'failed' ? '<span class="fail-chip">failed</span>' : '';
   // only flag hint mode; hard is the default and stays untagged
@@ -354,9 +354,14 @@ function renderRounds(){
 
   // a bar is a full-height TRACK with a fill — so 0% still shows the slot it
   // occupies instead of vanishing, and a missing measure reads as absent
-  const bar = (cls, pct, extra = '') => pct === null
-    ? `<span class="rbbar ${cls} nd"></span>`
-    : `<span class="rbbar ${cls}${extra}"><i style="height:${pct}%"></i></span>`;
+  const bar = (cls, pct, extra = '', label = false) => {
+    if(pct === null) return `<span class="rbbar ${cls} nd"></span>`;
+    // the reading sits INSIDE the fill when there is room for it, and above
+    // the fill when there is not — never floating over an empty track
+    const num = label
+      ? `<b class="${pct >= 34 ? 'in' : 'out'}" style="bottom:${pct}%">${pct}%</b>` : '';
+    return `<span class="rbbar ${cls}${extra}"><i style="height:${pct}%"></i>${num}</span>`;
+  };
 
   const segment = (tk, r) => {
     const st = roundStat(tk, r);
@@ -370,7 +375,7 @@ function renderRounds(){
     return `<div class="rbseg" title="${esc(tip)}">
       <div class="rbcap">${st.caps ? `+${st.caps}` : ''}</div>
       <div class="rbbars">${bar('flag', st.flag, st.tampered ? ' tamp' : '')}${
-        bar('svc', st.svc, st.down ? ' down' : '')}</div>
+        bar('svc', st.svc, st.down ? ' down' : '', true)}</div>
       <div class="rbnum">${r}</div></div>`;
   };
 
@@ -401,7 +406,7 @@ renderRounds();
 // never stream into a placeholder: the midend does not write placeholders for
 // live runs, so this pairing should not occur — but appending turns underneath
 // an "unavailable" notice would be incoherent if it ever did.
-if(D.status === 'running' && !D.parse_failed){
+if(D.outcome === 'running' && !D.parse_failed){
     // ?since = what we already rendered, so the FIRST connect sends only new
     // turns. On a RECONNECT the browser re-requests this same url with `since`
     // frozen at page-load, so resumption rides on the SSE event id instead:
@@ -431,7 +436,7 @@ if(D.status === 'running' && !D.parse_failed){
   });
   es.addEventListener('end', ev => {
     const { winner } = JSON.parse(ev.data);
-    D.winner = winner; D.status = 'finished';
+    D.winner = winner; D.outcome = 'succeeded';
     es.close();
     statusBadge();
     // reload to pull the frozen + analyzed match
@@ -517,7 +522,7 @@ async function renderAnalysis(pre){
   let a = pre || (D.analysis ? { ...D.analysis, status: 'ready' } : null);
   // Only a finished+succeeded match can ever have an analysis. Asking about a
   // live, failed or unparseable one is a guaranteed `not_available` round-trip.
-  if(!a && (D.status !== 'finished' || !D.succeeded || D.parse_failed)){
+  if(!a && (D.outcome !== 'succeeded' || D.parse_failed)){
     paintAnBtn({ status: 'not_available' });
     return;
   }
