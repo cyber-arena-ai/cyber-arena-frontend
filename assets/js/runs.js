@@ -51,14 +51,18 @@ const dateLabel = (d, t) => {
   const [, m, day] = (d || '2026-01-01').split('-');
   return `<b>${MONTHS[+m-1]} ${+day}</b>${t || ''}`;
 };
+// Three independent facts, so up to three tags — a run can be BOTH cancelled
+// and unreadable, and saying only one of those was the flaw in the old merged
+// `display` value: `unavailable` swallowed 19 cancellations and 12 failures.
 const statusTag = r => {
-  if(r.display === 'live')            return `<span class="stag live-tag"><i class="fa-solid fa-circle"></i> LIVE</span>`;
-  if(r.display === 'pending')         return `<span class="stag ana-tag" title="the backend has this queued — no result yet"><i class="fa-solid fa-hourglass-half"></i> pending</span>`;
-  if(r.display === 'unavailable')     return `<span class="stag anafail-tag" title="this run could not be parsed — its artifact is missing or unreadable">unavailable</span>`;
-  if(r.display === 'canceled')        return `<span class="stag fail-tag" title="stopped before it could finish — any score it shows is whatever the board held when it was killed">cancelled</span>`;
-  if(r.display === 'analysis_failed') return `<span class="stag anafail-tag" title="deep analysis gave up after retries">analysis failed</span>`;
-  if(r.display === 'failed')          return `<span class="stag fail-tag">failed</span>`;
-  return '';
+  const t = [];
+  if(r.outcome === 'running')       t.push(`<span class="stag live-tag"><i class="fa-solid fa-circle"></i> LIVE</span>`);
+  else if(r.outcome === 'failed')   t.push(`<span class="stag fail-tag">failed</span>`);
+  else if(r.outcome === 'canceled') t.push(`<span class="stag fail-tag" title="stopped before it could finish — any score it shows is whatever the board held when it was killed">cancelled</span>`);
+  if(r.parse === 'pending')         t.push(`<span class="stag ana-tag" title="the backend has this queued — nothing parsed yet"><i class="fa-solid fa-hourglass-half"></i> pending</span>`);
+  else if(r.parse === 'failed')     t.push(`<span class="stag anafail-tag" title="this run could not be parsed — its artifact is missing or unreadable">unavailable</span>`);
+  if(r.analysis === 'failed')       t.push(`<span class="stag anafail-tag" title="deep analysis gave up after retries">analysis failed</span>`);
+  return t.join('');
 };
 // only flag hint mode (agents got the vuln hint); hard mode is the default and
 // stays untagged
@@ -111,7 +115,7 @@ function renderList(list){
           : ` <span class="vs">vs</span> ${ent(r.teams.team2, h2, d2, 'c2')}`}</div>
       </div>
       <div class="rscore">${scoreHTML(r, h1, h2)}</div>
-      <div class="rwin">${(solo || r.winner) ? winTag(r, hw, win === 'team2' ? d2 : d1) : ''}<span class="rounds">${r.display === 'live' ? 'watch live' : 'view thread'}</span></div>
+      <div class="rwin">${(solo || r.winner) ? winTag(r, hw, win === 'team2' ? d2 : d1) : ''}<span class="rounds">${r.outcome === 'running' ? 'watch live' : 'view thread'}</span></div>
       <div class="rgo"><i class="arw"></i></div>`;
     // stagger the float-in, capped so long ?limit=0 lists don't crawl
     return `<a class="run live" style="--d:${Math.min(i, 12) * 70}ms" href="trajectory.html?run=${r.id}">${inner}</a>`;
@@ -132,16 +136,21 @@ draw();
 
 // status filters, by display state. `analysing` is gone — analysis is triggered
 // by hand now, so an un-analysed match is just finished.
+// Each chip names the ONE field it filters, so a count is the truth about that
+// axis and not whatever a priority chain let through: `failed` is every run that
+// failed, including the ones that are also unreadable.
 const STATES = [
-  { key: 'all',             label: 'all' },
-  { key: 'live',            label: 'live' },
-  { key: 'finished',        label: 'finished' },
-  { key: 'pending',         label: 'pending' },
-  { key: 'unavailable',     label: 'unavailable' },
-  { key: 'canceled',        label: 'cancelled' },
-  { key: 'analysis_failed', label: 'analysis failed' },
+  { key: 'all',             label: 'all',             hit: () => true },
+  { key: 'live',            label: 'live',            hit: r => r.outcome === 'running' },
+  { key: 'finished',        label: 'finished',        hit: r => r.outcome === 'succeeded' },
+  { key: 'canceled',        label: 'cancelled',       hit: r => r.outcome === 'canceled' },
+  { key: 'failed',          label: 'failed',          hit: r => r.outcome === 'failed' },
+  { key: 'pending',         label: 'pending',         hit: r => r.parse === 'pending' },
+  { key: 'unavailable',     label: 'unavailable',     hit: r => r.parse === 'failed' },
+  { key: 'analysis_failed', label: 'analysis failed', hit: r => r.analysis === 'failed' },
 ];
-const count = k => k === 'all' ? runs.length : runs.filter(r => r.display === k).length;
+const HIT = Object.fromEntries(STATES.map(s => [s.key, s.hit]));
+const count = k => runs.filter(HIT[k]).length;
 document.getElementById('filt').innerHTML = STATES
   .filter(s => s.key === 'all' || count(s.key) > 0)   // only show tags that exist
   .map((s, i) => `<button data-s="${s.key}" class="${s.key} ${i === 0 ? 'on' : ''}">${s.label} <b>${count(s.key)}</b></button>`)
@@ -152,7 +161,7 @@ document.getElementById('filt').innerHTML = STATES
 let fState = 'all', fCampaign = 'all';
 function applyFilters(){
   shown = runs.filter(r =>
-    (fState === 'all' || r.display === fState) &&
+    HIT[fState](r) &&
     (fCampaign === 'all'
       || (fCampaign === 'none' ? !r.campaign : r.campaign?.id === fCampaign)));
   page = 1;
