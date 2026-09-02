@@ -9,8 +9,8 @@
   const LINKS = [
     ['index.html', 'Home'],
     ['leaderboard.html', 'Leaderboard'],
-    ['games.html', 'Games'],
     ['runs.html', 'Runs'],
+    ['games.html', 'Games'],
     ['blogs.html', 'Blogs'],
     ['about.html', 'About us'],
   ];
