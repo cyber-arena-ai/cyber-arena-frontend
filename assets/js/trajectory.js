@@ -160,7 +160,7 @@ let ri = 0;
 function renderItem(item){
   let h = '';
   while(ri < rstarts.length && item.t >= rstarts[ri].t){
-    h += `<div class="day" data-mm-type="round" data-mm-label="R${rstarts[ri].r}"><span>◆ Round ${rstarts[ri].r} · ${fmtTime(rstarts[ri].t)}</span></div>`;
+    h += `<div class="day" data-mm-type="round" data-round="${rstarts[ri].r}" data-mm-label="R${rstarts[ri].r}"><span>◆ Round ${rstarts[ri].r} · ${fmtTime(rstarts[ri].t)}</span></div>`;
     ri++;
   }
   return h + (item.kind==='event' ? sysMsg(item) : bubble(item));
@@ -292,11 +292,15 @@ function refreshBoard(){
 
 /* ---- per-round board -------------------------------------------------
    ONE LINE PER TEAM (two at most, one for a solo run), each line a strip of
-   round segments. A segment carries two bars whose HEIGHT is the percentage:
-   how much of that team's own flag survived the round, and how much of its
-   service stayed up. A match can carry several services and several flag
-   stores per service, so a segment aggregates them — probe-weighted for
-   health, per-store for flags — and the exact figures ride in the tooltip.
+   round segments. A segment is a narrow mark per rival flag, plus a service
+   block: a mark is filled when that team snatched THAT rival flag in that
+   round and hollow when it did not — filled in the RIVAL's colour, since the
+   flag being taken is the rival's, and the block's HEIGHT is how much of its own
+   service stayed up. Own-flag status is NOT drawn — a capture reads a flag
+   without removing it, so a defender's copy reads held almost always, and a
+   bar that is full every round says nothing. It rides in the tooltip instead,
+   with the per-service figures. A match can carry several services, so the
+   block is probe-weighted across them.
    Absent for runs parsed before the midend produced this table (and for runs
    whose artifact was GC'd, which can never have it) — so the section hides
    itself rather than drawing an empty frame. */
@@ -312,6 +316,23 @@ function renderRounds(){
   if(!rounds.length){ host.innerHTML = ''; return; }
   const services = PR.services || [];
 
+  // Every segment draws the SAME flags in the SAME order, so the nth mark
+  // means the same flag in every round and on both team lines. Order follows
+  // the declared service list, then the store name, with `default` first —
+  // discovery order would let a flag that first appears in round 3 jump slot.
+  const FKEY = [];
+  const seen = new Set();
+  for(const tk of teamKeys) for(const r of rounds)
+    for(const [svc, byStore] of Object.entries(((PR.teams[tk] || {}).flags || {})[r] || {}))
+      for(const sk of Object.keys(byStore || {})){
+        const k = `${svc}\u0000${sk}`;
+        if(!seen.has(k)){ seen.add(k); FKEY.push({ k, svc, sk,
+          label: svc + (sk && sk !== 'default' ? '/' + sk : '') }); }
+      }
+  const svcRank = f => { const i = services.indexOf(f.svc); return i < 0 ? services.length : i; };
+  FKEY.sort((a, b) => svcRank(a) - svcRank(b) || a.svc.localeCompare(b.svc)
+    || (a.sk === 'default' ? -1 : b.sk === 'default' ? 1 : a.sk.localeCompare(b.sk)));
+
   // every service and store of one round collapsed to two percentages + the
   // detail line the tooltip shows, so nothing is lost, only folded
   const roundStat = (tk, r) => {
@@ -319,7 +340,7 @@ function renderRounds(){
     const flags = (half.flags || {})[r] || {};
     const svcs  = (half.service || {})[r] || {};
     let stores = 0, held = 0, tampered = false, caps = 0, tries = 0;
-    const detail = [];
+    const detail = [], byKey = {};
     for(const [svc, byStore] of Object.entries(flags)){
       for(const [sk, c] of Object.entries(byStore || {})){
         if(!c) continue;
@@ -329,8 +350,10 @@ function renderRounds(){
         if(c.lost !== true && c.status) held++;
         if(c.tampered) tampered = true;
         const cs = c.captures || [];
-        caps += cs.filter(x => x.scored).length;
+        const took = cs.filter(x => x.scored).length;
+        caps += took;
         tries += cs.length;
+        byKey[`${svc}\u0000${sk}`] = { took, tries: cs.length };
         const name = svc + (sk && sk !== 'default' ? '/' + sk : '');
         const state = c.lost === true ? (c.status || 'lost') : c.status ? 'held' : 'planted';
         detail.push(`${name}: ${state}${c.tampered ? ' + tampered' : ''}`);
@@ -347,20 +370,32 @@ function renderRounds(){
         + (sv.worst_level ? `, worst ${sv.worst_level}` : '')
         + (sv.restarts ? `, ${sv.restarts} restart${sv.restarts > 1 ? 's' : ''}` : ''));
     }
-    return { flag: stores ? Math.round(100 * held / stores) : null,
+    return { flag: stores ? Math.round(100 * held / stores) : null, known: stores > 0,
              svc: probes ? Math.round(100 * passed / probes) : null,
-             tampered, caps, tries, down, detail };
+             tampered, caps, tries, down, detail, byKey };
   };
 
   // a bar is a full-height TRACK with a fill — so 0% still shows the slot it
   // occupies instead of vanishing, and a missing measure reads as absent
   const bar = (cls, pct, extra = '', label = false) => {
     if(pct === null) return `<span class="rbbar ${cls} nd"></span>`;
-    // the reading sits INSIDE the fill when there is room for it, and above
-    // the fill when there is not — never floating over an empty track
-    const num = label
-      ? `<b class="${pct >= 34 ? 'in' : 'out'}" style="bottom:${pct}%">${pct}%</b>` : '';
+    const num = label ? `<b class="${pct >= 50 ? 'in' : 'out'}">${pct}%</b>` : '';
     return `<span class="rbbar ${cls}${extra}"><i style="height:${pct}%"></i>${num}</span>`;
+  };
+
+  // one mark per flag, each binary: filled = this team took THAT flag in this
+  // round. With no record for it the mark reads as absent — hollow would claim
+  // "took nothing", which is a different statement from "we do not know".
+  const flagMarks = (st, tk) => {
+  const rival = isSolo ? '' : (tk === 'team1' ? t2 : t1).label;
+  return FKEY.map(f => {
+    const v = st.byKey[f.k];
+    const cls = !v ? ' nd' : v.took > 0 ? ' on' : '';
+    const state = !v ? 'no record' : v.took > 0 ? `taken${v.took > 1 ? ` x${v.took}` : ''}`
+      : v.tries ? `${v.tries} attempt${v.tries > 1 ? 's' : ''}, none scored` : 'not taken';
+    return `<span class="rbflag${cls}" title="${esc(f.label)}${
+      rival ? ` (${esc(rival)}'s)` : ''} — ${state}"></span>`;
+  }).join('');
   };
 
   const segment = (tk, r) => {
@@ -372,14 +407,12 @@ function renderRounds(){
       st.down ? 'service ended down' : '',
       st.tries ? `${st.caps}/${st.tries} captured off the opponent` : '',
       ...st.detail].filter(Boolean).join(' · ');
-    return `<div class="rbseg" title="${esc(tip)}">
-      <div class="rbcap">${st.caps ? `+${st.caps}` : ''}</div>
-      <div class="rbbars">${bar('flag', st.flag, st.tampered ? ' tamp' : '')}${
-        bar('svc', st.svc, st.down ? ' down' : '', true)}</div>
-      <div class="rbnum">${r}</div></div>`;
+    return `<div class="rbseg" data-round="${r}" title="${esc(tip)}">
+      <div class="rbbars">${flagMarks(st, tk)}${bar('svc', st.svc, '', true)}</div>
+      </div>`;
   };
 
-  const line = (tk) => `<div class="rbline ${tk === 'team1' ? 't1' : 't2'}">
+  const line = (tk) => `<div class="rbline ${tk === 'team1' ? 't1' : 't2'}${isSolo ? ' solo' : ''}">
       <div class="rbteam">${esc((tk === 'team1' ? t1 : t2).label)}</div>
       <div class="rbsegs">${rounds.map(r => segment(tk, r)).join('')}</div>
     </div>`;
@@ -388,19 +421,64 @@ function renderRounds(){
     <div class="rhead"><span>Round board</span>
       <span class="svc">${services.map(esc).join(' · ')}</span></div>
     <div class="rblegend">
-      <span><i class="k flag"></i> own flag held</span>
-      <span><i class="k svc"></i> service uptime</span>
-      <span class="rbhint">bar height = %, one segment per round</span>
+      <span><i class="k flagon"></i><i class="k flagoff"></i> rival flag caught</span>
+      <span><i class="k svc"></i> uptime</span>
+      <span><i class="k nd"></i> no data</span>
     </div>
-    ${teamKeys.map(line).join('')}
-    <div class="rnote">Own flag is the defender's copy — a capture reads it, it does not
-      remove it, so a stolen flag still reads held; <b>+n</b> above a segment is what that
-      team captured off the opponent. Health is measured per probe
-      (process / tcp / http / checker), not per event. Hover a segment for the
-      per-service figures.</div>`;
+    ${teamKeys.map(line).join('')}`;
 }
 
 renderRounds();
+
+/* ---- thread <-> round board: one reading position ----------------------
+   The board sits directly above the thread, so it doubles as the thread's map:
+   scrolling the thread lights the round being read, and clicking a round
+   scrolls the thread to where that round starts. Both directions run off the
+   SAME anchors — the round rules already in the feed — so they cannot drift
+   apart, and a live match that grows new rounds needs no extra wiring. */
+function linkRoundsToThread(){
+  const host = document.getElementById('rounds');
+  const segs = host ? [...host.querySelectorAll('.rbseg')] : [];
+  if(!segs.length) return;
+  // the rules are re-read only when the feed actually grew (live appends),
+  // never on every scroll tick
+  let days = [], seen = -1;
+  const refresh = () => {
+    if(chat.children.length === seen) return;
+    seen = chat.children.length;
+    days = [...chat.querySelectorAll('.day[data-round]')]
+      .map(el => ({ r: +el.dataset.round, el }));
+  };
+  // a round counts as the one being read once its rule has passed the top edge
+  const current = () => {
+    refresh();
+    if(!days.length) return null;
+    const y = chat.scrollTop + 24;
+    let cur = days[0].r;
+    for(const d of days){ if(d.el.offsetTop <= y) cur = d.r; else break; }
+    return cur;
+  };
+  const paint = () => {
+    const r = current();
+    segs.forEach(sg => sg.classList.toggle('on', r !== null && +sg.dataset.round === r));
+  };
+  segs.forEach(sg => {
+    sg.addEventListener('click', () => {
+      refresh();
+      const d = days.find(x => x.r === +sg.dataset.round);
+      if(d) chat.scrollTop = Math.max(0, d.el.offsetTop - 8);
+    });
+    // a click target must be reachable without a mouse
+    sg.tabIndex = 0;
+    sg.addEventListener('keydown', e => {
+      if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); sg.click(); }
+    });
+  });
+  chat.addEventListener('scroll', paint);
+  window.addEventListener('resize', paint);
+  paint();
+}
+linkRoundsToThread();
 
 /* ---- live streaming (in-flight matches) ---- */
 // never stream into a placeholder: the midend does not write placeholders for

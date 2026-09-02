@@ -242,46 +242,46 @@
 .rblegend{display:flex;align-items:center;gap:14px;margin:8px 0 10px;
   font-size:11px;color:#6f6657;font-family:'JetBrains Mono',monospace}
 .rblegend span{display:flex;align-items:center;gap:5px}
+.rblegend em{font-style:normal;color:#9a917f}
 .rblegend .k{width:9px;height:12px;border:2px solid var(--ink);display:inline-block}
-.rblegend .k.flag{background:var(--ink)}
+.rblegend .k.flagon{background:var(--ink)}
+.rblegend .k.flagoff{background:var(--paper)}
 .rblegend .k.svc{background:var(--green)}
 .rblegend .rbhint{margin-left:auto}
-
 /* one line per team: label, then a segment per round */
-.rbline{display:grid;grid-template-columns:minmax(92px,150px) 1fr;align-items:end;
-  gap:12px;border-bottom:2px solid #d9d3c6;padding:8px 0}
+.rbline{display:grid;grid-template-columns:minmax(92px,150px) 1fr;align-items:center;
+  gap:12px;padding:6px 0}
 .rbline .rbteam{font-weight:700;font-size:13px;line-height:1.25;padding-left:9px;
-  border-left:5px solid transparent;align-self:center;overflow-wrap:anywhere}
+  border-left:5px solid transparent;overflow-wrap:anywhere}
 .rbline.t1 .rbteam{border-left-color:var(--t1,var(--blue))}
 .rbline.t2 .rbteam{border-left-color:var(--t2,var(--pink))}
 .rbsegs{display:flex;gap:10px;overflow-x:auto;padding-bottom:2px}
 .rbseg{flex:1 1 0;min-width:54px;display:flex;flex-direction:column;
-  align-items:stretch;gap:3px}
-
-/* offense marker — what this team took off the opponent that round */
-.rbseg .rbcap{height:12px;font-size:10px;font-weight:700;line-height:12px;
-  text-align:center;font-family:'JetBrains Mono',monospace}
-.rbline.t1 .rbcap{color:var(--t1,var(--blue))}
-.rbline.t2 .rbcap{color:var(--t2,var(--pink))}
+  align-items:stretch;gap:3px;cursor:pointer;outline-offset:3px;
+  padding-bottom:4px;border-bottom:3px solid transparent}
+/* the round the thread below is currently showing */
+.rbseg.on{border-bottom-color:var(--ink)}
+.rbseg.on .rbbar,.rbseg.on .rbflag{border-width:3px}
 
 /* a bar is a TRACK (the round happened) + a fill (how much of it held), so 0%
    still shows its slot instead of vanishing */
-.rbbars{display:flex;align-items:flex-end;gap:5px;height:56px;width:100%}
+.rbbars{display:flex;align-items:flex-end;gap:5px;height:31px;width:100%}
+.rbflag{flex:0 0 11px;height:100%;border:2px solid var(--ink);background:var(--paper)}
+.rbflag + .rbflag{margin-left:-2px}   /* several flags read as one group of marks */
+.rbline.t1 .rbflag.on{background:var(--t2,var(--pink))}
+.rbline.t2 .rbflag.on{background:var(--t1,var(--blue))}
+.rbline.solo .rbflag.on{background:var(--ink)}
+.rbflag.nd{border-style:dotted;border-color:#c3b9a3}
 .rbbar{position:relative;flex:1 1 0;height:100%;
   border:2px solid var(--ink);background:var(--paper);display:block}
-/* the service reading, inside its own fill or just above it */
-.rbbar b{position:absolute;left:0;right:0;text-align:center;font-size:10px;
-  font-weight:700;font-family:'JetBrains Mono',monospace;line-height:13px}
-.rbbar b.in{margin-bottom:-15px;color:var(--paper)}
-.rbbar b.out{margin-bottom:1px;color:#6f6657}
-.rbbar i{position:absolute;left:0;right:0;bottom:0;display:block}
-.rbline.t1 .rbbar.flag i{background:var(--t1,var(--blue))}
-.rbline.t2 .rbbar.flag i{background:var(--t2,var(--pink))}
-.rbbar.svc i{background:var(--green)}
-.rbbar.tamp{border-style:dashed}                 /* tampered, then repaired */
-.rbbar.down{box-shadow:0 3px 0 var(--ink)}       /* service ended down */
-.rbbar.nd{border-style:dotted;border-color:#c3b9a3}   /* no measure for this round */
-.rbseg .rbnum{font-size:10px;font-weight:700;color:#6f6657;text-align:center;
+/* the service reading, centred in the block */
+.rbbar b{position:absolute;left:0;right:0;top:50%;transform:translateY(-50%);
+  text-align:center;font-size:10px;font-weight:700;line-height:12px;
   font-family:'JetBrains Mono',monospace}
+.rbbar b.in{color:var(--paper)}
+.rbbar b.out{color:var(--ink)}
+.rbbar i{position:absolute;left:0;right:0;bottom:0;display:block}
+.rbbar.svc i{background:var(--green)}
+.rbbar.nd{border-style:dotted;border-color:#c3b9a3}   /* no measure for this round */
+  min-width:16px;line-height:14px}
 
-.rounds .rnote{font-size:11px;color:#6f6657;margin-top:8px}
