@@ -72,11 +72,17 @@ Use `api('/api/...')` to build midend URLs. Endpoints used: `/api/harnesses`,
   - `comboLabel(x)` — compact `"model · HH"` label.
   - `duoCSS(x)` — CSS background for the **half-half combo indicator**: model color |
     harness color, collapsing to a solid when they agree. Used on discs/chips/avatars.
-  - `modelColor(x)` — the model half's own color (model→harness binding / prefix / synth).
+  - `modelColor(x)` — the model's VENDOR colour (see the colour system below).
+  - `harnessColor(x)` — the harness's vendor colour, or graphite when vendor-neutral.
+  - `isNative(x)` / `vendor(x)` — is the model on its own vendor's harness; the vendor record.
   - `distinctPair(t1, t2)` — per-team **accent** colors for theming (`--t1`/`--t2`, text,
     borders): picks whichever component color differs between the two entrants.
 
   **Use this for all competitor identity/colors — never hardcode per-agent colors.**
+
+- `fmtTime(s)`, `esc(s)`, `initials(m)`, `setActiveNav(pageHref)`.
+- `dropdown(host, {label, options, value, onChange})` — the shared listbox used by the
+  runs archive and the leaderboard (see §4).
 
 ### The colour system: vendor, not harness
 
@@ -114,7 +120,7 @@ muddy.
 `vendorOf(model)` and `harnessVendorOf(harness)` are exported for legends. The
 harness table's own colours are now only a fallback for a model whose vendor
 cannot be named.
-- `fmtTime(s)`, `esc(s)`, `initials(m)`, `setActiveNav(pageHref)`.
+
 
 ---
 
