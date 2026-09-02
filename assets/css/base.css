@@ -96,3 +96,20 @@ body > .wrap > .nav{position:sticky;top:0;z-index:30;
   .mast h1{font-size:32px}
   .headline h2{font-size:27px}
 }
+
+/* ---- campaign dropdown (shared: runs archive + leaderboard) ----
+   One control, one style, wherever a page slices by campaign. Native <select>
+   so keyboard and mobile behaviour come for free; the riso treatment is the
+   ink border + hard offset shadow used by every other control. */
+.cpick{display:inline-flex;align-items:center;gap:8px;vertical-align:middle}
+.cpick .cplabel{font-size:10px;font-weight:700;text-transform:uppercase;
+  letter-spacing:1px;color:var(--mut)}
+.cpick select{appearance:none;-webkit-appearance:none;font-family:inherit;
+  font-weight:700;font-size:12.5px;color:var(--ink);background-color:var(--paper2);
+  border:2px solid var(--ink);border-radius:30px;padding:5px 32px 5px 14px;
+  cursor:pointer;box-shadow:2px 2px 0 var(--ink);max-width:min(60vw,340px);
+  background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 8'><path d='M1 1l5 5 5-5' fill='none' stroke='%231A1A1A' stroke-width='2' stroke-linecap='round'/></svg>");
+  background-repeat:no-repeat;background-position:right 12px center;background-size:11px}
+.cpick select:hover{background-color:var(--paper)}
+.cpick select:focus-visible{outline:3px solid var(--blue);outline-offset:2px}
+.cpick select:disabled{opacity:.45;cursor:default;box-shadow:none}

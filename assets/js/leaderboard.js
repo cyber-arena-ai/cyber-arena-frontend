@@ -60,20 +60,28 @@ if(!campaigns.length){
   dek.style.display = 'none';
 
   const paintPicker = () => {
-    // an offline campaign has no name to show — the midend does not keep one —
-    // so it is listed by id and visibly marked, not hidden
-    picker.innerHTML = campaigns.map(c =>
-      `<button data-c="${c.id}" class="${c.id === current.id ? 'on' : ''}${c.online ? '' : ' off'}"
-         title="${esc(c.online ? (c.description || '') : (c.error || 'not responding'))}"
-        >${esc(c.name || c.id)}${c.stale ? ' <i class="pstale" title="cached; the campaign is not answering">·</i>' : ''} <b>${c.online ? c.entries : '—'}</b></button>`
-    ).join('');
-    picker.querySelectorAll('button').forEach(b => b.onclick = () => {
-      current = campaigns.find(c => c.id === b.dataset.c);
+    // A campaign that is not answering has no name to show — the midend keeps
+    // only the routing — so it is listed by id and visibly marked, never hidden:
+    // a wedged process must not look deregistered.
+    const opt = c => {
+      const bits = [c.online ? `${c.entries}` : 'offline'];
+      if(c.stale) bits.push('cached');
+      return `<option value="${esc(c.id)}"${c.id === current.id ? ' selected' : ''}
+                title="${esc(c.online ? (c.description || '') : (c.error || 'not responding'))}"
+              >${esc(c.name || c.id)} · ${bits.join(' · ')}</option>`;
+    };
+    picker.innerHTML =
+      `<span class="cplabel">campaign</span>
+       <select id="csel" aria-label="Which campaign's standings to show">
+         ${campaigns.map(opt).join('')}
+       </select>`;
+    picker.querySelector('select').onchange = e => {
+      current = campaigns.find(c => c.id === e.target.value);
       const u = new URL(location);
       u.searchParams.set('campaign', current.id);
       history.replaceState(null, '', u);
-      paintPicker(); show(current.id);
-    });
+      show(current.id);
+    };
   };
   paintPicker();
   show(current.id);

@@ -92,7 +92,3 @@
 .rmeta .cmp{font-family:'JetBrains Mono',monospace;font-size:10px;
   border:2px solid var(--ink);padding:1px 5px;margin-left:2px;white-space:nowrap}
 
-/* campaign filter — a second, composing axis next to the status tags */
-.cfilt{margin-left:14px;display:inline-flex;align-items:center;gap:6px;flex-wrap:wrap}
-.cfilt .cflabel{font-size:10px;text-transform:uppercase;letter-spacing:1px;color:#6f6657}
-.cfilt button{font-family:'JetBrains Mono',monospace;font-size:11px}

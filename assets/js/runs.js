@@ -164,25 +164,25 @@ document.querySelectorAll('#filt button').forEach(b => b.onclick = () => {
   applyFilters();
 });
 
-// Campaign filter — only rendered when a campaign actually commissioned
-// something in this archive, so a deploy that runs none never sees the control.
+// Campaign filter — the same dropdown the leaderboard uses. Only rendered when
+// a campaign actually commissioned something in this archive, so a deploy that
+// runs none never sees the control.
 const campaigns = new Map();
 for(const r of runs) if(r.campaign?.id) campaigns.set(r.campaign.id, r.campaign);
-const host = document.getElementById('cfilt');
-if(host && campaigns.size){
+const chost = document.getElementById('cfilt');
+if(chost && campaigns.size){
   const n = id => runs.filter(r => r.campaign?.id === id).length;
   const hand = runs.filter(r => !r.campaign).length;
-  host.innerHTML = '<span class="cflabel">campaign</span>'
-    + `<button data-c="all" class="on">all <b>${runs.length}</b></button>`
-    + [...campaigns.values()].map(c =>
-        `<button data-c="${esc(c.id)}" title="${esc(c.type || 'campaign')}">`
-        + `${esc(c.id)} <b>${n(c.id)}</b></button>`).join('')
-    + (hand ? `<button data-c="none" title="submitted by hand, not by a campaign">`
-              + `ad-hoc <b>${hand}</b></button>` : '');
-  host.querySelectorAll('button').forEach(b => b.onclick = () => {
-    host.querySelectorAll('button').forEach(x => x.classList.remove('on'));
-    b.classList.add('on');
-    fCampaign = b.dataset.c;
+  const opts = [`<option value="all">all campaigns · ${runs.length}</option>`]
+    .concat([...campaigns.values()].map(c =>
+      `<option value="${esc(c.id)}" title="${esc(c.type || 'campaign')}">${esc(c.id)} · ${n(c.id)}</option>`))
+    // runs submitted by hand belong to no campaign — worth selecting for on a
+    // page where most rows may now carry one
+    .concat(hand ? [`<option value="none">ad-hoc (no campaign) · ${hand}</option>`] : []);
+  chost.innerHTML = `<span class="cplabel">campaign</span>
+    <select aria-label="Filter the archive by campaign">${opts.join('')}</select>`;
+  chost.querySelector('select').onchange = e => {
+    fCampaign = e.target.value;
     applyFilters();
-  });
+  };
 }
