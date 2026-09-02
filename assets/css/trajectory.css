@@ -237,19 +237,46 @@
   text-transform:uppercase;letter-spacing:1px;border-bottom:3px solid var(--ink);padding-bottom:6px}
 .rounds .rhead .svc{font-family:'JetBrains Mono',monospace;font-weight:500;
   text-transform:none;letter-spacing:0;color:#6f6657}
-.rtable{width:100%;border-collapse:collapse;margin-top:0}
-.rtable th,.rtable td{border-bottom:2px solid #d9d3c6;padding:9px 10px;text-align:left;vertical-align:top}
-.rtable th{font-size:10px;text-transform:uppercase;letter-spacing:1px;color:#6f6657;font-weight:700}
-.rtable td.rn{font-family:'JetBrains Mono',monospace;font-weight:700;width:52px}
-.rtable tr td.tm{border-left:5px solid transparent;font-weight:700;width:24%}
-.rtable tr td.tm.t1{border-left-color:var(--t1,var(--blue))}
-.rtable tr td.tm.t2{border-left-color:var(--t2,var(--pink))}
-.rtable td.num{font-family:'JetBrains Mono',monospace;font-size:12px}
-.pill{display:inline-block;font-size:10px;font-weight:700;text-transform:uppercase;
-  letter-spacing:.5px;padding:2px 7px;border:2px solid var(--ink);margin-right:5px}
-.pill.ok{background:var(--green);color:var(--paper);border-color:var(--green)}
-.pill.bad{background:var(--ink);color:var(--paper)}
-.pill.warn{background:var(--paper);color:var(--ink);border-style:dashed}
-.pill.mut{border-color:#c3b9a3;color:#6f6657}
-.rtable .cap{font-size:11px;color:#6f6657;font-family:'JetBrains Mono',monospace}
+
+/* legend: the two measures a segment stacks, in the same shapes it draws */
+.rblegend{display:flex;align-items:center;gap:14px;margin:8px 0 10px;
+  font-size:11px;color:#6f6657;font-family:'JetBrains Mono',monospace}
+.rblegend span{display:flex;align-items:center;gap:5px}
+.rblegend .k{width:9px;height:12px;border:2px solid var(--ink);display:inline-block}
+.rblegend .k.flag{background:var(--ink)}
+.rblegend .k.svc{background:repeating-linear-gradient(135deg,var(--ink) 0 2px,transparent 2px 4px)}
+.rblegend .rbhint{margin-left:auto}
+
+/* one line per team: label, then a segment per round */
+.rbline{display:grid;grid-template-columns:minmax(92px,150px) 1fr;align-items:end;
+  gap:12px;border-bottom:2px solid #d9d3c6;padding:8px 0}
+.rbline .rbteam{font-weight:700;font-size:13px;line-height:1.25;padding-left:9px;
+  border-left:5px solid transparent;align-self:center;overflow-wrap:anywhere}
+.rbline.t1 .rbteam{border-left-color:var(--t1,var(--blue))}
+.rbline.t2 .rbteam{border-left-color:var(--t2,var(--pink))}
+.rbsegs{display:flex;justify-content:flex-start;gap:6px;overflow-x:auto;padding-bottom:2px}
+.rbseg{flex:1 1 0;min-width:30px;max-width:96px;display:flex;flex-direction:column;
+  align-items:center;gap:3px}
+
+/* offense marker — what this team took off the opponent that round */
+.rbseg .rbcap{height:12px;font-size:10px;font-weight:700;line-height:12px;
+  font-family:'JetBrains Mono',monospace}
+.rbline.t1 .rbcap{color:var(--t1,var(--blue))}
+.rbline.t2 .rbcap{color:var(--t2,var(--pink))}
+
+/* a bar is a TRACK (the round happened) + a fill (how much of it held), so 0%
+   still shows its slot instead of vanishing */
+.rbbars{display:flex;align-items:flex-end;gap:4px;height:44px;width:100%;max-width:58px}
+.rbbar{position:relative;flex:1 1 0;min-width:9px;max-width:24px;height:100%;
+  border:2px solid var(--ink);background:var(--paper);display:block}
+.rbbar i{position:absolute;left:0;right:0;bottom:0;display:block}
+.rbline.t1 .rbbar.flag i{background:var(--t1,var(--blue))}
+.rbline.t2 .rbbar.flag i{background:var(--t2,var(--pink))}
+.rbbar.svc i{background:repeating-linear-gradient(135deg,var(--ink) 0 2px,transparent 2px 4px)}
+.rbbar.tamp{border-style:dashed}                 /* tampered, then repaired */
+.rbbar.down{box-shadow:0 3px 0 var(--ink)}       /* service ended down */
+.rbbar.nd{border-style:dotted;border-color:#c3b9a3}   /* no measure for this round */
+.rbseg .rbnum{font-size:10px;font-weight:700;color:#6f6657;
+  font-family:'JetBrains Mono',monospace}
+
 .rounds .rnote{font-size:11px;color:#6f6657;margin-top:8px}

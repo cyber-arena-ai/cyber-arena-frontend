@@ -60,16 +60,13 @@ const defeated = (label, key, wkey) => {
 // both names in their team colors — used when nobody is defeated
 const cname = key => `<span style="color:${HH[key].color}">${(key === 'team1' ? t1 : t2).label}</span>`;
 
-// winner is null while a match is live — show a "live · X vs Y" headline then
-const leader = D.score.team1 === D.score.team2 ? null
-  : (D.score.team1 > D.score.team2 ? 'team1' : 'team2');
+// winner is null while a match is live — the headline is just the pairing then
+// (the masthead's live chip is the one place that says LIVE)
 const captured = (D.attack_flags?.team1 || 0) > 0;
 if(isSolo){
   // no opponent => no "def." and no "draw"; the result is whether it captured
-  const live = D.status === 'running'
-    ? `<mark style="background:${HH.team1.color}">LIVE</mark> ` : '';
   document.getElementById('hl').innerHTML = D.status === 'failed' || D.status === 'running'
-    ? `${live}${cname('team1')} <em>solo run</em>`
+    ? `${cname('team1')} <em>solo run</em>`
     : captured
       ? `<mark style="background:${HH.team1.color}">${t1.label}</mark> captured solo`
       : `${cname('team1')} <em>solo run</em> — no capture`;
@@ -77,9 +74,8 @@ if(isSolo){
   document.getElementById('hl').innerHTML =
     `${cname('team1')} <em>vs</em> ${cname('team2')}`;
 } else if(!D.winner){
-  const lead = leader ? HH[leader].color : HH.team1.color;
   document.getElementById('hl').innerHTML =
-    `<mark style="background:${lead}">LIVE</mark> ${cname('team1')} <em>vs</em> ${cname('team2')}`;
+    `${cname('team1')} <em>vs</em> ${cname('team2')}`;
 } else if(D.winner === 'draw'){
   document.getElementById('hl').innerHTML =
     `${cname('team1')} and ${cname('team2')} draw`;
@@ -295,9 +291,12 @@ function refreshBoard(){
 }
 
 /* ---- per-round board -------------------------------------------------
-   One row per (round x team): what happened to that team's own flag, and how
-   its service held up. Both halves span every round and every service, because
-   a match can carry several challenges and a challenge several flag stores.
+   ONE LINE PER TEAM (two at most, one for a solo run), each line a strip of
+   round segments. A segment carries two bars whose HEIGHT is the percentage:
+   how much of that team's own flag survived the round, and how much of its
+   service stayed up. A match can carry several services and several flag
+   stores per service, so a segment aggregates them — probe-weighted for
+   health, per-store for flags — and the exact figures ride in the tooltip.
    Absent for runs parsed before the midend produced this table (and for runs
    whose artifact was GC'd, which can never have it) — so the section hides
    itself rather than drawing an empty frame. */
@@ -313,68 +312,89 @@ function renderRounds(){
   if(!rounds.length){ host.innerHTML = ''; return; }
   const services = PR.services || [];
 
-  const flagCell = (cell) => {
-    if(!cell) return `<span class="pill mut">no data</span>`;
-    const out = [];
-    if(cell.lost === true)      out.push(`<span class="pill bad">${esc(cell.status)}</span>`);
-    else if(cell.status)        out.push(`<span class="pill ok">held</span>`);
-    else if(cell.planted)       out.push(`<span class="pill mut">planted</span>`);
-    // a read-precondition tamper is keyed on `repair`, never on `status`:
-    // status can read PRESENT again after a successful repair
-    if(cell.tampered)           out.push(`<span class="pill warn">tampered</span>`);
-    const caps = (cell.captures || []).filter(c => c.scored).length;
-    const tries = (cell.captures || []).length;
-    if(tries) out.push(`<span class="cap">${caps}/${tries} captured</span>`);
-    return out.join(' ') || `<span class="pill mut">—</span>`;
-  };
-
-  const svcCell = (s) => {
-    if(!s) return `<span class="pill mut">no data</span>`;
-    const cls = s.failed ? 'warn' : 'ok';
-    const bits = [`<span class="pill ${cls}">${s.uptime_pct ?? '—'}%</span>`,
-                  `<span class="cap">${s.passed}/${s.probes} probes</span>`];
-    if(s.worst_level) bits.push(`<span class="cap">worst: ${esc(s.worst_level)}</span>`);
-    if(s.restarts)    bits.push(`<span class="cap">${s.restarts} restart${s.restarts>1?'s':''}</span>`);
-    if(s.final === 'down') bits.unshift(`<span class="pill bad">down</span>`);
-    return bits.join(' ');
-  };
-
-  const rows = [];
-  for(const svc of services){
-    for(const r of rounds){
-      for(const tk of teamKeys){
-        const half = PR.teams[tk] || {};
-        const stores = ((half.flags || {})[r] || {})[svc] || {};
-        const keys = Object.keys(stores);
-        const svcStat = ((half.service || {})[r] || {})[svc];
-        // one row per flag store, so several flags in one service stay visible
-        const storeKeys = keys.length ? keys : [''];
-        storeKeys.forEach((sk, i) => {
-          rows.push(`<tr>
-            <td class="rn">${i === 0 ? 'R' + r : ''}</td>
-            <td class="tm ${tk === 'team1' ? 't1' : 't2'}">${
-              i === 0 ? esc((tk === 'team1' ? t1 : t2).label) : ''}</td>
-            <td class="num">${keys.length > 1 ? esc(sk) : ''}</td>
-            <td>${flagCell(stores[sk])}</td>
-            <td>${i === 0 ? svcCell(svcStat) : ''}</td>
-          </tr>`);
-        });
+  // every service and store of one round collapsed to two percentages + the
+  // detail line the tooltip shows, so nothing is lost, only folded
+  const roundStat = (tk, r) => {
+    const half = PR.teams[tk] || {};
+    const flags = (half.flags || {})[r] || {};
+    const svcs  = (half.service || {})[r] || {};
+    let stores = 0, held = 0, tampered = false, caps = 0, tries = 0;
+    const detail = [];
+    for(const [svc, byStore] of Object.entries(flags)){
+      for(const [sk, c] of Object.entries(byStore || {})){
+        if(!c) continue;
+        stores++;
+        // a capture READS the flag: being robbed is not losing it. Defense is
+        // status, offense is captures — the two are never conflated.
+        if(c.lost !== true && c.status) held++;
+        if(c.tampered) tampered = true;
+        const cs = c.captures || [];
+        caps += cs.filter(x => x.scored).length;
+        tries += cs.length;
+        const name = svc + (sk && sk !== 'default' ? '/' + sk : '');
+        const state = c.lost === true ? (c.status || 'lost') : c.status ? 'held' : 'planted';
+        detail.push(`${name}: ${state}${c.tampered ? ' + tampered' : ''}`);
       }
     }
-  }
+    let probes = 0, passed = 0, restarts = 0, down = false;
+    for(const [svc, sv] of Object.entries(svcs)){
+      if(!sv) continue;
+      probes += sv.probes || 0;
+      passed += sv.passed || 0;
+      restarts += sv.restarts || 0;
+      if(sv.final === 'down') down = true;
+      detail.push(`${svc}: ${sv.passed}/${sv.probes} probes`
+        + (sv.worst_level ? `, worst ${sv.worst_level}` : '')
+        + (sv.restarts ? `, ${sv.restarts} restart${sv.restarts > 1 ? 's' : ''}` : ''));
+    }
+    return { flag: stores ? Math.round(100 * held / stores) : null,
+             svc: probes ? Math.round(100 * passed / probes) : null,
+             tampered, caps, tries, down, detail };
+  };
+
+  // a bar is a full-height TRACK with a fill — so 0% still shows the slot it
+  // occupies instead of vanishing, and a missing measure reads as absent
+  const bar = (cls, pct, extra = '') => pct === null
+    ? `<span class="rbbar ${cls} nd"></span>`
+    : `<span class="rbbar ${cls}${extra}"><i style="height:${pct}%"></i></span>`;
+
+  const segment = (tk, r) => {
+    const st = roundStat(tk, r);
+    const tip = [`R${r}`,
+      st.flag === null ? 'flag: no data' : `own flag ${st.flag}% held`,
+      st.svc === null ? 'service: no data' : `service ${st.svc}% up`,
+      st.tampered ? 'tampered + repaired' : '',
+      st.down ? 'service ended down' : '',
+      st.tries ? `${st.caps}/${st.tries} captured off the opponent` : '',
+      ...st.detail].filter(Boolean).join(' · ');
+    return `<div class="rbseg" title="${esc(tip)}">
+      <div class="rbcap">${st.caps ? `+${st.caps}` : ''}</div>
+      <div class="rbbars">${bar('flag', st.flag, st.tampered ? ' tamp' : '')}${
+        bar('svc', st.svc, st.down ? ' down' : '')}</div>
+      <div class="rbnum">${r}</div></div>`;
+  };
+
+  const line = (tk) => `<div class="rbline ${tk === 'team1' ? 't1' : 't2'}">
+      <div class="rbteam">${esc((tk === 'team1' ? t1 : t2).label)}</div>
+      <div class="rbsegs">${rounds.map(r => segment(tk, r)).join('')}</div>
+    </div>`;
 
   host.innerHTML = `
     <div class="rhead"><span>Round board</span>
       <span class="svc">${services.map(esc).join(' · ')}</span></div>
-    <table class="rtable">
-      <thead><tr><th>round</th><th>team</th><th>store</th>
-        <th>own flag</th><th>service health</th></tr></thead>
-      <tbody>${rows.join('')}</tbody>
-    </table>
+    <div class="rblegend">
+      <span><i class="k flag"></i> own flag held</span>
+      <span><i class="k svc"></i> service uptime</span>
+      <span class="rbhint">bar height = %, one segment per round</span>
+    </div>
+    ${teamKeys.map(line).join('')}
     <div class="rnote">Own flag is the defender's copy — a capture reads it, it does not
-      remove it, so a stolen flag still reads <b>held</b>. Health is measured per probe
-      (process / tcp / http / checker), not per event.</div>`;
+      remove it, so a stolen flag still reads held; <b>+n</b> above a segment is what that
+      team captured off the opponent. Health is measured per probe
+      (process / tcp / http / checker), not per event. Hover a segment for the
+      per-service figures.</div>`;
 }
+
 renderRounds();
 
 /* ---- live streaming (in-flight matches) ---- */
