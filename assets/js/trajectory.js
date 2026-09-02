@@ -320,15 +320,24 @@ function renderRounds(){
   // means the same flag in every round and on both team lines. Order follows
   // the declared service list, then the store name, with `default` first —
   // discovery order would let a flag that first appears in round 3 jump slot.
+  // A slot is only worth a column if it is a REAL flag somewhere: planted, or
+  // read, or actually taken. An event the backend could not attribute lands in
+  // a placeholder store (service "?", planted:false, an UNKNOWN rejected
+  // submission) — giving that a column would draw a dotted mark in every round
+  // for a flag that never existed. Its attempts still count in the tooltip.
   const FKEY = [];
-  const seen = new Set();
+  const real = new Set();
+  const seen = new Map();
   for(const tk of teamKeys) for(const r of rounds)
     for(const [svc, byStore] of Object.entries(((PR.teams[tk] || {}).flags || {})[r] || {}))
-      for(const sk of Object.keys(byStore || {})){
+      for(const [sk, c] of Object.entries(byStore || {})){
         const k = `${svc}\u0000${sk}`;
-        if(!seen.has(k)){ seen.add(k); FKEY.push({ k, svc, sk,
-          label: svc + (sk && sk !== 'default' ? '/' + sk : '') }); }
+        if(!seen.has(k)) seen.set(k, { k, svc, sk,
+          label: svc + (sk && sk !== 'default' ? '/' + sk : '') });
+        if(c && (c.planted === true || c.status ||
+                 (c.captures || []).some(x => x.scored))) real.add(k);
       }
+  seen.forEach((f, k) => { if(real.has(k)) FKEY.push(f); });
   const svcRank = f => { const i = services.indexOf(f.svc); return i < 0 ? services.length : i; };
   FKEY.sort((a, b) => svcRank(a) - svcRank(b) || a.svc.localeCompare(b.svc)
     || (a.sk === 'default' ? -1 : b.sk === 'default' ? 1 : a.sk.localeCompare(b.sk)));
@@ -344,18 +353,24 @@ function renderRounds(){
     for(const [svc, byStore] of Object.entries(flags)){
       for(const [sk, c] of Object.entries(byStore || {})){
         if(!c) continue;
+        const k = `${svc}\u0000${sk}`;
+        const cs = c.captures || [];
+        const took = cs.filter(x => x.scored).length;
+        // attempts count wherever they landed, including the placeholder store
+        caps += took;
+        tries += cs.length;
+        byKey[k] = { took, tries: cs.length };
+        // ...but a placeholder is not a flag, so it must not drag the defense
+        // reading: one phantom store beside one real flag would read 50% held.
+        if(!real.has(k)) continue;
         stores++;
         // a capture READS the flag: being robbed is not losing it. Defense is
         // status, offense is captures — the two are never conflated.
         if(c.lost !== true && c.status) held++;
         if(c.tampered) tampered = true;
-        const cs = c.captures || [];
-        const took = cs.filter(x => x.scored).length;
-        caps += took;
-        tries += cs.length;
-        byKey[`${svc}\u0000${sk}`] = { took, tries: cs.length };
         const name = svc + (sk && sk !== 'default' ? '/' + sk : '');
-        const state = c.lost === true ? (c.status || 'lost') : c.status ? 'held' : 'planted';
+        const state = c.lost === true ? (c.status || 'lost') : c.status ? 'held'
+          : c.planted ? 'planted' : 'no record';
         detail.push(`${name}: ${state}${c.tampered ? ' + tampered' : ''}`);
       }
     }
@@ -419,7 +434,10 @@ function renderRounds(){
 
   host.innerHTML = `
     <div class="rhead"><span>Round board</span>
-      <span class="svc">${services.map(esc).join(' · ')}</span></div>
+      <span class="svc">${services.filter(sv => FKEY.some(f => f.svc === sv)
+        || teamKeys.some(tk => rounds.some(r =>
+             (((PR.teams[tk] || {}).service || {})[r] || {})[sv])))
+        .map(esc).join(' · ')}</span></div>
     <div class="rblegend">
       <span><i class="k flagon"></i><i class="k flagoff"></i> rival flag caught</span>
       <span><i class="k svc"></i> uptime</span>
