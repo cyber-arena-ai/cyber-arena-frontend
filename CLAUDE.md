@@ -63,7 +63,8 @@ Use `api('/api/...')` to build midend URLs. Endpoints used: `/api/harnesses`,
 ## 3. Shared helpers — [`assets/js/util.js`](assets/js/util.js)
 
 - `loadJSON(path)` — fetch + throw on non-OK.
-- `loadHarnesses()` — loads `/api/harnesses` and returns `{ table, get, comboKey, comboLabel }`:
+- `loadHarnesses()` — loads `/api/harnesses` (**the single source of truth for competitor
+  identity**, see the colour system below) and returns a resolver:
   - `get(x)` — resolve a team/agent object (`{model, harness?}`) or a legacy bare model string to
     its harness meta. **Always returns a usable object** (color/shortName/fullName). An explicit
     `harness` field wins (matched loosely: id, fullName, cli name, declared aliases); else the
@@ -74,7 +75,9 @@ Use `api('/api/...')` to build midend URLs. Endpoints used: `/api/harnesses`,
     harness color, collapsing to a solid when they agree. Used on discs/chips/avatars.
   - `modelColor(x)` — the model's VENDOR colour (see the colour system below).
   - `harnessColor(x)` — the harness's vendor colour, or graphite when vendor-neutral.
-  - `isNative(x)` / `vendor(x)` — is the model on its own vendor's harness; the vendor record.
+  - `isNative(x)` — is the model running on a harness built by its own vendor.
+  - `vendorOf(model)` / `harnessVendorOf(harness)` — vendor id, `''` when unknown or
+    vendor-neutral. Closures over the fetched table, so they live on the resolver.
   - `distinctPair(t1, t2)` — per-team **accent** colors for theming (`--t1`/`--t2`, text,
     borders): picks whichever component color differs between the two entrants.
 
@@ -85,6 +88,13 @@ Use `api('/api/...')` to build midend URLs. Endpoints used: `/api/harnesses`,
   runs archive and the leaderboard (see §4).
 
 ### The colour system: vendor, not harness
+
+**It is all data.** Vendor colours, model→vendor prefixes, native harnesses, the
+neutral tone and the synth palette live in
+[`midend/data/harnesses.json`](../cyber-arena-deploy/midend/data/harnesses.json)
+alongside the harness rows — `util.js` hardcodes none of it and derives every
+colour from the fetched table. Adding a vendor or renaming an org is an edit to
+that ONE file, served per request, no midend restart and no frontend deploy.
 
 Colour is carried by the **model's vendor**. `claude-opus-4-8` is Anthropic blue
 whether it ran under Claude Code, opencode or anything else — if colour followed
@@ -103,24 +113,29 @@ different competitors.
 | Zhipu | `#9E1B1B` | 0° (dark) |
 | Meta | `#2F6B1F` | 107° (dark) |
 
-Hues are spread as far as nine vendors allow, with lightness carrying the
-separation where hue alone is tight (Zhipu vs Moonshot, Meta vs Google). Adding a
-tenth vendor means finding a gap — `_claude_tmp/vendor_check.mjs` asserts the
-closest pair stays separated, so a bad choice fails rather than merely looking
-muddy.
+(A copy for reading — `vendors` in the JSON is what actually renders.) Hues are
+spread as far as nine vendors allow, with lightness carrying the separation where
+hue alone is tight (Zhipu vs Moonshot, Meta vs Google). Adding a tenth vendor
+means finding a gap — `_claude_tmp/vendor_check.mjs` reads the real file and
+asserts the closest pair stays separated, so a bad choice fails rather than
+merely looking muddy.
 
-- **A NATIVE harness shares the vendor colour** (claude+claude-code, gpt+codex,
-  qwen+qwen, kimi+kimi, deepseek+dsh), so `duoCSS` collapses to a solid disc.
-- **A vendor-neutral harness** (opencode, openhands, nexau, script, idle) takes
-  graphite `#5A5347` — a general harness must not compete with the vendor hue
-  beside it.
+- `vendors[].models` are lowercase **prefixes**, first match wins, so key order
+  in the file is priority.
+- **A NATIVE harness shares the vendor colour** — one named in that vendor's
+  `harnesses` list (claude+claude-code, gpt+codex, qwen+qwen) — so `duoCSS`
+  collapses to a solid disc. That list is also where a model with no table
+  binding falls back for its harness row.
+- **A vendor-neutral harness** (`neutral.harnesses`: opencode, openhands, nexau,
+  script, idle) takes graphite `#5A5347` — a general harness must not compete
+  with the vendor hue beside it.
 - So: **colour tells you the vendor; a split disc tells you the model is running
   somewhere other than home.**
 
-`vendorOf(model)` and `harnessVendorOf(harness)` are exported for legends. The
-harness table's own colours are now only a fallback for a model whose vendor
-cannot be named.
-
+The vendor NAME a page prints (the `· Anthropic` beside a winner) is the harness
+row's `org` — **not** a `vendors` key: `org` is who builds the *harness*, so
+OpenCode reads `SST` whoever's model it runs. A harness row's own `color` is only
+a fallback for a model whose vendor cannot be named.
 
 ---
 

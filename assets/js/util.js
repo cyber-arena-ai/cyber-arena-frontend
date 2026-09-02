@@ -9,6 +9,10 @@ export async function loadJSON(path, init){
   return res.json();
 }
 
+// Normalized key for loose name matching: the backend and the table spell
+// harnesses differently ("claude", "Claude Code", "claude-code").
+const norm = s => String(s ?? '').toLowerCase().replace(/[^a-z0-9]+/g, '');
+
 // Load the harness color table and return a combo-aware resolver.
 //
 // The competitive entity is a <model × harness> pair — the same model can run
@@ -23,85 +27,36 @@ export async function loadJSON(path, init){
 //      out of the riso accent palette. The table is a curation layer, not a
 //      fixed pool: unknown harnesses still get a distinct, stable identity.
 // Always returns a usable object (color/shortName/fullName).
-/* ---- vendor colour system -------------------------------------------------
-   COLOUR IS CARRIED BY THE VENDOR, not the harness. A model's identity is who
-   built it, so `claude-opus-4-8` is Anthropic blue whether it ran under Claude
-   Code, opencode, or anything else — otherwise the same model changes colour
-   between rows and the eye reads it as two competitors.
-
-   Hues are spread as far apart as nine vendors allow (the wheel is only 360°),
-   and separation is reinforced with lightness where hue alone would be tight.
-   Anthropic/OpenAI keep the riso --blue/--pink so the existing pages do not
-   shift under this change.
-
-   A NATIVE harness — one built by the model's own vendor, claude+claude-code,
-   gpt+codex, qwen+qwen — shares the vendor colour, so the combo disc renders
-   solid. A vendor-neutral harness (opencode, openhands, nexau) has no colour of
-   its own and takes a graphite tone, letting the model's vendor dominate. That
-   is the whole rule: colour tells you the vendor, and a split disc tells you the
-   model is running somewhere other than home. */
-export const VENDORS = {
-  anthropic: { label: 'Anthropic', color: '#2540FF' },  // blue    231°
-  openai:    { label: 'OpenAI',    color: '#FF3D7F' },  // pink    340°
-  google:    { label: 'Google',    color: '#0E9E6E' },  // green   160°
-  xai:       { label: 'xAI',       color: '#6B2BD9' },  // violet  267°
-  deepseek:  { label: 'DeepSeek',  color: '#1AA3C4' },  // cyan    191°
-  moonshot:  { label: 'Moonshot',  color: '#E8761A' },  // orange   27°
-  alibaba:   { label: 'Alibaba',   color: '#8C8A00' },  // olive    78°
-  zhipu:     { label: 'Zhipu',     color: '#9E1B1B' },  // crimson   0° (dark)
-  meta:      { label: 'Meta',      color: '#2F6B1F' },  // forest  107° (dark)
-};
-// A harness with no vendor of its own. Deliberately colourless: it must not
-// compete with the vendor hue it sits beside.
-const NEUTRAL = '#5A5347';
-
-// model name -> vendor. Ordered: the FIRST match wins, so a more specific
-// prefix must come before a looser one.
-const MODEL_VENDOR = [
-  [/^claude|^opus|^sonnet|^haiku|^fable/, 'anthropic'],
-  [/^gpt|codex|^o[1-4]\b/,               'openai'],
-  [/^gemini/,                            'google'],
-  [/^grok/,                              'xai'],
-  [/^deepseek|^ds-/,                     'deepseek'],
-  [/^kimi|^moonshot/,                    'moonshot'],
-  [/^qwen|^qwq/,                         'alibaba'],
-  [/^glm|^chatglm/,                      'zhipu'],
-  [/^llama/,                             'meta'],
-];
-// harness -> the vendor that builds it, or null for vendor-neutral. Keys are
-// normalised, so `dsh`, `deepseek` and `deepseek-cli` all land in one place.
-const HARNESS_VENDOR = {
-  claude: 'anthropic', claudecode: 'anthropic', cc: 'anthropic',
-  codex: 'openai', openaicodex: 'openai', cx: 'openai',
-  gemini: 'google', geminicli: 'google',
-  grok: 'xai', grokcli: 'xai',
-  deepseek: 'deepseek', dsh: 'deepseek', deepseekcli: 'deepseek',
-  kimi: 'moonshot', kimicli: 'moonshot',
-  qwen: 'alibaba', qwencode: 'alibaba',
-  llama: 'meta', llamacli: 'meta',
-  // vendor-neutral: general harnesses that run anyone's model
-  opencode: null, openhands: null, nexau: null, script: null, idle: null,
-};
-
-const _norm = s => String(s ?? '').toLowerCase().replace(/[^a-z0-9]+/g, '');
-
-/** The vendor id for a model name, or '' when nothing matches. */
-export function vendorOf(model){
-  const m = String(model ?? '').toLowerCase().trim();
-  for(const [re, v] of MODEL_VENDOR) if(re.test(m)) return v;
-  return '';
-}
-/** The vendor id a harness belongs to: '' when vendor-neutral or unknown. */
-export function harnessVendorOf(harness){
-  const k = _norm(harness);
-  if(k in HARNESS_VENDOR) return HARNESS_VENDOR[k] || '';
-  return vendorOf(harness);   // e.g. a harness literally named "claude-code"
-}
-
 export async function loadHarnesses(path = api('/api/harnesses')){
   const table = await loadJSON(path);
   const byModel = {}, byId = {}, byAlias = {};
-  const norm = s => String(s ?? '').toLowerCase().replace(/[^a-z0-9]+/g, '');
+  /* ---- vendor colour system, entirely table-driven ------------------------
+     COLOUR IS CARRIED BY THE VENDOR, not the harness — `claude-opus-4-8` is
+     Anthropic blue whether it ran under Claude Code or opencode, or the same
+     model would change colour between rows and read as two competitors. The
+     vendor table, the neutral tone and the synth palette all come from
+     harnesses.json, so a new vendor is an edit THERE and none here. */
+  const VENDORS = table.vendors || {};
+  const NEUTRAL = table.neutral || {};
+  // harness (normalized) -> the vendor that builds it; '' for vendor-neutral
+  const H_VENDOR = {};
+  Object.entries(VENDORS).forEach(([v, d]) =>
+    (d.harnesses || []).forEach(h => { H_VENDOR[norm(h)] = v; }));
+  (NEUTRAL.harnesses || []).forEach(h => { H_VENDOR[norm(h)] = ''; });
+  // the vendor id for a model name, or '' when nothing matches. `models` are
+  // prefixes and the first vendor wins, so file order is priority.
+  const vendorOf = m => {
+    const s = String(m ?? '').toLowerCase().trim();
+    for(const [v, d] of Object.entries(VENDORS))
+      if((d.models || []).some(pre => s.startsWith(pre))) return v;
+    return '';
+  };
+  // the vendor id a harness belongs to: '' when vendor-neutral or unknown
+  const harnessVendorOf = h => {
+    const k = norm(h);
+    if(k in H_VENDOR) return H_VENDOR[k];
+    return vendorOf(h);   // e.g. a harness literally named "claude-code"
+  };
   table.harnesses.forEach(h => {
     byId[h.id] = h;
     (h.models || []).forEach(m => { byModel[m] = h; });
@@ -109,20 +64,17 @@ export async function loadHarnesses(path = api('/api/harnesses')){
     [h.id, h.fullName, String(h.cli || '').split(/\s/)[0], ...(h.aliases || [])]
       .map(norm).filter(Boolean).forEach(a => { if(!byAlias[a]) byAlias[a] = h; });
   });
+  // a model with no explicit harness and no table binding falls back to its
+  // own vendor's harness, when the table carries one
   const byPrefix = m => {
-    const s = String(m ?? '').toLowerCase();
-    if(s.startsWith('claude')) return byId['claude-code'];
-    if(s.startsWith('gpt') || s.includes('codex')) return byId['openai-codex'];
-    if(s.startsWith('gemini')) return byId['gemini-cli'];
-    if(s.startsWith('grok')) return byId['grok-cli'];
-    if(s.startsWith('deepseek')) return byId['deepseek-cli'];
-    if(s.startsWith('llama')) return byId['llama-cli'];
-    return null;
+    const v = vendorOf(m);
+    if(!v) return null;
+    return (VENDORS[v].harnesses || []).map(a => byId[a]).find(Boolean) || null;
   };
   // synthesized identity for anything outside the table: initials + a color
   // picked deterministically (name hash) from the riso accent palette, so a
   // brand-new harness is stable and distinct without a table edit
-  const PALETTE = ['#2540FF', '#FF3D7F', '#0E9E6E', '#6B2BD9', '#1AA3C4', '#E8761A', '#E8A11B', '#D62F2F'];
+  const PALETTE = table.palette?.length ? table.palette : [table.fallback.color];
   const hash = s => [...String(s)].reduce((a, c) => (a * 31 + c.charCodeAt(0)) >>> 0, 7);
   const synth = name => {
     const n = String(name ?? '?');
@@ -162,7 +114,7 @@ export async function loadHarnesses(path = api('/api/harnesses')){
     const h = get(x);
     const v = harnessVendorOf((x && typeof x === 'object' && x.harness) || h.id || h.fullName);
     if(v) return VENDORS[v].color;
-    return _norm(h.id) in HARNESS_VENDOR ? NEUTRAL : h.color;
+    return norm(h.id) in H_VENDOR ? NEUTRAL.color : h.color;
   };
   // Is the model running on a harness built by its own vendor?
   const isNative = x => {
@@ -182,11 +134,6 @@ export async function loadHarnesses(path = api('/api/harnesses')){
   // — harness color when distinct, else model color, else a palette shift
   // (true mirror match). Takes the raw entities, returns harness-identity
   // objects with `color` set to the accent.
-  // vendor identity for a legend or a tooltip
-  const vendor = x => {
-    const v = vendorOf(model(x));
-    return v ? { id: v, ...VENDORS[v] } : { id: '', label: 'unknown', color: modelColor(x) };
-  };
   const distinctPair = (x1, x2) => {
     // vendor first: it is the axis a reader is most likely to care about
     const h1 = get(x1), h2 = get(x2);
@@ -197,7 +144,7 @@ export async function loadHarnesses(path = api('/api/harnesses')){
     return [h1, { ...h2, color: PALETTE.find(c => c !== h1.color) }];
   };
   return { get, comboKey, comboLabel, duoCSS, modelColor, harnessColor,
-           isNative, vendor, distinctPair };
+           isNative, distinctPair, vendorOf, harnessVendorOf };
 }
 
 export const fmtTime = s => `${Math.floor(s/60)}:${String(Math.round(s)%60).padStart(2,'0')}`;
