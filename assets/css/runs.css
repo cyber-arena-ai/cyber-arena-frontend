@@ -88,7 +88,11 @@
 .filt button.unavailable{border-color:#8a8378;color:#8a8378}
 .filt button.unavailable.on{background:#8a8378;color:var(--paper)}
 
-/* campaign badge — a match commissioned by a campaign instance, not by hand */
-.rmeta .cmp{font-family:'JetBrains Mono',monospace;font-size:10px;
-  border:2px solid var(--ink);padding:1px 5px;margin-left:2px;white-space:nowrap}
+/* campaign tag — which campaign commissioned this match. A flat grey block:
+   no frame, and the text a darker shade of its own background, so it reads as
+   quiet metadata. It sits inside a row whose colour already carries the
+   competitors' vendors (see CLAUDE.md §3) and must not compete with them. */
+.rmeta .cmp{font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:600;
+  background:#DED8CB;color:#6F6657;border:0;border-radius:2px;
+  padding:2px 6px;margin-left:2px;white-space:nowrap}
 

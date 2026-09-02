@@ -133,4 +133,6 @@ body > .wrap > .nav{position:sticky;top:0;z-index:30;
 .dd-menu li.on{background:var(--ink);color:var(--paper)}
 .dd-menu li.on b{opacity:.85}
 .dd-menu li .dd-tag{font-size:9.5px;font-weight:700;text-transform:uppercase;
-  letter-spacing:.6px;opacity:.75}
+  letter-spacing:.6px;background:#DED8CB;color:#6F6657;border-radius:2px;padding:1px 5px}
+/* on the selected (ink) row the block would vanish into the dark ground */
+.dd-menu li.on .dd-tag{background:rgba(247,243,236,.22);color:var(--paper)}
