@@ -138,7 +138,7 @@ const STATES = [
   { key: 'finished',        label: 'finished' },
   { key: 'pending',         label: 'pending' },
   { key: 'unavailable',     label: 'unavailable' },
-  { key: 'canceled', label: 'cancelled' },
+  { key: 'canceled',        label: 'cancelled' },
   { key: 'analysis_failed', label: 'analysis failed' },
 ];
 const count = k => k === 'all' ? runs.length : runs.filter(r => r.display === k).length;
