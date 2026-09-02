@@ -12,7 +12,7 @@
 //
 // The table is GENERIC. Each campaign declares its own `columns`, so a new
 // campaign with a different algorithm renders here without a frontend change.
-import { loadJSON, loadHarnesses, setActiveNav, api } from './util.js';
+import { loadJSON, loadHarnesses, setActiveNav, api, dropdown } from './util.js';
 
 setActiveNav('leaderboard.html');
 
@@ -61,27 +61,25 @@ if(!campaigns.length){
 
   const paintPicker = () => {
     // A campaign that is not answering has no name to show — the midend keeps
-    // only the routing — so it is listed by id and visibly marked, never hidden:
-    // a wedged process must not look deregistered.
-    const opt = c => {
-      const bits = [c.online ? `${c.entries}` : 'offline'];
-      if(c.stale) bits.push('cached');
-      return `<option value="${esc(c.id)}"${c.id === current.id ? ' selected' : ''}
-                title="${esc(c.online ? (c.description || '') : (c.error || 'not responding'))}"
-              >${esc(c.name || c.id)} · ${bits.join(' · ')}</option>`;
-    };
-    picker.innerHTML =
-      `<span class="cplabel">campaign</span>
-       <select id="csel" aria-label="Which campaign's standings to show">
-         ${campaigns.map(opt).join('')}
-       </select>`;
-    picker.querySelector('select').onchange = e => {
-      current = campaigns.find(c => c.id === e.target.value);
-      const u = new URL(location);
-      u.searchParams.set('campaign', current.id);
-      history.replaceState(null, '', u);
-      show(current.id);
-    };
+    // only the routing — so it is listed by id and marked, never hidden: a
+    // wedged process must not look deregistered.
+    dropdown(picker, {
+      value: current.id,
+      options: campaigns.map(c => ({
+        value: c.id,
+        label: c.name || c.id,
+        count: c.online ? c.entries : '—',
+        tag: !c.online ? 'offline' : (c.stale ? 'cached' : ''),
+        title: c.online ? (c.description || '') : (c.error || 'not responding'),
+      })),
+      onChange: id => {
+        current = campaigns.find(c => c.id === id);
+        const u = new URL(location);
+        u.searchParams.set('campaign', current.id);
+        history.replaceState(null, '', u);
+        show(current.id);
+      },
+    });
   };
   paintPicker();
   show(current.id);

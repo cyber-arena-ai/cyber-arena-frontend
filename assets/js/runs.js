@@ -1,5 +1,5 @@
 // Runs directory — all matches this season (competitor-agnostic)
-import { loadJSON, loadHarnesses, fmtTime, esc, setActiveNav, renderPager, api } from './util.js';
+import { loadJSON, loadHarnesses, fmtTime, esc, setActiveNav, renderPager, api, dropdown } from './util.js';
 
 setActiveNav('runs.html');
 
@@ -173,16 +173,15 @@ const chost = document.getElementById('cfilt');
 if(chost && campaigns.size){
   const n = id => runs.filter(r => r.campaign?.id === id).length;
   const hand = runs.filter(r => !r.campaign).length;
-  const opts = [`<option value="all">all campaigns · ${runs.length}</option>`]
-    .concat([...campaigns.values()].map(c =>
-      `<option value="${esc(c.id)}" title="${esc(c.type || 'campaign')}">${esc(c.id)} · ${n(c.id)}</option>`))
-    // runs submitted by hand belong to no campaign — worth selecting for on a
-    // page where most rows may now carry one
-    .concat(hand ? [`<option value="none">ad-hoc (no campaign) · ${hand}</option>`] : []);
-  chost.innerHTML = `<span class="cplabel">campaign</span>
-    <select aria-label="Filter the archive by campaign">${opts.join('')}</select>`;
-  chost.querySelector('select').onchange = e => {
-    fCampaign = e.target.value;
-    applyFilters();
-  };
+  dropdown(chost, {
+    label: 'campaign',
+    value: 'all',
+    options: [{ value: 'all', label: 'all campaigns', count: runs.length }]
+      .concat([...campaigns.values()].map(c =>
+        ({ value: c.id, label: c.id, count: n(c.id), tag: c.type || '' })))
+      // runs submitted by hand belong to no campaign — worth selecting for on a
+      // page where most rows may now carry one
+      .concat(hand ? [{ value: 'none', label: 'ad-hoc', tag: 'no campaign', count: hand }] : []),
+    onChange: v => { fCampaign = v; applyFilters(); },
+  });
 }

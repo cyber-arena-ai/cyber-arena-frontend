@@ -123,3 +123,104 @@ export function setActiveNav(page){
     if(a.getAttribute('href') === page) a.classList.add('active');
   });
 }
+
+/* ---- dropdown ------------------------------------------------------------
+   A hand-built listbox, used wherever a page slices by campaign. Not a native
+   <select>: that control cannot take the riso treatment and read as part of the
+   page. The cost of dropping it is that everything it did for free has to be
+   done here — roving focus, type-ahead-free arrow navigation, Escape, click-
+   outside, and the ARIA that makes it announce as a listbox.
+
+   options: [{ value, label, count?, tag?, title?, current? }]
+   Returns { el, set(value), destroy() }. */
+export function dropdown(host, { label = '', options = [], value, onChange }) {
+  const opts = options.slice();
+  let open = false, active = Math.max(0, opts.findIndex(o => o.value === value));
+
+  const wrap = document.createElement('span');
+  wrap.className = 'cpick';
+  wrap.innerHTML =
+    (label ? `<span class="cplabel">${esc(label)}</span>` : '') +
+    `<span class="dd" data-open="false">
+       <button type="button" class="dd-btn" aria-haspopup="listbox" aria-expanded="false">
+         <span class="dd-cur"></span><b></b><i class="dd-car"></i>
+       </button>
+       <ul class="dd-menu" role="listbox" tabindex="-1"></ul>
+     </span>`;
+  const dd = wrap.querySelector('.dd');
+  const btn = wrap.querySelector('.dd-btn');
+  const menu = wrap.querySelector('.dd-menu');
+
+  const paintBtn = () => {
+    const o = opts.find(x => x.value === value) || opts[0] || {};
+    wrap.querySelector('.dd-cur').textContent = o.label ?? '';
+    wrap.querySelector('.dd-btn b').textContent = o.count ?? '';
+    btn.title = o.title || '';
+  };
+  const paintMenu = () => {
+    menu.innerHTML = opts.map((o, i) =>
+      `<li role="option" data-v="${esc(o.value)}" title="${esc(o.title || '')}"
+           aria-selected="${o.value === value}"
+           class="${o.value === value ? 'on' : ''}${i === active ? ' act' : ''}"
+         ><span>${esc(o.label)}${o.tag ? ` <span class="dd-tag">${esc(o.tag)}</span>` : ''}</span>`
+      + `<b>${o.count ?? ''}</b></li>`).join('');
+  };
+
+  const setOpen = (v) => {
+    open = v;
+    dd.dataset.open = String(v);
+    btn.setAttribute('aria-expanded', String(v));
+    if (v) { active = Math.max(0, opts.findIndex(o => o.value === value)); paintMenu(); }
+  };
+  const choose = (v) => {
+    if (v !== value) { value = v; paintBtn(); onChange?.(v); }
+    setOpen(false);
+    btn.focus();
+  };
+  const move = (d) => {
+    if (!opts.length) return;
+    active = (active + d + opts.length) % opts.length;
+    paintMenu();
+    menu.children[active]?.scrollIntoView({ block: 'nearest' });
+  };
+
+  btn.onclick = (e) => { e.stopPropagation(); setOpen(!open); };
+  menu.onclick = (e) => {
+    const li = e.target.closest('li');
+    if (li) { e.stopPropagation(); choose(li.dataset.v); }
+  };
+  // pointer highlight tracks the keyboard cursor, so the two never disagree
+  menu.onmousemove = (e) => {
+    const li = e.target.closest('li');
+    if (!li) return;
+    const i = [...menu.children].indexOf(li);
+    if (i !== active) { active = i; paintMenu(); }
+  };
+  wrap.onkeydown = (e) => {
+    const k = e.key;
+    if (!open) {
+      if (k === 'ArrowDown' || k === 'Enter' || k === ' ') { e.preventDefault(); setOpen(true); }
+      return;
+    }
+    if (k === 'Escape') { e.preventDefault(); setOpen(false); btn.focus(); }
+    else if (k === 'ArrowDown') { e.preventDefault(); move(1); }
+    else if (k === 'ArrowUp') { e.preventDefault(); move(-1); }
+    else if (k === 'Home') { e.preventDefault(); active = 0; paintMenu(); }
+    else if (k === 'End') { e.preventDefault(); active = opts.length - 1; paintMenu(); }
+    else if (k === 'Enter' || k === ' ') { e.preventDefault(); choose(opts[active]?.value); }
+    else if (k === 'Tab') setOpen(false);
+  };
+  const onDoc = () => { if (open) setOpen(false); };
+  document.addEventListener('click', onDoc);
+
+  // set the closed state through the same path that toggles it, rather than
+  // trusting the markup above to agree with it
+  setOpen(false);
+  paintBtn(); paintMenu();
+  host.replaceChildren(wrap);
+  return {
+    el: wrap,
+    set(v) { value = v; paintBtn(); paintMenu(); },
+    destroy() { document.removeEventListener('click', onDoc); },
+  };
+}
