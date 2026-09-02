@@ -77,6 +77,43 @@ Use `api('/api/...')` to build midend URLs. Endpoints used: `/api/harnesses`,
     borders): picks whichever component color differs between the two entrants.
 
   **Use this for all competitor identity/colors — never hardcode per-agent colors.**
+
+### The colour system: vendor, not harness
+
+Colour is carried by the **model's vendor**. `claude-opus-4-8` is Anthropic blue
+whether it ran under Claude Code, opencode or anything else — if colour followed
+the harness, the same model would change colour between rows and read as two
+different competitors.
+
+| vendor | colour | hue |
+|---|---|---|
+| Anthropic | `#2540FF` | 233° |
+| OpenAI | `#FF3D7F` | 340° |
+| Google | `#0E9E6E` | 160° |
+| xAI | `#6B2BD9` | 262° |
+| DeepSeek | `#1AA3C4` | 192° |
+| Moonshot | `#E8761A` | 27° |
+| Alibaba | `#8C8A00` | 59° |
+| Zhipu | `#9E1B1B` | 0° (dark) |
+| Meta | `#2F6B1F` | 107° (dark) |
+
+Hues are spread as far as nine vendors allow, with lightness carrying the
+separation where hue alone is tight (Zhipu vs Moonshot, Meta vs Google). Adding a
+tenth vendor means finding a gap — `_claude_tmp/vendor_check.mjs` asserts the
+closest pair stays separated, so a bad choice fails rather than merely looking
+muddy.
+
+- **A NATIVE harness shares the vendor colour** (claude+claude-code, gpt+codex,
+  qwen+qwen, kimi+kimi, deepseek+dsh), so `duoCSS` collapses to a solid disc.
+- **A vendor-neutral harness** (opencode, openhands, nexau, script, idle) takes
+  graphite `#5A5347` — a general harness must not compete with the vendor hue
+  beside it.
+- So: **colour tells you the vendor; a split disc tells you the model is running
+  somewhere other than home.**
+
+`vendorOf(model)` and `harnessVendorOf(harness)` are exported for legends. The
+harness table's own colours are now only a fallback for a model whose vendor
+cannot be named.
 - `fmtTime(s)`, `esc(s)`, `initials(m)`, `setActiveNav(pageHref)`.
 
 ---
