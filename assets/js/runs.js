@@ -5,11 +5,11 @@ setActiveNav('runs.html');
 
 // The API returns every run by default; the page pages client-side over the
 // whole list, so D.count and the rendered rows always agree.
-//   nofail=1   drop matches that never happened
-//   withtraj=1 drop runs with no readable thread — `unavailable` (the backend
-//              GC'd the artifact before we parsed it) and `pending`
-// Together: matches that were played AND can be opened.
-const [D, H] = await Promise.all([loadJSON(api('/api/runs?nofail=1&withtraj=1')), loadHarnesses()]);
+//   outcome=succeeded,running  real results, plus matches still being played
+//   parse=ok                   only runs whose thread we can actually open
+// Cancelled matches are deliberately NOT here: one stopped 18 seconds in still
+// records whatever the board held, which reads as a nil-nil draw.
+const [D, H] = await Promise.all([loadJSON(api('/api/runs?outcome=succeeded,running&parse=ok')), loadHarnesses()]);
 D.updated = D.updated || new Date().toISOString().slice(0, 10);
 const runs = D.runs;  // already newest-first from the API
 

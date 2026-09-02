@@ -7,11 +7,11 @@ const params = new URLSearchParams(location.search);
 let runId = params.get('run');
 
 // "Random Match": no ?run given -> pick from runs that were played AND have
-// a thread to show (withtraj=1) — otherwise most picks land on an
-// `unavailable` match whose artifact was GC'd before we could parse it.
+// a thread to show (parse=ok) — otherwise most picks land on a run
+// whose artifact was GC'd before we could parse it.
 if(!runId){
   try {
-    const pool = (await loadJSON(api('/api/runs?nofail=1&withtraj=1'))).runs || [];
+    const pool = (await loadJSON(api('/api/runs?outcome=succeeded,running&parse=ok'))).runs || [];
     if(pool.length) runId = pool[Math.floor(Math.random() * pool.length)].id;
   } catch { /* fall through to the message below */ }
 }
