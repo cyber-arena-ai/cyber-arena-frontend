@@ -1,7 +1,7 @@
 // Games — the challenge arena. Probes the warehouse registry (index.json) and
 // renders every challenge as a card. No hardcoded list; add a YAML + rebuild the
 // index and it shows up here automatically.
-import { loadJSON, loadHarnesses, esc, setActiveNav, renderPager, api } from './util.js';
+import { loadJSON, loadHarnesses, esc, setActiveNav, renderPager, api, ARCHIVE_RUNS } from './util.js';
 import { reg } from './config.js';
 
 setActiveNav('games.html');
@@ -136,7 +136,7 @@ document.querySelectorAll('#filt button').forEach(b => b.onclick = () => {
 let _runs;   // undefined=not fetched, null=fetch failed, [] / [...] = loaded
 async function allRuns() {
   if (_runs !== undefined) return _runs;
-  try { _runs = (await loadJSON(api('/api/runs?outcome=succeeded,running&parse=ok'))).runs || []; }
+  try { _runs = (await loadJSON(api(ARCHIVE_RUNS))).runs || []; }
   catch { _runs = null; }
   return _runs;
 }
@@ -157,9 +157,9 @@ function runRow(r, H) {
   const w = r.winner;
   const s1 = `<b class="${w === 'team1' ? 'win' : ''}">${r.score?.team1 ?? '–'}</b>`;
   const s2 = `<b class="${w === 'team2' ? 'win' : ''}">${r.score?.team2 ?? '–'}</b>`;
+  // only `live` is reachable: ARCHIVE_RUNS admits succeeded + running only
   const state = r.outcome === 'running'
-    ? `<span class="hstate live"><i class="fa-solid fa-circle"></i> live</span>`
-    : r.outcome === 'failed' ? `<span class="hstate failed">failed</span>` : '';
+    ? `<span class="hstate live"><i class="fa-solid fa-circle"></i> live</span>` : '';
   return `<a class="hrow" href="trajectory.html?run=${r.id}">
     <span class="hdate">${dLabel(r.date)}</span>
     <span class="hvs">${esc(teamLabel(H, t1))} <em>vs</em> ${esc(teamLabel(H, t2))}</span>

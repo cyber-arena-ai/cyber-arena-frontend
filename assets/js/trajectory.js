@@ -1,5 +1,5 @@
 // Trajectory (single match) — chat thread + Sublime-style minimap
-import { loadJSON, loadHarnesses, fmtTime, esc, setActiveNav, api } from './util.js';
+import { loadJSON, loadHarnesses, fmtTime, esc, setActiveNav, api, ARCHIVE_RUNS } from './util.js';
 
 setActiveNav('trajectory.html');
 
@@ -11,7 +11,7 @@ let runId = params.get('run');
 // whose artifact was GC'd before we could parse it.
 if(!runId){
   try {
-    const pool = (await loadJSON(api('/api/runs?outcome=succeeded,running&parse=ok'))).runs || [];
+    const pool = (await loadJSON(api(ARCHIVE_RUNS))).runs || [];
     if(pool.length) runId = pool[Math.floor(Math.random() * pool.length)].id;
   } catch { /* fall through to the message below */ }
 }

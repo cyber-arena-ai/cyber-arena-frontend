@@ -37,3 +37,14 @@ export const REGISTRY_BASE = (
 
 // path is relative to _registry/ (e.g. reg('/index.json'), reg('/covers/x.png'))
 export const reg = path => `${REGISTRY_BASE}/_registry${path.startsWith('/') ? '' : '/'}${path}`;
+
+// The archive corpus, in one place: real results plus matches still being
+// played, and only ones whose thread can be opened. It is a POLICY, not a
+// convenience — three pages have to agree on it or Random Match and the Games
+// view show a different set of matches than the Runs page does.
+//
+// `running` is not optional: a live match is `outcome=running, parse=ok`, and
+// dropping it takes the LIVE rows off the Runs page. Cancelled matches are
+// deliberately out — one stopped 18 seconds in still records whatever the board
+// held, which reads as a nil-nil draw.
+export const ARCHIVE_RUNS = '/api/runs?outcome=succeeded,running&parse=ok';

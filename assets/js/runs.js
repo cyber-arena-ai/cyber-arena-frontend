@@ -1,15 +1,12 @@
 // Runs directory — all matches this season (competitor-agnostic)
-import { loadJSON, loadHarnesses, fmtTime, esc, setActiveNav, renderPager, api, dropdown } from './util.js';
+import { loadJSON, loadHarnesses, fmtTime, esc, setActiveNav, renderPager, api, dropdown, ARCHIVE_RUNS } from './util.js';
 
 setActiveNav('runs.html');
 
 // The API returns every run by default; the page pages client-side over the
 // whole list, so D.count and the rendered rows always agree.
-//   outcome=succeeded,running  real results, plus matches still being played
-//   parse=ok                   only runs whose thread we can actually open
-// Cancelled matches are deliberately NOT here: one stopped 18 seconds in still
-// records whatever the board held, which reads as a nil-nil draw.
-const [D, H] = await Promise.all([loadJSON(api('/api/runs?outcome=succeeded,running&parse=ok')), loadHarnesses()]);
+// ARCHIVE_RUNS is the corpus policy — see config.js.
+const [D, H] = await Promise.all([loadJSON(api(ARCHIVE_RUNS)), loadHarnesses()]);
 D.updated = D.updated || new Date().toISOString().slice(0, 10);
 const runs = D.runs;  // already newest-first from the API
 
@@ -51,19 +48,30 @@ const dateLabel = (d, t) => {
   const [, m, day] = (d || '2026-01-01').split('-');
   return `<b>${MONTHS[+m-1]} ${+day}</b>${t || ''}`;
 };
-// Three independent facts, so up to three tags — a run can be BOTH cancelled
-// and unreadable, and saying only one of those was the flaw in the old merged
-// `display` value: `unavailable` swallowed 19 cancellations and 12 failures.
-const statusTag = r => {
-  const t = [];
-  if(r.outcome === 'running')       t.push(`<span class="stag live-tag"><i class="fa-solid fa-circle"></i> LIVE</span>`);
-  else if(r.outcome === 'failed')   t.push(`<span class="stag fail-tag">failed</span>`);
-  else if(r.outcome === 'canceled') t.push(`<span class="stag fail-tag" title="stopped before it could finish — any score it shows is whatever the board held when it was killed">cancelled</span>`);
-  if(r.parse === 'pending')         t.push(`<span class="stag ana-tag" title="the backend has this queued — nothing parsed yet"><i class="fa-solid fa-hourglass-half"></i> pending</span>`);
-  else if(r.parse === 'failed')     t.push(`<span class="stag anafail-tag" title="this run could not be parsed — its artifact is missing or unreadable">unavailable</span>`);
-  if(r.analysis === 'failed')       t.push(`<span class="stag anafail-tag" title="deep analysis gave up after retries">analysis failed</span>`);
-  return t.join('');
-};
+// ONE table, driving both the row tags and the filter chips — they were two
+// parallel copies of the same axis->label map, so a value added to one showed
+// up as a tag with no chip, or a chip whose count never matched the rows.
+//
+// Each entry names the ONE field it tests. That is the point of the three
+// axes: a count is the truth about its own axis rather than whatever a
+// priority chain let through. The entries are NOT mutually exclusive, so a run
+// carries every tag that matches — it can be cancelled AND unreadable, and
+// saying only one of those was the flaw in the merged `display` value it
+// replaced.
+//
+// Only outcomes the archive query admits are listed. `runs.js` asks for
+// `outcome=succeeded,running&parse=ok`, so chips for `failed`, `canceled`,
+// `parse=pending` and `parse=failed` could never match — widen the query first
+// if you want them back.
+const STATES = [
+  { key: 'all',             label: 'all',             hit: () => true },
+  { key: 'live',            label: 'live',             hit: r => r.outcome === 'running',
+    tag: '<span class="stag live-tag"><i class="fa-solid fa-circle"></i> LIVE</span>' },
+  { key: 'finished',        label: 'finished',        hit: r => r.outcome === 'succeeded' },
+  { key: 'analysis_failed', label: 'analysis failed', hit: r => r.analysis === 'failed',
+    tag: '<span class="stag anafail-tag" title="deep analysis gave up after retries">analysis failed</span>' },
+];
+const statusTag = r => STATES.filter(s => s.tag && s.hit(r)).map(s => s.tag).join('');
 // only flag hint mode (agents got the vuln hint); hard mode is the default and
 // stays untagged
 const modeTag = r =>
@@ -134,21 +142,6 @@ function draw(scroll = false){
 }
 draw();
 
-// status filters, by display state. `analysing` is gone — analysis is triggered
-// by hand now, so an un-analysed match is just finished.
-// Each chip names the ONE field it filters, so a count is the truth about that
-// axis and not whatever a priority chain let through: `failed` is every run that
-// failed, including the ones that are also unreadable.
-const STATES = [
-  { key: 'all',             label: 'all',             hit: () => true },
-  { key: 'live',            label: 'live',            hit: r => r.outcome === 'running' },
-  { key: 'finished',        label: 'finished',        hit: r => r.outcome === 'succeeded' },
-  { key: 'canceled',        label: 'cancelled',       hit: r => r.outcome === 'canceled' },
-  { key: 'failed',          label: 'failed',          hit: r => r.outcome === 'failed' },
-  { key: 'pending',         label: 'pending',         hit: r => r.parse === 'pending' },
-  { key: 'unavailable',     label: 'unavailable',     hit: r => r.parse === 'failed' },
-  { key: 'analysis_failed', label: 'analysis failed', hit: r => r.analysis === 'failed' },
-];
 const HIT = Object.fromEntries(STATES.map(s => [s.key, s.hit]));
 const count = k => runs.filter(HIT[k]).length;
 document.getElementById('filt').innerHTML = STATES
@@ -156,7 +149,7 @@ document.getElementById('filt').innerHTML = STATES
   .map((s, i) => `<button data-s="${s.key}" class="${s.key} ${i === 0 ? 'on' : ''}">${s.label} <b>${count(s.key)}</b></button>`)
   .join('');
 
-// The two filters compose: status is the row's display state, campaign is who
+// The two filters compose: status is one of the run's axes, campaign is who
 // commissioned it. A run submitted by hand has no campaign at all.
 let fState = 'all', fCampaign = 'all';
 function applyFilters(){

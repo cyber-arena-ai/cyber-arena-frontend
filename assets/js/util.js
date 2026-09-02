@@ -1,7 +1,7 @@
 // CyberArena — shared helpers
 import { api } from './config.js';
 
-export { api, API_BASE } from './config.js';
+export { api, API_BASE, ARCHIVE_RUNS } from './config.js';
 
 export async function loadJSON(path, init){
   const res = await fetch(path, init);
