@@ -169,11 +169,15 @@ html,body{overflow-x:clip}
      its column open at var(--ln-end) */
   .ln-go{display:none}
   .ln-slide{grid-template-columns:var(--ln-end) minmax(0,1.2fr) minmax(0,1fr) 0}
-  /* On desktop the robots' fists just clip the ends of the strip, which reads
-     as depth. At phone width they are 240px wide and pinned to both edges, so
-     they bury it completely — and .fighter takes pointer events, so the link
-     is unclickable too. Lift the hero copy over them here, and only here. */
-  .hero-copy{z-index:21}
+  /* The robots stay ON TOP at every width — they are the page's identity, and
+     nothing should be drawn over them. At phone width they are 240px wide and
+     pinned to both edges, so their fists do reach across the hero copy; that
+     overlap is intended depth, not a bug.
+     What is NOT acceptable is them eating taps: .fighter takes pointer events,
+     which made the live strip and the buttons beneath it unclickable here. So
+     the robots go inert at phone width instead of being lowered — they keep
+     covering, and stop intercepting. */
+  .robo .fighter{pointer-events:none}
 }
 /* the roll is decorative — hold still and just replace the content */
 @media(prefers-reduced-motion:reduce){

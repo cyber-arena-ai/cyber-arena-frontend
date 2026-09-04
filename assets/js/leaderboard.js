@@ -96,12 +96,10 @@ if(!campaigns.length){
           ? [c.campaign_type && `${c.campaign_type} scheduler`, c.description]
               .filter(Boolean).join(' — ')
           : (c.error || 'not responding'),
-        // The tag is about the PROCESS, and only two states matter to a reader:
-        // this copy is old (say how old), or there is nothing to show at all.
-        // WHERE an old copy came from — the in-memory window or the stored
-        // snapshot — is an implementation detail of the midend's fallback, and
-        // the age already carries everything a reader does with it.
-        tag: c.stale ? `cached ${forS(c.stale_age_s)} ago` : (c.online ? '' : 'offline'),
+        // One word: the campaign is not answering. The picker is a chooser, not
+        // a status board — how old the copy is belongs on the list it labels,
+        // and the facts line says it once a campaign is chosen.
+        tag: c.online ? '' : 'offline',
       })),
       onChange: id => {
         current = campaigns.find(c => c.id === id);
