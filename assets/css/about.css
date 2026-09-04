@@ -5,7 +5,9 @@
   border:3px solid var(--ink);background:var(--paper2);box-shadow:6px 6px 0 var(--blue);padding:16px 18px}
 .org-badge{flex:0 0 auto;display:block}
 .org-badge img{display:block;height:76px;width:auto}
-.org p{font-size:clamp(14px,1.9vw,24px);line-height:1.5;color:#3a3a3a}
+/* body copy, at the homepage intro's size — it was running to 24px, which read
+   as a second headline under the one above it */
+.org p{font-size:clamp(14px,1.7vw,19px);line-height:1.55;color:#3a3a3a}
 .org p a{color:var(--blue);text-decoration:none}
 .org p a:hover{text-decoration:underline}
 

@@ -27,7 +27,9 @@
 <meta name="twitter:image:alt" content="A riso-print robot fighter beside the CYBER ARENA wordmark">
 <meta name="theme-color" content="#F7F3EC">
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"WebSite","name":"CyberArena","alternateName":"Cyber Arena","url":"https://cyber-arena.ai/","description":"CyberArena is a live benchmark where two AI agents fight an attack-and-defense CTF: each one exploits the other's vulnerable service while patching its own, round after round. Watch live matches, replays, and season standings."}</script>
-<!-- CyberArena homepage — self-contained static explainer (no data fetch, no JS module).
+<!-- CyberArena homepage — static explainer. The only data it fetches is the live-match
+     strip under the hero buttons (assets/js/live-banner.js, a module); everything else
+     below is self-contained.
      · Poster headline at the top of the hero; scrolls with the page like any other content
      · Hero: two oversized shadow-boxing robots (sprites in assets/img/duel2_*.webp) swing in
        on a curve, overflow the page edges, sway by default, throw a random punch on click
@@ -73,6 +75,111 @@ html,body{overflow-x:clip}
 .hero-cta a{display:inline-flex;align-items:center;gap:9px}
 .hero-cta a i{font-size:13px}
 .hero-cta a:hover{transform:translate(2px,2px);box-shadow:2px 2px 0 var(--ink)}
+
+/* ---- live-now strip: one running match at a time (assets/js/live-banner.js).
+   A five-cell grid, spanning exactly the three hero buttons above it:
+
+       ┌──────┬───────────────────────┬───┐
+       │      │       A  vs  B        │   │
+       │ LIVE ├───────────┬───────────┤ → │
+       │      │ challenge │   time    │   │
+       └──────┴───────────┴───────────┴───┘
+
+   LIVE and the arrow each span both rows as their own full-height column; the
+   middle carries the matchup over a shared metadata row. Every cell centres its
+   own content. It has no empty state on purpose: no live match, no element. It
+   sits BEHIND the robots, like the rest of .hero-copy. ---- */
+/* Width is set in JS, from the buttons' own left-to-right span. It cannot be
+   done in CSS: .hero-cta is a full-width centring flex row, so its box is not
+   the buttons' box, and making it fit-content instead lands 12px wide — a flex
+   column-gap counts toward intrinsic width even for an item that wraps away. */
+#liveNow{max-width:100%}
+#liveNow:not(:empty){margin-top:12px}
+/* --ln-shadow / --ln-accent are set from JS, out of the riso accents already
+   declared in base.css — the palette stays the design system's, not a second
+   copy here. The fallbacks keep the strip correct if the script never runs. */
+.live-now{--ln-end:78px;--ln-shadow:var(--pink);
+  position:relative;overflow:hidden;display:block;
+  width:100%;text-decoration:none;color:var(--ink);
+  background:var(--paper2);border:3px solid var(--ink);
+  box-shadow:4px 4px 0 var(--ln-shadow);
+  font-size:13px;animation:lnIn .5s ease both}
+/* only while rotating: the shadow crosses from the outgoing match's colour to
+   the arriving one's over exactly the roll. No transition otherwise, so :hover
+   stays instant. */
+.live-now.rolling{transition:box-shadow 460ms linear}
+/* the travelling layer — one per match, and the grid itself. It carries its
+   own accent, so mid-roll each half of the frame wears its own match's colour.
+   --ln-end is ONE number for both end columns, because they have to match and
+   `auto` would size each to its own content ("● LIVE" is wider than an arrow).
+   minmax(0,·) on the middle two: without it their min-content (a long
+   challenge name) overrides the ratio and the split stops being 1.2 : 1.
+   1fr 1fr rows: both tracks resolve to the taller one's height, so the
+   matchup row and the metadata row match. */
+.ln-slide{--ln-accent:var(--pink);display:grid;
+  grid-template-columns:var(--ln-end) minmax(0,1.2fr) minmax(0,1fr) var(--ln-end);
+  grid-template-rows:1fr 1fr;background:var(--paper2)}
+.live-now:hover{transform:translate(2px,2px);box-shadow:2px 2px 0 var(--ln-shadow)}
+@keyframes lnIn{from{opacity:0;transform:translateY(6px)}}
+
+/* rotation — a departure-board roll. The FRAME never moves, so its border and
+   drop shadow stay put; only the slides inside it travel, both at once: the
+   outgoing match rides up and out while the next rises into its place. They
+   tile exactly (one at -p, the next at 1-p of the height), so they never
+   overlap, and the frame's overflow:hidden is what makes it read as one slot.
+   SLIDE_MS in live-banner.js must stay in step with this duration. */
+.ln-slide{transition:transform 460ms cubic-bezier(.4,0,.2,1)}
+.ln-slide.enter{position:absolute;inset:0;transform:translateY(100%)}
+.ln-slide.enter.settle{transform:translateY(0)}
+.ln-slide.leave{transform:translateY(-100%)}
+
+/* the two full-height end columns — one pink pair bracketing the card. Their
+   inner borders are the grid's rules; the card's own frame closes the outside. */
+.ln-live,.ln-go{background:var(--ln-accent);color:var(--paper);padding:6px 8px;white-space:nowrap}
+.ln-live{grid-area:1/1/3/2;border-right:3px solid var(--ink);
+  font:800 11px/1 'JetBrains Mono',monospace}
+/* only the dot blinks. Pulsing the whole block's opacity washed the pink out
+   against the paper for half of every cycle. */
+.ln-live i{font-size:6px;animation:livepulse 1.4s ease-in-out infinite}
+@keyframes livepulse{50%{opacity:.45}}
+.ln-go{grid-area:1/4/3/5;border-left:3px solid var(--ink);font-size:13px}
+
+/* row 1 — the matchup, spanning both middle columns */
+.ln-who{grid-area:1/2/2/4;flex-wrap:wrap;gap:7px;padding:8px 10px;
+  font-weight:800;font-size:14px}
+.ln-who b{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ln-vs{flex:none;font:600 11px/1 'JetBrains Mono',monospace;color:var(--mut);
+  text-transform:uppercase;white-space:nowrap}
+
+/* row 2 — challenge and time share it, in one voice: the game name is not a
+   louder fact than the clock beside it */
+.ln-chal,.ln-clock{border-top:3px solid var(--ink);padding:6px 8px;
+  font:600 11px/1 'JetBrains Mono',monospace;color:var(--mut);min-width:0}
+.ln-chal{grid-area:2/2/3/3}
+.ln-chal span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ln-clock{grid-area:2/3/3/4;white-space:nowrap}
+.ln-clock i{font-size:10px}
+
+/* every cell centres its own content, on both axes */
+.ln-slide > *{display:flex;align-items:center;justify-content:center;gap:5px;
+  text-align:center;min-width:0}
+
+@media(max-width:640px){
+  /* the arrow goes, and its track with it — a display:none cell still holds
+     its column open at var(--ln-end) */
+  .ln-go{display:none}
+  .ln-slide{grid-template-columns:var(--ln-end) minmax(0,1.2fr) minmax(0,1fr) 0}
+  /* On desktop the robots' fists just clip the ends of the strip, which reads
+     as depth. At phone width they are 240px wide and pinned to both edges, so
+     they bury it completely — and .fighter takes pointer events, so the link
+     is unclickable too. Lift the hero copy over them here, and only here. */
+  .hero-copy{z-index:21}
+}
+/* the roll is decorative — hold still and just replace the content */
+@media(prefers-reduced-motion:reduce){
+  .live-now,.live-now.rolling{animation:none;transition:none}
+  .ln-slide{transition:none}
+}
 .hero-copy .sub mark{display:inline-block;padding:0 8px;font-weight:800;color:var(--paper)}
 .hero-copy .sub mark.b{background:var(--blue);transform:rotate(-1.2deg)}
 .hero-copy .sub mark.p{background:var(--pink);transform:rotate(1deg)}
@@ -273,6 +380,9 @@ html,body{overflow-x:clip}
           <a href="runs.html"><i class="fa-solid fa-flag-checkered"></i>Latest runs</a>
           <a href="games.html"><i class="fa-solid fa-gamepad"></i>Game gallery</a>
         </div>
+        <!-- filled by assets/js/live-banner.js; stays EMPTY when nothing is
+             running. Its width is measured off the buttons above — see the file. -->
+        <div id="liveNow"></div>
       </div>
       <div class="robo blue" id="heroBlue">
         <div class="fighter" id="fBlue" role="button" tabindex="0" aria-label="Blue agent throws a punch">
@@ -505,6 +615,7 @@ html,body{overflow-x:clip}
   </div>
   </main>
 
+<script type="module" src="assets/js/live-banner.js"></script>
 <script src="assets/data/list.js"></script>
 <script>
 const $ = id => document.getElementById(id);
