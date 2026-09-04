@@ -7,7 +7,7 @@
 // such: a held ranking must never be presented as a current one. A campaign (cyber-arena-deploy/campaign/) is a persistent
 // process beside the midend: it pulls the run list, applies its own selection
 // and algorithm, and serves the result over loopback. So every field on this
-// page is the campaign's own word, read live — including its name. That is the point: a ranking is one campaign's opinion, named and
+// page is the campaign's own word, read live — including its type. That is the point: a ranking is one campaign's opinion, identified and
 // comparable, not an unattributed number handed down by the server.
 //
 // The table is GENERIC. Each campaign declares its own `columns`, so a new
@@ -60,17 +60,22 @@ if(!campaigns.length){
   dek.style.display = 'none';
 
   const paintPicker = () => {
-    // A campaign that is not answering has no name to show — the midend keeps
-    // only the routing — so it is listed by id and marked, never hidden: a
-    // wedged process must not look deregistered.
+    // A campaign is identified by its ID and nothing else — the midend keeps only
+    // the routing, so the id is the one string that always exists, and it is the
+    // same string in the ledger, the logs and the URL. A campaign that is not
+    // answering is listed and marked, never hidden: a wedged process must not
+    // look deregistered.
     dropdown(picker, {
       value: current.id,
       options: campaigns.map(c => ({
         value: c.id,
-        label: c.name || c.id,
+        label: c.id,
         count: c.online ? c.entries : '—',
         tag: !c.online ? 'offline' : (c.stale ? 'cached' : ''),
-        title: c.online ? (c.description || '') : (c.error || 'not responding'),
+        title: c.online
+          ? [c.campaign_type && `${c.campaign_type} scheduler`, c.description]
+              .filter(Boolean).join(' — ')
+          : (c.error || 'not responding'),
       })),
       onChange: id => {
         current = campaigns.find(c => c.id === id);
@@ -126,7 +131,7 @@ async function show(id){
   if(!entries.length){
     clearBoard();
     board.innerHTML = meta(d) + `<div class="notice"><span class="tag">pending</span>
-      <div><b>${esc(d.name || id)}</b> is registered but has not published a ranking yet.</div></div>`;
+      <div><b>${esc(id)}</b> is registered but has not published a ranking yet.</div></div>`;
     return;
   }
 
@@ -197,6 +202,8 @@ function meta(d){
   // rendered — the facts line's "N of M runs ranked" carries the same point. It
   // remains in the API for anyone who wants the detail.
   return `<div class="lb-meta">
+    ${d.campaign_type ? `<div class="lb-algo"><span class="tag">type</span>${esc(d.campaign_type)}${
+      d.description ? ` — ${esc(d.description)}` : ''}</div>` : ''}
     <div class="lb-algo"><span class="tag">how</span>${esc(d.algorithm || '—')}</div>
     <div class="lb-facts">
       ${s.runs_used != null ? `<span><b>${s.runs_used}</b> of ${s.runs_total} runs ranked</span>` : ''}
