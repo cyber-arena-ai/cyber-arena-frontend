@@ -89,16 +89,27 @@ function scoreHTML(r, h1, h2){
   const s2 = r.winner === 'team2' ? `style="color:${h2.color}"` : 'class="lo"';
   return `<span ${s1}>${r.score.team1}</span><span class="dash">–</span><span ${s2}>${r.score.team2}</span>`;
 }
-function winTag(r, hw, duo){
+function winTag(r, hw, duo, win){
   // a solo run is won or drawn against nobody — report what it actually did
   if(isSolo(r)) return captured(r)
     ? `<span class="tag" style="background:${duo};color:var(--paper);border-color:var(--ink)">Captured</span>`
     : `<span class="tag draw">No capture</span>`;
   if(r.winner === 'draw') return `<span class="tag draw">Draw</span>`;
-  const org = hw.org ? ` · ${hw.org}` : '';   // org from the harness table, not the (empty) team field
+  // WHAT won, not what drove it: the model's family. Harness and vendor answer
+  // different questions and both are already on the row above — the harness as
+  // the chip beside each model, the vendor as the colour everything wears.
+  const me = win === 'team1' ? r.teams.team1 : r.teams.team2;
+  const you = win === 'team1' ? r.teams.team2 : r.teams.team1;
+  const fam = H.familyOf(me);
+  // A family is shorthand, and shorthand fails when both sides share it —
+  // `claude-opus-5` vs `claude-sonnet-4-6` is fine, two Opus revisions are not.
+  // Name the model outright in that case rather than print a tag that cannot
+  // say who won.
+  const clash = fam && H.familyOf(you)?.id === fam.id;
+  const text = (!fam || clash) ? H.bareModel(me.model) : fam.label;
   // the tag wears the winner's own combo color (model|harness duo, solid when
   // they agree) — not the per-team accent, which is stock blue/pink today
-  return `<span class="tag" style="background:${duo};color:var(--paper);border-color:var(--ink)" title="${hw.fullName}">${hw.shortName}${org}</span>`;
+  return `<span class="tag" style="background:${duo};color:var(--paper);border-color:var(--ink)" title="${H.bareModel(me.model)} on ${hw.fullName}">${text}</span>`;
 }
 
 function renderList(list){
@@ -123,7 +134,7 @@ function renderList(list){
           : ` <span class="vs">vs</span> ${ent(r.teams.team2, h2, d2, 'c2')}`}</div>
       </div>
       <div class="rscore">${scoreHTML(r, h1, h2)}</div>
-      <div class="rwin">${(solo || r.winner) ? winTag(r, hw, win === 'team2' ? d2 : d1) : ''}<span class="rounds">${r.outcome === 'running' ? 'watch live' : 'view thread'}</span></div>
+      <div class="rwin">${(solo || r.winner) ? winTag(r, hw, win === 'team2' ? d2 : d1, win) : ''}<span class="rounds">${r.outcome === 'running' ? 'watch live' : 'view thread'}</span></div>
       <div class="rgo"><i class="arw"></i></div>`;
     // stagger the float-in, capped so long ?limit=0 lists don't crawl
     return `<a class="run live" style="--d:${Math.min(i, 12) * 70}ms" href="trajectory.html?run=${r.id}">${inner}</a>`;

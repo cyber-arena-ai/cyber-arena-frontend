@@ -82,6 +82,26 @@ export async function loadHarnesses(path = api('/api/harnesses')){
              color: PALETTE[hash(norm(n)) % PALETTE.length], synthetic: true };
   };
   const model = x => (x && typeof x === 'object') ? x.model : x;
+  /* ---- model family -------------------------------------------------------
+     The competitor LINE a model belongs to — what a reader wants on a result,
+     where the harness ("what drove it") and the vendor ("who built it") are
+     beside the point. Table-driven like everything else: `families` is an
+     ordered prefix list in harnesses.json and the first match wins, so nothing
+     about a competitor is spelled out here. */
+  const FAMILIES = table.families || [];
+  // A wire prefix is not part of a model's identity: openhands drives through
+  // LiteLLM, which needs `openai/` on the front to pick its wire, and that
+  // reaches us on the run row. Strip one leading `<word>/` before matching, so
+  // `openai/claude-opus-5` is the same competitor as `claude-opus-5`.
+  const bareModel = m => String(m ?? '').trim().replace(/^[a-z0-9_-]+\//i, '');
+  const familyOf = x => {
+    const m = bareModel(model(x)).toLowerCase();
+    if(!m) return null;
+    const hit = FAMILIES.find(f => m.startsWith(String(f.prefix || '').toLowerCase()));
+    // No table entry: fall back to the model itself rather than inventing a
+    // family — a wrong grouping reads as a claim about who the competitor is.
+    return { id: hit ? hit.label : m, label: hit ? hit.label : bareModel(model(x)) };
+  };
   const get = x => {
     // an explicit harness always wins — even unknown, it must not be rendered
     // as the model's table binding (that's exactly the 1:1 assumption we drop)
@@ -144,7 +164,7 @@ export async function loadHarnesses(path = api('/api/harnesses')){
     return [h1, { ...h2, color: PALETTE.find(c => c !== h1.color) }];
   };
   return { get, comboKey, comboLabel, duoCSS, modelColor, harnessColor,
-           isNative, distinctPair, vendorOf, harnessVendorOf };
+           isNative, distinctPair, vendorOf, harnessVendorOf, familyOf, bareModel };
 }
 
 export const fmtTime = s => `${Math.floor(s/60)}:${String(Math.round(s)%60).padStart(2,'0')}`;
