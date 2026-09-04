@@ -13,7 +13,13 @@
   background:var(--paper);border:2px solid var(--ink);padding:11px 14px}
 .lb-algo .tag{flex:none;font-family:'Hanken Grotesk';font-weight:900;font-size:10px;text-transform:uppercase;letter-spacing:1px;
   color:var(--paper);background:var(--ink);padding:3px 8px}
-.lb-facts{display:flex;gap:18px;flex-wrap:wrap;font-size:12px;color:#7a7468;margin:9px 2px 0;font-weight:600}
+/* stacked meta boxes must not collide into one doubled border line */
+.lb-algo + .lb-algo{margin-top:8px}
+/* the list's own caption — it rides inside the Standings header, so it has to
+   shed everything .sech imposes on its title text */
+.lb-facts{display:inline-flex;gap:14px;flex-wrap:wrap;font-size:11px;color:#7a7468;font-weight:600;
+  text-transform:none;letter-spacing:0;margin-left:12px;padding-left:12px;border-left:2px solid var(--line)}
+.lb-facts:empty{display:none}
 .lb-facts b{color:var(--ink);font-weight:800}
 
 /* a cached copy served while the campaign is unreachable — never silent */
