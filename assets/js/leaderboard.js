@@ -86,15 +86,19 @@ if(!campaigns.length){
       options: campaigns.map(c => ({
         value: c.id,
         label: c.id,
-        count: c.online ? c.entries : '—',
-        // `online` means the campaign answered just now. A campaign that is
-        // stopped but has a stored table is neither online nor unreachable —
-        // it is readable-but-old, which is its own thing and says so.
-        tag: c.stale ? (c.from_snapshot ? 'stored' : 'cached') : (c.online ? '' : 'offline'),
-        title: c.online
+        // Facts about the TABLE, so they hang off having one — `entries` is
+        // present for a live, cached OR stored document, and absent only when
+        // nothing came back at all. Gating these on `online` (which means
+        // "answered just now") blanked the count and the description for
+        // precisely the stopped campaigns whose tables are kept on purpose.
+        count: c.entries ?? '—',
+        title: c.entries != null
           ? [c.campaign_type && `${c.campaign_type} scheduler`, c.description]
               .filter(Boolean).join(' — ')
           : (c.error || 'not responding'),
+        // The tag is about the PROCESS: live, briefly cached, stored with the
+        // campaign stopped, or nothing to show.
+        tag: c.stale ? (c.from_snapshot ? 'stored' : 'cached') : (c.online ? '' : 'offline'),
       })),
       onChange: id => {
         current = campaigns.find(c => c.id === id);
