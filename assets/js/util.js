@@ -168,6 +168,24 @@ export async function loadHarnesses(path = api('/api/harnesses')){
 }
 
 export const fmtTime = s => `${Math.floor(s/60)}:${String(Math.round(s)%60).padStart(2,'0')}`;
+
+// How long a match has been going, in seconds — the ONE answer to that
+// question, because `duration_s` is not it for a match still being played.
+//
+// `duration_s` is the time of the last SCOREBOARD event, so a running match
+// reads 0 until its first steal or patch lands and then lags by however long
+// it has since been quiet: 3:13 for a match that was 16:29 old. Elapsed for a
+// running match is now() - started_at, and it has to be recomputed to tick.
+// For a FINISHED match duration_s is the real wall duration and stays right.
+//
+// null means "we cannot say": a live run cached before `started_at` existed
+// and with no event yet. Callers print "just started", never a wrong number.
+export const runSeconds = r => {
+  if (r.outcome !== 'running') return r.duration_s ?? 0;
+  const t0 = Date.parse(r.started_at || '');
+  if (!isNaN(t0)) return Math.max(0, (Date.now() - t0) / 1000);
+  return r.duration_s > 0 ? r.duration_s : null;
+};
 export const esc = s => String(s).replace(/[&<>]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
 export const initials = m => m.split(/[-\s]/)[0].slice(0,2).toUpperCase();
 

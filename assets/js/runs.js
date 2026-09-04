@@ -1,5 +1,5 @@
 // Runs directory — all matches this season (competitor-agnostic)
-import { loadJSON, loadHarnesses, fmtTime, esc, setActiveNav, renderPager, api, dropdown, ARCHIVE_RUNS } from './util.js';
+import { loadJSON, loadHarnesses, fmtTime, runSeconds, esc, setActiveNav, renderPager, api, dropdown, ARCHIVE_RUNS } from './util.js';
 
 setActiveNav('runs.html');
 
@@ -112,6 +112,18 @@ function winTag(r, hw, duo, win){
   return `<span class="tag" style="background:${duo};color:var(--paper);border-color:var(--ink)" title="${H.bareModel(me.model)} on ${hw.fullName}">${text}</span>`;
 }
 
+// A running match's duration is elapsed WALL time, not `duration_s` — that
+// field is the time of the last scoreboard event, so a live row sat at 3:13
+// while the match was really 16:29 old, and never moved between page loads.
+// Live rows are marked so the ticker below can refresh them every second.
+const durText = r => {
+  const s = runSeconds(r);
+  return s === null ? 'just started' : fmtTime(s);
+};
+const durHTML = r => r.outcome === 'running'
+  ? `<span class="rdur" data-run="${r.id}">${durText(r)}</span>`
+  : durText(r);
+
 function renderList(list){
   document.getElementById('runs').innerHTML = list.map((r, i) => {
     // distinctPair: same-harness matchups still get two tellable-apart accents.
@@ -128,7 +140,7 @@ function renderList(list){
       <div class="rdate">${dateLabel(r.date, r.time)}</div>
       <div>
         <div class="rname">${r.name}${r.category ? ` <span class="badge ${r.category.toLowerCase()}">${r.category}</span>` : ''} ${modeTag(r)}${statusTag(r)}</div>
-        <div class="rmeta">${r.challenge} · ${r.rounds} rounds · ${fmtTime(r.duration_s)}${r.campaign ? ` · <span class="cmp" title="commissioned by the ${esc(r.campaign.type)} campaign &quot;${esc(r.campaign.id)}&quot;">${esc(r.campaign.id)}</span>` : ''}</div>
+        <div class="rmeta">${r.challenge} · ${r.rounds} rounds · ${durHTML(r)}${r.campaign ? ` · <span class="cmp" title="commissioned by the ${esc(r.campaign.type)} campaign &quot;${esc(r.campaign.id)}&quot;">${esc(r.campaign.id)}</span>` : ''}</div>
         <div class="rvs">${ent(r.teams.team1, h1, d1, 'c1')}${solo
           ? ` <span class="vs">solo run</span>`
           : ` <span class="vs">vs</span> ${ent(r.teams.team2, h2, d2, 'c2')}`}</div>
@@ -152,6 +164,17 @@ function draw(scroll = false){
   if(scroll) document.querySelector('.sech').scrollIntoView({ behavior: 'smooth' });
 }
 draw();
+
+// Tick the live rows. The DOM is re-queried each second rather than the
+// elements cached, because paging and filtering re-render the whole list.
+// Nothing runs when no match is live — the query simply finds nothing.
+const byId = new Map(runs.map(r => [r.id, r]));
+setInterval(() => {
+  document.querySelectorAll('#runs .rdur[data-run]').forEach(el => {
+    const r = byId.get(el.dataset.run);
+    if (r) el.textContent = durText(r);
+  });
+}, 1000);
 
 const HIT = Object.fromEntries(STATES.map(s => [s.key, s.hit]));
 const count = k => runs.filter(HIT[k]).length;

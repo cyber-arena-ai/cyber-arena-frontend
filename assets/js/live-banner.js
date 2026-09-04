@@ -14,7 +14,7 @@
        not scored yet. Elapsed comes from `started_at` (the job's created_at)
        and ticks locally; duration_s is only the fallback for a cached row
        written before that field existed. */
-import { loadJSON, fmtTime, esc, api } from './util.js';
+import { loadJSON, fmtTime, runSeconds, esc, api } from './util.js';
 
 const ROTATE_MS = 5000;    // the user-facing cadence: a different match every 5s
 const REFRESH_MS = 60000;  // re-ask who is live, so the strip empties when nobody is
@@ -65,18 +65,11 @@ if (host) {
   // ("openai/gemini-3.7-flash"), and the vendor half is noise on a teaser
   const seat = t => esc(String(t.model ?? '?').split('/').pop());
 
-  // seconds since the match started; null when we cannot tell honestly
-  const elapsed = r => {
-    const t0 = Date.parse(r.started_at || '');
-    if (!isNaN(t0)) return Math.max(0, (Date.now() - t0) / 1000);
-    return r.duration_s > 0 ? r.duration_s : null;   // pre-`started_at` cached row
-  };
-
   // ONE renderer for the duration, used both to build a slide and to tick it.
   // The slide has to arrive already showing its time — filling the cell after
   // the roll made every incoming match flash an empty box for up to a second.
   const clockHTML = r => {
-    const s = elapsed(r);
+    const s = runSeconds(r);
     return s === null
       ? '<i class="fa-regular fa-hourglass"></i> just started'
       : `<i class="fa-regular fa-clock"></i> ${fmtTime(s)}`;
