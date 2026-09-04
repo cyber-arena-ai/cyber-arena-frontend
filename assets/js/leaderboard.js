@@ -232,11 +232,16 @@ function meta(d){
 // rather than as another fact about the campaign.
 function paintFacts(d){
   const s = d.source || {};
+  // ONE freshness fact, never two. A stale copy's `ranked_at` is the campaign's
+  // own, so printing it beside the staleness reads as a contradiction —
+  // "ranked just now · cached 32s ago" — even though both are true. When the
+  // copy is not live, its age IS the freshness, so it replaces the line rather
+  // than sitting next to it.
   facts.innerHTML = `
     ${s.runs_used != null ? `<span><b>${s.runs_used}</b> of ${s.runs_total} runs ranked</span>` : ''}
-    <span>ranked <b>${ago(d.ranked_at)}</b></span>
-    ${d.stale ? `<span class="lb-stale" title="${esc(d.stale_reason || 'campaign unreachable')}">
-      ${d.from_snapshot
-        ? `stored ranking — this campaign is not running; last published ${forS(d.stale_age_s)} ago`
-        : `cached — the campaign stopped answering ${forS(d.stale_age_s)} ago`}</span>` : ''}`;
+    ${d.stale
+      ? `<span class="lb-stale" title="${esc(d.stale_reason || 'campaign unreachable')}">${
+          d.from_snapshot ? 'stored' : 'cached'} <b>${forS(d.stale_age_s)} ago</b>${
+          d.from_snapshot ? ' — not running' : ''}</span>`
+      : `<span>ranked <b>${ago(d.ranked_at)}</b></span>`}`;
 }
