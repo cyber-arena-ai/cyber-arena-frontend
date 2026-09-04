@@ -96,9 +96,12 @@ if(!campaigns.length){
           ? [c.campaign_type && `${c.campaign_type} scheduler`, c.description]
               .filter(Boolean).join(' — ')
           : (c.error || 'not responding'),
-        // The tag is about the PROCESS: live, briefly cached, stored with the
-        // campaign stopped, or nothing to show.
-        tag: c.stale ? (c.from_snapshot ? 'stored' : 'cached') : (c.online ? '' : 'offline'),
+        // The tag is about the PROCESS, and only two states matter to a reader:
+        // this copy is old (say how old), or there is nothing to show at all.
+        // WHERE an old copy came from — the in-memory window or the stored
+        // snapshot — is an implementation detail of the midend's fallback, and
+        // the age already carries everything a reader does with it.
+        tag: c.stale ? `cached ${forS(c.stale_age_s)} ago` : (c.online ? '' : 'offline'),
       })),
       onChange: id => {
         current = campaigns.find(c => c.id === id);
@@ -244,8 +247,6 @@ function paintFacts(d){
   facts.innerHTML = `
     ${s.runs_used != null ? `<span><b>${s.runs_used}</b> of ${s.runs_total} runs ranked</span>` : ''}
     ${d.stale
-      ? `<span class="lb-stale" title="${esc(d.stale_reason || 'campaign unreachable')}">${
-          d.from_snapshot ? 'stored' : 'cached'} <b>${forS(d.stale_age_s)} ago</b>${
-          d.from_snapshot ? ' — not running' : ''}</span>`
+      ? `<span class="lb-stale" title="${esc(d.stale_reason || 'campaign unreachable')}">cached <b>${forS(d.stale_age_s)} ago</b></span>`
       : `<span>ranked <b>${ago(d.ranked_at)}</b></span>`}`;
 }
