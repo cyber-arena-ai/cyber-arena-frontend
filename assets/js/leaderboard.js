@@ -18,11 +18,14 @@ setActiveNav('leaderboard.html');
 
 const dek = document.getElementById('dek');
 const picker = document.getElementById('campaigns');
+const head = document.getElementById('lb-head');
+const facts = document.getElementById('lb-facts');
 const board = document.getElementById('board');
 const lead = document.getElementById('lead');
 const rows = document.getElementById('rows');
 const clearBoard = () => { lead.innerHTML = ''; lead.className = 'lead';
-                           lead.style.background = ''; rows.innerHTML = ''; };
+                           lead.style.background = ''; rows.innerHTML = '';
+                           facts.innerHTML = ''; };
 
 const [list, H] = await Promise.all([
   loadJSON(api('/api/campaigns')).catch(() => ({ campaigns: [] })),
@@ -40,7 +43,19 @@ const ago = iso => {
   return `${Math.round(s / 86400)}d ago`;
 };
 
+// The same scale for a DURATION rather than an instant. A snapshot's age is
+// unbounded — a finished campaign can be months stopped — so raw seconds would
+// read as a number nobody parses.
+const forS = s => {
+  if(!isFinite(s)) return 'a while';
+  if(s < 90) return `${Math.round(s)}s`;
+  if(s < 5400) return `${Math.round(s / 60)} min`;
+  if(s < 172800) return `${Math.round(s / 3600)} hours`;
+  return `${Math.round(s / 86400)} days`;
+};
+
 if(!campaigns.length){
+  head.style.display = 'none';   // no picker to head, and no list under it
   dek.style.display = '';
   dek.innerHTML = `<b>No campaigns registered.</b>`;
   board.innerHTML = `<div class="notice"><span class="tag">empty</span>
@@ -55,8 +70,9 @@ if(!campaigns.length){
   let current = campaigns.find(c => c.id === want)
              || campaigns.find(c => c.online) || campaigns[0];
 
-  // no dek here: the picker directly below is self-explanatory. The element stays
-  // for the no-campaigns case, hidden while there is something to show.
+  // no dek here: the campaign's own meta block and the picker heading the list
+  // say it. The element stays for the no-campaigns case, hidden while there is
+  // something to show.
   dek.style.display = 'none';
 
   const paintPicker = () => {
@@ -71,7 +87,10 @@ if(!campaigns.length){
         value: c.id,
         label: c.id,
         count: c.online ? c.entries : '—',
-        tag: !c.online ? 'offline' : (c.stale ? 'cached' : ''),
+        // `online` means the campaign answered just now. A campaign that is
+        // stopped but has a stored table is neither online nor unreachable —
+        // it is readable-but-old, which is its own thing and says so.
+        tag: c.stale ? (c.from_snapshot ? 'stored' : 'cached') : (c.online ? '' : 'offline'),
         title: c.online
           ? [c.campaign_type && `${c.campaign_type} scheduler`, c.description]
               .filter(Boolean).join(' — ')
@@ -130,12 +149,14 @@ async function show(id){
   // not an error — say so instead of rendering an empty table.
   if(!entries.length){
     clearBoard();
+    paintFacts(d);
     board.innerHTML = meta(d) + `<div class="notice"><span class="tag">pending</span>
       <div><b>${esc(id)}</b> is registered but has not published a ranking yet.</div></div>`;
     return;
   }
 
   board.innerHTML = meta(d);
+  paintFacts(d);
 
   // Identity is resolved HERE, from the harness table — the campaign only ever
   // publishes the raw <model x harness> pair.
@@ -194,22 +215,28 @@ function scoreLabel(d){
   return 'Score';
 }
 
-// What a reader needs in order to trust the number: how it was computed, over
-// how much of the archive, what was left out, and how stale it is.
+// How the ranking was computed. `d.notes` (the campaign's per-filter exclusion
+// breakdown) is deliberately not rendered — the header's "N of M runs ranked"
+// carries the same point. It remains in the API for anyone who wants the detail.
 function meta(d){
-  const s = d.source || {};
-  // `d.notes` (the campaign's per-filter exclusion breakdown) is deliberately not
-  // rendered — the facts line's "N of M runs ranked" carries the same point. It
-  // remains in the API for anyone who wants the detail.
   return `<div class="lb-meta">
     ${d.campaign_type ? `<div class="lb-algo"><span class="tag">type</span>${esc(d.campaign_type)}${
       d.description ? ` — ${esc(d.description)}` : ''}</div>` : ''}
     <div class="lb-algo"><span class="tag">how</span>${esc(d.algorithm || '—')}</div>
-    <div class="lb-facts">
-      ${s.runs_used != null ? `<span><b>${s.runs_used}</b> of ${s.runs_total} runs ranked</span>` : ''}
-      <span>ranked <b>${ago(d.ranked_at)}</b></span>
-      ${d.stale ? `<span class="lb-stale" title="${esc(d.stale_reason || 'campaign unreachable')}">
-        cached — the campaign stopped answering ${Math.round(d.stale_age_s)}s ago</span>` : ''}
-    </div>
   </div>`;
+}
+
+// What the reader needs in order to trust the list they are looking at: over how
+// much of the archive it was computed, and how stale it is. It sits in the
+// Standings header, beside the picker, so it reads as a caption on THIS list
+// rather than as another fact about the campaign.
+function paintFacts(d){
+  const s = d.source || {};
+  facts.innerHTML = `
+    ${s.runs_used != null ? `<span><b>${s.runs_used}</b> of ${s.runs_total} runs ranked</span>` : ''}
+    <span>ranked <b>${ago(d.ranked_at)}</b></span>
+    ${d.stale ? `<span class="lb-stale" title="${esc(d.stale_reason || 'campaign unreachable')}">
+      ${d.from_snapshot
+        ? `stored ranking — this campaign is not running; last published ${forS(d.stale_age_s)} ago`
+        : `cached — the campaign stopped answering ${forS(d.stale_age_s)} ago`}</span>` : ''}`;
 }
