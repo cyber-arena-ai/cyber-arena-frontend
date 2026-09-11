@@ -178,20 +178,49 @@ setInterval(() => {
 
 const HIT = Object.fromEntries(STATES.map(s => [s.key, s.hit]));
 const count = k => runs.filter(HIT[k]).length;
-document.getElementById('filt').innerHTML = STATES
-  .filter(s => s.key === 'all' || count(s.key) > 0)   // only show tags that exist
-  .map((s, i) => `<button data-s="${s.key}" class="${s.key} ${i === 0 ? 'on' : ''}">${s.label} <b>${count(s.key)}</b></button>`)
-  .join('');
+
+// Both filters live in the URL, so a filtered archive is linkable and survives
+// a reload — the same contract ?campaign= already gives the leaderboard.
+// Restored BEFORE the first paint so the page never renders one selection and
+// then jumps to another.
+//
+// An unknown value falls back to the default and is not written back: a
+// campaign can be pruned from the archive while someone still holds its link,
+// and a stale ?campaign= must degrade to "all" rather than silently showing an
+// empty list, or pin a param naming nothing.
+const params = new URLSearchParams(location.search);
+const wantState = params.get('state');
+const wantCampaign = params.get('campaign');
 
 // The two filters compose: status is one of the run's axes, campaign is who
 // commissioned it. A run submitted by hand has no campaign at all.
-let fState = 'all', fCampaign = 'all';
+let fState = STATES.some(s => s.key === wantState) ? wantState : 'all';
+let fCampaign = 'all';   // validated below, once the campaign list is known
+
+document.getElementById('filt').innerHTML = STATES
+  .filter(s => s.key === 'all' || count(s.key) > 0)   // only show tags that exist
+  .map(s => `<button data-s="${s.key}" class="${s.key} ${s.key === fState ? 'on' : ''}">${s.label} <b>${count(s.key)}</b></button>`)
+  .join('');
+
+// `all` is the default on both axes, so it is omitted rather than spelled out —
+// the unfiltered page keeps a clean URL, and a copied link carries only what was
+// actually chosen.
+function syncURL(){
+  const u = new URL(location);
+  for(const [k, v] of [['state', fState], ['campaign', fCampaign]])
+    v === 'all' ? u.searchParams.delete(k) : u.searchParams.set(k, v);
+  // replaceState, not pushState: filtering is not navigation, and each keystroke
+  // of a chip should not cost the reader a Back press to escape the page.
+  history.replaceState(null, '', u);
+}
+
 function applyFilters(){
   shown = runs.filter(r =>
     HIT[fState](r) &&
     (fCampaign === 'all'
       || (fCampaign === 'none' ? !r.campaign : r.campaign?.id === fCampaign)));
   page = 1;
+  syncURL();
   draw();
 }
 
@@ -211,9 +240,14 @@ const chost = document.getElementById('cfilt');
 if(chost && campaigns.size){
   const n = id => runs.filter(r => r.campaign?.id === id).length;
   const hand = runs.filter(r => !r.campaign).length;
+  // Only now is the campaign list known, so this is where ?campaign= can be
+  // validated. `none` (ad-hoc) is a real selection, not a missing one.
+  if(wantCampaign && (campaigns.has(wantCampaign) || (wantCampaign === 'none' && hand)))
+    fCampaign = wantCampaign;
+
   dropdown(chost, {
     label: 'campaign',
-    value: 'all',
+    value: fCampaign,
     options: [{ value: 'all', label: 'all campaigns', count: runs.length }]
       .concat([...campaigns.values()].map(c =>
         ({ value: c.id, label: c.id, count: n(c.id), tag: c.type || '' })))
@@ -223,3 +257,10 @@ if(chost && campaigns.size){
     onChange: v => { fCampaign = v; applyFilters(); },
   });
 }
+
+// A restored filter has to reach the list — the first draw() above ran on the
+// unfiltered set. When nothing was restored there is nothing to re-draw, but the
+// URL may still carry a param that failed validation (a pruned campaign, a
+// hand-edited state), so sync it away rather than leave it naming nothing.
+if(fState !== 'all' || fCampaign !== 'all') applyFilters();
+else syncURL();
