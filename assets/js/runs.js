@@ -177,7 +177,6 @@ setInterval(() => {
 }, 1000);
 
 const HIT = Object.fromEntries(STATES.map(s => [s.key, s.hit]));
-const count = k => runs.filter(HIT[k]).length;
 
 // Both filters live in the URL, so a filtered archive is linkable and survives
 // a reload — the same contract ?campaign= already gives the leaderboard.
@@ -197,10 +196,42 @@ const wantCampaign = params.get('campaign');
 let fState = STATES.some(s => s.key === wantState) ? wantState : 'all';
 let fCampaign = 'all';   // validated below, once the campaign list is known
 
+const inState    = r => HIT[fState](r);
+const inCampaign = r => fCampaign === 'all'
+  || (fCampaign === 'none' ? !r.campaign : r.campaign?.id === fCampaign);
+
+// The chip SET is fixed at load, from the whole archive — only the NUMBERS move
+// when a campaign is picked. Re-deriving which chips exist per campaign would
+// reflow the row on every switch, and could strand the current selection by
+// deleting the chip that carries it.
 document.getElementById('filt').innerHTML = STATES
-  .filter(s => s.key === 'all' || count(s.key) > 0)   // only show tags that exist
-  .map(s => `<button data-s="${s.key}" class="${s.key} ${s.key === fState ? 'on' : ''}">${s.label} <b>${count(s.key)}</b></button>`)
+  .filter(s => s.key === 'all' || runs.some(HIT[s.key]))   // only tags that exist
+  .map(s => `<button data-s="${s.key}" class="${s.key} ${s.key === fState ? 'on' : ''}">${s.label} <b></b></button>`)
   .join('');
+
+// The two controls are FACETS of each other: each one's counts are taken over
+// the runs the OTHER admits, never its own. Counting a chip against its own
+// selection would read 0 on every chip except the one just picked, and the
+// campaign dropdown would keep claiming archive-wide totals while a chip is on.
+let cpick = null;                    // the campaign dropdown, once it exists
+function paintCounts(){
+  const byCampaign = runs.filter(inCampaign);
+  for(const b of document.querySelectorAll('#filt button')){
+    const n = byCampaign.filter(HIT[b.dataset.s]).length;
+    b.querySelector('b').textContent = n;
+    // nothing behind it under this campaign: the chip stays put and stays
+    // clickable, but reads as empty instead of implying rows are there
+    b.classList.toggle('zero', n === 0);
+  }
+  if(!cpick) return;
+  const byState = runs.filter(inState);
+  cpick.setCounts(Object.fromEntries([
+    ['all', byState.length],
+    ['none', byState.filter(r => !r.campaign).length],
+    ...[...campaigns.keys()].map(id =>
+      [id, byState.filter(r => r.campaign?.id === id).length]),
+  ]));
+}
 
 // `all` is the default on both axes, so it is omitted rather than spelled out —
 // the unfiltered page keeps a clean URL, and a copied link carries only what was
@@ -215,11 +246,9 @@ function syncURL(){
 }
 
 function applyFilters(){
-  shown = runs.filter(r =>
-    HIT[fState](r) &&
-    (fCampaign === 'all'
-      || (fCampaign === 'none' ? !r.campaign : r.campaign?.id === fCampaign)));
+  shown = runs.filter(r => inState(r) && inCampaign(r));
   page = 1;
+  paintCounts();          // the other control's numbers move with this one
   syncURL();
   draw();
 }
@@ -245,7 +274,7 @@ if(chost && campaigns.size){
   if(wantCampaign && (campaigns.has(wantCampaign) || (wantCampaign === 'none' && hand)))
     fCampaign = wantCampaign;
 
-  dropdown(chost, {
+  cpick = dropdown(chost, {
     label: 'campaign',
     value: fCampaign,
     options: [{ value: 'all', label: 'all campaigns', count: runs.length }]
@@ -263,4 +292,4 @@ if(chost && campaigns.size){
 // URL may still carry a param that failed validation (a pruned campaign, a
 // hand-edited state), so sync it away rather than leave it naming nothing.
 if(fState !== 'all' || fCampaign !== 'all') applyFilters();
-else syncURL();
+else { paintCounts(); syncURL(); }

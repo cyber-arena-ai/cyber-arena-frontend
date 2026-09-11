@@ -312,6 +312,14 @@ export function dropdown(host, { label = '', options = [], value, onChange }) {
   return {
     el: wrap,
     set(v) { value = v; paintBtn(); paintMenu(); },
+    // Counts move without the options themselves changing — a dropdown paired
+    // with another filter shows how many rows each choice would yield UNDER
+    // that filter, so the numbers have to be repaintable on their own.
+    setCounts(next) {
+      for (const o of opts) if (next[o.value] !== undefined) o.count = next[o.value];
+      paintBtn();
+      if (open) paintMenu();     // only visible while open; skip the DOM churn
+    },
     destroy() { document.removeEventListener('click', onDoc); },
   };
 }

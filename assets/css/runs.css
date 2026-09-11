@@ -96,3 +96,11 @@
   background:#DED8CB;color:#6F6657;border:0;border-radius:2px;
   padding:2px 6px;margin-left:2px;white-space:nowrap}
 
+
+/* A status chip with nothing behind it under the selected campaign. It stays in
+   place and stays clickable — removing it would reflow the row on every campaign
+   switch and could delete the chip carrying the current selection — but it must
+   not read as if rows were waiting behind it. Mirrors .filt button.off on the
+   leaderboard, which says the same thing about an offline campaign. */
+.filt button.zero{border-color:#bcb4a4;color:#9a9282;border-style:dashed}
+.filt button.zero.on{background:#8a8378;color:var(--paper);border-color:#8a8378}
