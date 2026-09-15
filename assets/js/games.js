@@ -9,7 +9,10 @@ setActiveNav('games.html');
 // no-cache: the registry is served by jsDelivr with max-age=604800, so a cached
 // index would hide newly added challenges for a week. Revalidate every load.
 const D = await loadJSON(reg('/index.json'), { cache: 'no-cache' });
-const chals = D.challenges || [];
+// a challenge can be withheld from the public catalogue (e.g. no usable upstream
+// license) with `show_in_gallery: false` in its YAML — absent means shown. Filtered
+// here, at the source, so counts, facets and the #slug deep-link all skip it too.
+const chals = (D.challenges || []).filter(c => c.show_in_gallery !== false);
 
 // ?v=<index build date>: covers keep their filename when redrawn, so without a
 // version token the browser serves its week-old copy of the previous artwork.
