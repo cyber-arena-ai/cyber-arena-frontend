@@ -1,5 +1,5 @@
 // Trajectory (single match) — chat thread + Sublime-style minimap
-import { loadJSON, loadHarnesses, fmtTime, esc, setActiveNav, api, ARCHIVE_RUNS } from './util.js';
+import { loadJSON, loadHarnesses, fmtTime, runSeconds, esc, setActiveNav, api, ARCHIVE_RUNS } from './util.js';
 
 setActiveNav('trajectory.html');
 
@@ -267,16 +267,37 @@ document.querySelectorAll('.filt button').forEach(b => b.onclick = () => {
 });
 
 /* ---- status badge ---- */
+// The LIVE chip carries the ELAPSED time, the same answer the Runs list and the
+// live banner already show (`runSeconds` = now() - started_at, because
+// `duration_s` counts SCOREBOARD events and reads 0 until a match scores).
+//
+// Without it, "LIVE" is a bare word: a match wedged for half an hour looks
+// exactly like one that started ten seconds ago. That is not hypothetical — a
+// run that set up cleanly and then never reached ROUND_START sat here reading
+// LIVE for 30 minutes, and nothing on the page contradicted it.
 function statusBadge(){
   const el = document.getElementById('mastcat');
   const s = D.outcome;
-  const chip = s === 'running' ? '<span class="live-chip"><i class="fa-solid fa-circle"></i> LIVE</span>'
+  const secs = s === 'running' ? runSeconds(D) : null;
+  // null means "we cannot say" (no started_at, no event yet) — say that rather
+  // than print a wrong number.
+  const elapsed = s !== 'running' ? ''
+    : secs === null ? ' <span class="live-el">just started</span>'
+    : ` <span class="live-el">${fmtTime(secs)}</span>`;
+  const chip = s === 'running' ? `<span class="live-chip"><i class="fa-solid fa-circle"></i> LIVE${elapsed}</span>`
     : s === 'failed' ? '<span class="fail-chip">failed</span>' : '';
   // only flag hint mode; hard is the default and stays untagged
   const mode = D.hint === true ? '<span class="mode-chip hint" title="hint mode — agents were given the vulnerability hint">hint</span>' : '';
   el.innerHTML = `${D.category || ''} ${mode} ${chip}`;
 }
 statusBadge();
+// Tick the elapsed figure while the match is live. The SSE stream flips
+// D.outcome to 'succeeded' at GAME_END, so the timer stops itself rather than
+// counting past the end of the match.
+let liveTick = D.outcome === 'running' ? setInterval(() => {
+  statusBadge();
+  if(D.outcome !== 'running'){ clearInterval(liveTick); liveTick = null; }
+}, 1000) : null;
 
 /* ---- rebuild scoreboard/headline (used by live updates) ---- */
 function refreshBoard(){

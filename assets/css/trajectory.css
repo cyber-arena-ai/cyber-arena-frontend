@@ -131,6 +131,9 @@
   background:var(--pink);border:2px solid var(--ink);border-radius:20px;padding:3px 8px;vertical-align:middle;
   animation:livepulse 1.4s ease-in-out infinite}
 .live-chip i{font-size:6px;vertical-align:2px}
+/* elapsed time inside the LIVE chip — tabular so the seconds digit does not
+   shift the chip's width once a second while it ticks */
+.live-el{font-variant-numeric:tabular-nums;opacity:.85;margin-left:1px}
 .fail-chip{display:inline-block;font:800 11px/1 'JetBrains Mono',monospace;color:var(--paper);
   background:#8a8378;border:2px solid var(--ink);border-radius:20px;padding:3px 8px;vertical-align:middle}
 /* hint-mode chip (challenge level); hard is the default, untagged */
