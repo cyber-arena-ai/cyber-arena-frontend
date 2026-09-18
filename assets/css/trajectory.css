@@ -279,6 +279,10 @@
 .rbline.t2 .rbflag.on{background:var(--t1,var(--blue))}
 .rbline.solo .rbflag.on{background:var(--ink)}
 .rbflag.nd{border-style:dotted;border-color:#c3b9a3}
+/* a store scored more than once in one round: badge the count on the mark (as the minimap does) */
+.rbflag{position:relative}
+.rbflag[data-n]::after{content:"×" attr(data-n);position:absolute;left:50%;top:1px;transform:translateX(-50%);
+  font:800 8px/1 'JetBrains Mono',monospace;color:var(--ink);background:var(--paper);padding:1px 2px;border:1px solid var(--ink);white-space:nowrap}
 .rbbar{position:relative;flex:1 1 0;height:100%;
   border:2px solid var(--ink);background:var(--paper);display:block}
 /* the service reading, centred in the block */

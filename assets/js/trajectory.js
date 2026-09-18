@@ -435,17 +435,24 @@ function renderRounds(){
     return `<span class="rbbar ${cls}${extra}"><i style="height:${pct}%"></i>${num}</span>`;
   };
 
-  // one mark per flag, each binary: filled = this team took THAT flag in this
+  // one mark per flag STORE: filled = this team scored off that store in this
   // round. With no record for it the mark reads as absent — hollow would claim
   // "took nothing", which is a different statement from "we do not know".
+  // A store can score more than once in a round (two flags the backend filed
+  // under one store — run a482c8369ab0 scored mlflow's read and write flags
+  // 8 s apart, both as `default`), and one filled square read "one flag" while
+  // the score said two. The count is badged on the mark, as on the minimap;
+  // the column count stays one per store so the nth mark still means the same
+  // flag in every round.
   const flagMarks = (st, tk) => {
   const rival = isSolo ? '' : (tk === 'team1' ? t2 : t1).label;
   return FKEY.map(f => {
     const v = st.byKey[f.k];
     const cls = !v ? ' nd' : v.took > 0 ? ' on' : '';
-    const state = !v ? 'no record' : v.took > 0 ? `taken${v.took > 1 ? ` x${v.took}` : ''}`
+    const n = v && v.took > 1 ? ` data-n="${v.took}"` : '';
+    const state = !v ? 'no record' : v.took > 0 ? `taken${v.took > 1 ? ` ×${v.took}` : ''}`
       : v.tries ? `${v.tries} attempt${v.tries > 1 ? 's' : ''}, none scored` : 'not taken';
-    return `<span class="rbflag${cls}" title="${esc(f.label)}${
+    return `<span class="rbflag${cls}"${n} title="${esc(f.label)}${
       rival ? ` (${esc(rival)}'s)` : ''} — ${state}"></span>`;
   }).join('');
   };
