@@ -205,6 +205,13 @@ function buildMinimaps(){
     const team = mini.dataset.team;
     const marks = mini.querySelector('.marks');
     marks.innerHTML = '';
+    // Two events seconds apart (a flag captured twice in one round) land on the
+    // same pixel of a 60-minute bar and one square hides the other, so the bar
+    // reads "one flag" while the score says two. Markers of one type that fall
+    // within a marker's height of the previous one merge into it and carry a
+    // count badge instead of stacking.
+    const barH = marks.clientHeight || 1, MERGE_PX = 14;
+    let prev = null;
     [...chat.children].forEach(el => {
       if(el.style.display === 'none') return;
       const type = el.dataset.mmType;
@@ -212,11 +219,20 @@ function buildMinimaps(){
       // round markers appear in both columns; everything else only in its team's column
       if(type !== 'round' && el.dataset.mmTeam !== team) return;
       const top = (el.offsetTop + el.offsetHeight/2) / scrollH * 100;
+      const px = top / 100 * barH;
+      if(prev && prev.type === type && type !== 'round' && type !== 'turn'
+         && Math.abs(prev.px - px) < MERGE_PX){
+        prev.n++;
+        prev.m.dataset.n = prev.n;
+        if(el.title) prev.m.title += '\n' + el.title;
+        return;
+      }
       const m = document.createElement('div');
       m.className = 'mk ' + type;
       m.style.top = top + '%';
       if(el.title) m.title = el.title;
       marks.appendChild(m);
+      prev = { type, px, m, n: 1 };
     });
   });
   updateView();
