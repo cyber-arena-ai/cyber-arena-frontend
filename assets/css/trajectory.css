@@ -52,9 +52,6 @@
 .minimap[data-team="team2"] .mk.capture{background:var(--t2,var(--pink))}
 .mk.dup{width:9px;height:9px;border:1.5px solid var(--mut);background:transparent}
 /* several events on one pixel of the bar: one square, a count on its shoulder */
-.mk[data-n]{pointer-events:auto}
-.mk[data-n]::after{content:"×" attr(data-n);position:absolute;left:100%;top:50%;transform:translate(3px,-50%);
-  font:800 9px/1 'JetBrains Mono',monospace;color:var(--ink);background:var(--paper);padding:1px 2px;border:1px solid var(--ink);white-space:nowrap}
 .mk.patch{width:10px;height:10px;border:2px solid var(--green);background:transparent}
 .mk.round{left:0;right:0;transform:translateY(-50%);height:0;border-top:2px solid #c3b9a3}
 .mm-view{position:absolute;left:0;right:0;background:rgba(26,26,26,.07);border-top:2px solid var(--ink);border-bottom:2px solid var(--ink);pointer-events:none;min-height:14px}
@@ -279,10 +276,6 @@
 .rbline.t2 .rbflag.on{background:var(--t1,var(--blue))}
 .rbline.solo .rbflag.on{background:var(--ink)}
 .rbflag.nd{border-style:dotted;border-color:#c3b9a3}
-/* a store scored more than once in one round: badge the count on the mark (as the minimap does) */
-.rbflag{position:relative}
-.rbflag[data-n]::after{content:"×" attr(data-n);position:absolute;left:50%;top:1px;transform:translateX(-50%);
-  font:800 8px/1 'JetBrains Mono',monospace;color:var(--ink);background:var(--paper);padding:1px 2px;border:1px solid var(--ink);white-space:nowrap}
 .rbbar{position:relative;flex:1 1 0;height:100%;
   border:2px solid var(--ink);background:var(--paper);display:block}
 /* the service reading, centred in the block */

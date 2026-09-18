@@ -205,12 +205,13 @@ function buildMinimaps(){
     const team = mini.dataset.team;
     const marks = mini.querySelector('.marks');
     marks.innerHTML = '';
-    // Two events seconds apart (a flag captured twice in one round) land on the
-    // same pixel of a 60-minute bar and one square hides the other, so the bar
-    // reads "one flag" while the score says two. Markers of one type that fall
-    // within a marker's height of the previous one merge into it and carry a
-    // count badge instead of stacking.
-    const barH = marks.clientHeight || 1, MERGE_PX = 14;
+    // Two events seconds apart (two flags captured in one round) land on the
+    // same pixel of a 60-minute bar and one square would hide the other, so
+    // the bar read "one flag" while the score said two. A marker of the same
+    // type within a marker's height of the previous one is nudged below it
+    // instead — two captures are two blocks. Round and turn markers are left
+    // where time puts them.
+    const barH = marks.clientHeight || 1, NUDGE_PX = 15;
     let prev = null;
     [...chat.children].forEach(el => {
       if(el.style.display === 'none') return;
@@ -218,21 +219,15 @@ function buildMinimaps(){
       if(!type) return;
       // round markers appear in both columns; everything else only in its team's column
       if(type !== 'round' && el.dataset.mmTeam !== team) return;
-      const top = (el.offsetTop + el.offsetHeight/2) / scrollH * 100;
-      const px = top / 100 * barH;
+      let px = (el.offsetTop + el.offsetHeight/2) / scrollH * barH;
       if(prev && prev.type === type && type !== 'round' && type !== 'turn'
-         && Math.abs(prev.px - px) < MERGE_PX){
-        prev.n++;
-        prev.m.dataset.n = prev.n;
-        if(el.title) prev.m.title += '\n' + el.title;
-        return;
-      }
+         && px - prev.px < NUDGE_PX) px = prev.px + NUDGE_PX;
       const m = document.createElement('div');
       m.className = 'mk ' + type;
-      m.style.top = top + '%';
+      m.style.top = (px / barH * 100) + '%';
       if(el.title) m.title = el.title;
       marks.appendChild(m);
-      prev = { type, px, m, n: 1 };
+      prev = { type, px };
     });
   });
   updateView();
@@ -371,9 +366,17 @@ function renderRounds(){
         const k = `${svc}\u0000${sk}`;
         if(!seen.has(k)) seen.set(k, { k, svc, sk,
           label: svc + (sk && sk !== 'default' ? '/' + sk : '') });
-        if(c && (c.planted === true || c.status ||
-                 (c.captures || []).some(x => x.scored))) real.add(k);
+        if(c && (c.planted === true || c.status)) real.add(k);
       }
+  // A store that was never planted is not a flag: it is where the backend files
+  // a capture it could not attribute (`default`, planted:false — run a482c8369ab0
+  // scored mlflow's two designed flags into it). Those captures are dealt out to
+  // the service's planted stores below. Only when a service has NO planted store
+  // at all (older runs that knew nothing but `default`) does such a bucket stand
+  // in for the flag.
+  seen.forEach((f, k) => {
+    if(!real.has(k) && ![...real].some(rk => seen.get(rk).svc === f.svc)) real.add(k);
+  });
   seen.forEach((f, k) => { if(real.has(k)) FKEY.push(f); });
   const svcRank = f => { const i = services.indexOf(f.svc); return i < 0 ? services.length : i; };
   FKEY.sort((a, b) => svcRank(a) - svcRank(b) || a.svc.localeCompare(b.svc)
@@ -411,6 +414,23 @@ function renderRounds(){
         detail.push(`${name}: ${state}${c.tampered ? ' + tampered' : ''}`);
       }
     }
+    // captures filed under an unplanted bucket belong to the designed flags of
+    // that service: one per store in column order, any excess on the last
+    for(const k of Object.keys(byKey)){
+      if(real.has(k)) continue;
+      const svc = k.split('\u0000')[0];
+      const targets = FKEY.filter(f => f.svc === svc);
+      if(!targets.length) continue;
+      let { took, tries } = byKey[k];
+      delete byKey[k];
+      targets.forEach((f, i) => {
+        const last = i === targets.length - 1;
+        const t = last ? took : Math.min(1, took), a = last ? tries : Math.min(1, tries);
+        const cur = byKey[f.k] || { took: 0, tries: 0 };
+        byKey[f.k] = { took: cur.took + t, tries: cur.tries + a };
+        took -= t; tries -= a;
+      });
+    }
     let probes = 0, passed = 0, restarts = 0, down = false;
     for(const [svc, sv] of Object.entries(svcs)){
       if(!sv) continue;
@@ -435,30 +455,35 @@ function renderRounds(){
     return `<span class="rbbar ${cls}${extra}"><i style="height:${pct}%"></i>${num}</span>`;
   };
 
-  // one mark per flag STORE: filled = this team scored off that store in this
-  // round. With no record for it the mark reads as absent — hollow would claim
-  // "took nothing", which is a different statement from "we do not know".
-  // A store can score more than once in a round (two flags the backend filed
-  // under one store — run a482c8369ab0 scored mlflow's read and write flags
-  // 8 s apart, both as `default`), and one filled square read "one flag" while
-  // the score said two. The count is badged on the mark, as on the minimap;
-  // the column count stays one per store so the nth mark still means the same
-  // flag in every round.
+  // one BLOCK per flag: a store can hold more than one (mlflow's read and
+  // write flags both land under `default`, run a482c8369ab0 scored both 8 s
+  // apart), so a store gets as many columns as the most captures scored off it
+  // in any one round, and every segment draws that same width — the nth block
+  // means the same flag in every round and on both team lines. Filled = this
+  // team scored that flag in this round; hollow = it did not; with no record
+  // for the store the blocks read as absent — hollow would claim "took
+  // nothing", which is a different statement from "we do not know".
+  const stats = {};
+  for(const tk of teamKeys){ stats[tk] = {}; for(const r of rounds) stats[tk][r] = roundStat(tk, r); }
+  const width = {};
+  for(const tk of teamKeys) for(const r of rounds)
+    for(const [k, v] of Object.entries(stats[tk][r].byKey))
+      width[k] = Math.max(width[k] || 1, v.took);
   const flagMarks = (st, tk) => {
   const rival = isSolo ? '' : (tk === 'team1' ? t2 : t1).label;
   return FKEY.map(f => {
     const v = st.byKey[f.k];
-    const cls = !v ? ' nd' : v.took > 0 ? ' on' : '';
-    const n = v && v.took > 1 ? ` data-n="${v.took}"` : '';
     const state = !v ? 'no record' : v.took > 0 ? `taken${v.took > 1 ? ` ×${v.took}` : ''}`
       : v.tries ? `${v.tries} attempt${v.tries > 1 ? 's' : ''}, none scored` : 'not taken';
-    return `<span class="rbflag${cls}"${n} title="${esc(f.label)}${
-      rival ? ` (${esc(rival)}'s)` : ''} — ${state}"></span>`;
+    const title = `${esc(f.label)}${rival ? ` (${esc(rival)}'s)` : ''} — ${state}`;
+    return Array.from({ length: width[f.k] || 1 }, (_, i) =>
+      `<span class="rbflag${!v ? ' nd' : i < v.took ? ' on' : ''}" title="${title}"></span>`
+    ).join('');
   }).join('');
   };
 
   const segment = (tk, r) => {
-    const st = roundStat(tk, r);
+    const st = stats[tk][r];
     const tip = [`R${r}`,
       st.flag === null ? 'flag: no data' : `own flag ${st.flag}% held`,
       st.svc === null ? 'service: no data' : `service ${st.svc}% up`,
