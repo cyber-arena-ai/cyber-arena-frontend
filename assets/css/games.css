@@ -66,8 +66,12 @@
 .gav::before{content:attr(data-ini)}                 /* initial shows until/unless the PNG loads */
 .gav img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
 .gav.sm{width:20px;height:20px}
-.gav.rev{border-style:dashed}                         /* reviewer, vs the author's solid ring */
-.gpeople{display:inline-flex;align-items:center;gap:4px}
+.gpeople{display:inline-flex;align-items:center;gap:4px;min-width:0}
+/* card footer: avatar only at rest; the handle slides out of it on hover */
+.gpeep{gap:0}
+.gpeep .ghandle{max-width:0;overflow:hidden;white-space:nowrap;opacity:0;
+  transition:max-width .22s ease,opacity .18s ease,margin-left .22s ease}
+.gpeep:hover .ghandle,.gpeep:focus-visible .ghandle{max-width:160px;opacity:1;margin-left:6px}
 .ghandle{font:600 12px/1 'JetBrains Mono',monospace;color:#555}
 .sheet-rev{display:flex;flex-wrap:wrap;gap:12px}
 .gorigin{margin-left:auto;font:800 9.5px/1 'JetBrains Mono',monospace;letter-spacing:.5px;

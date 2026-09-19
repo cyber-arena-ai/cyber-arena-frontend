@@ -49,13 +49,10 @@ function avatar(handle, cls = '') {
   return `<span class="gav ${cls}" data-ini="${esc(handle.slice(0, 1).toUpperCase())}"><img loading="lazy" src="${avatarURL(handle)}" alt="" onerror="this.remove()"></span>`;
 }
 const ghURL = handle => `https://github.com/${encodeURIComponent(handle)}`;
-function personLink(handle, role, avClass) {
-  return `<a class="gauthor" href="${ghURL(handle)}" target="_blank" rel="noopener" title="@${esc(handle)} · ${role}">
+// `cls` on the link: 'gpeep' folds the handle away until the avatar is hovered
+function personLink(handle, role, avClass, cls = '') {
+  return `<a class="gauthor ${cls}" href="${ghURL(handle)}" target="_blank" rel="noopener" title="@${esc(handle)} · ${role}">
     ${avatar(handle, avClass)}<span class="ghandle">${esc(handle)}</span></a>`;
-}
-// card footer: avatars only — a handle per person would overflow the fold
-function personAvatar(handle, role, avClass) {
-  return `<a class="gauthor" href="${ghURL(handle)}" target="_blank" rel="noopener" title="@${esc(handle)} · ${role}">${avatar(handle, avClass)}</a>`;
 }
 // `reviewer` is a hand-set registry field (a handle or a list); absent = unreviewed
 const reviewers = c => [].concat(c.reviewer || []).filter(Boolean);
@@ -77,7 +74,7 @@ function card(c, i) {
           ${svc.protocol ? `<span class="gport">${esc(svc.protocol)} ${esc(ports)}</span>` : ''}
         </div>
         <div class="gfoot">
-          <span class="gpeople">${personAvatar(c.contributor, 'author', '')}${reviewers(c).map(h => personAvatar(h, 'reviewer', 'rev')).join('')}</span>
+          <span class="gpeople">${personLink(c.contributor, 'author', '', 'gpeep')}${reviewers(c).map(h => personLink(h, 'reviewer', '', 'gpeep')).join('')}</span>
           <span class="gorigin ${c.origin?.type || ''}">${originLabel(c.origin?.type)}</span>
         </div>
       </div>
