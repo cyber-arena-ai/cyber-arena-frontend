@@ -12,7 +12,7 @@
 //
 // The table is GENERIC. Each campaign declares its own `columns`, so a new
 // campaign with a different algorithm renders here without a frontend change.
-import { loadJSON, loadHarnesses, setActiveNav, api, dropdown } from './util.js';
+import { loadJSON, loadHarnesses, setActiveNav, api, dropdown, scoreDomain, bellSVG } from './util.js';
 
 setActiveNav('leaderboard.html');
 
@@ -166,9 +166,15 @@ async function show(id){
   // Identity is resolved HERE, from the harness table — the campaign only ever
   // publishes the raw <model x harness> pair.
   const idLine = h => [h.fullName, h.org].filter(Boolean).join(' · ');
-  const statCells = e => cols.map(c =>
+  // A posterior campaign publishes a 5–95% interval per entrant. It is drawn as
+  // a bell on one shared axis (util.bellSVG) instead of listed as two more
+  // numbers, so those two columns are dropped from the stat strip.
+  const dom = scoreDomain(entries);
+  const BELL = new Set(dom ? ['lo90', 'hi90'] : []);
+  const statCells = e => cols.filter(c => !BELL.has(c.key)).map(c =>
     `<div><b>${esc((e.stats || {})[c.key] ?? '—')}</b><span>${esc(c.label || c.key)}</span></div>`
   ).join('');
+  const bellCell = (e, opts) => dom ? `<div class="post" title="posterior mean and 5–95% interval">${bellSVG(e, dom, opts)}</div>` : '';
 
   // --- champion block ---
   const L = entries[0], hL = H.get(L.entrant || {});
@@ -189,6 +195,7 @@ async function show(id){
       <div class="nums">
         <div class="score"><b>${esc(L.score_label ?? '')}</b><span>${esc(scoreLabel(d))}</span></div>
         ${statCells(L)}
+        ${bellCell(L, { w: 300, h: 70, ink: '#F7F3EC', fill: 'rgba(247,243,236,.3)', mute: 'rgba(247,243,236,.8)' })}
       </div>
     </div>`;
 
@@ -196,7 +203,7 @@ async function show(id){
   rows.innerHTML = entries.slice(1).map((e, i) => {
     const t = e.entrant || {}, h = H.get(t);
     return `
-    <div class="row${e.provisional ? ' prov' : ''}" style="--d:${Math.min(i, 12) * 70}ms">
+    <div class="row${e.provisional ? ' prov' : ''}${dom ? ' iv' : ''}" style="--d:${Math.min(i, 12) * 70}ms">
       <div class="n">${e.rank ?? ''}</div>
       <div class="nm">
         <span class="hchip" style="background:${H.duoCSS(t)}" title="${esc(h.fullName)}">${esc(h.shortName)}</span>${esc(e.label || t.model || '?')}
@@ -204,6 +211,7 @@ async function show(id){
         <em>${esc(idLine(h))}</em>
       </div>
       <div class="elo">${esc(e.score_label ?? '')}</div>
+      ${bellCell(e, { fill: H.modelColor(t) + '55' })}
       <div class="stats">${statCells(e)}</div>
     </div>`;
   }).join('');
@@ -217,6 +225,7 @@ function scoreLabel(d){
   if(a.includes('win rate')) return 'Win rate';
   if(a.includes('elo')) return 'ELO';
   if(a.includes('points')) return 'Points';
+  if(a.includes('posterior')) return 'Posterior score';
   return 'Score';
 }
 

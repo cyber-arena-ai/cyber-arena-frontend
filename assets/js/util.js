@@ -323,3 +323,52 @@ export function dropdown(host, { label = '', options = [], value, onChange }) {
     destroy() { document.removeEventListener('click', onDoc); },
   };
 }
+
+// --- posterior strip ------------------------------------------------------
+// A campaign that ranks by a POSTERIOR (the montecarlo campaign) publishes a
+// score with a 5–95% interval, `stats.lo90` / `stats.hi90`. A number with an
+// interval printed beside it reads as three numbers; the same thing drawn as a
+// bell on a shared axis reads as one claim with a width. The bell is the
+// Gaussian whose 5–95% band is the published interval (σ = width / 3.29) —
+// the Laplace posterior IS Gaussian, so this is the campaign's own shape, not
+// a decoration. `dom` is shared across every row so widths are comparable.
+export function scoreDomain(entries){
+  let lo = Infinity, hi = -Infinity;
+  for(const e of entries){
+    const s = e.stats || {};
+    if(s.lo90 == null || s.hi90 == null) continue;
+    lo = Math.min(lo, +s.lo90); hi = Math.max(hi, +s.hi90);
+  }
+  if(!isFinite(lo)) return null;
+  const pad = Math.max(3, (hi - lo) * 0.12);
+  return [Math.max(0, Math.floor(lo - pad)), Math.min(100, Math.ceil(hi + pad))];
+}
+
+export function bellSVG(e, dom, { w = 230, h = 56, ink = '#1A1A1A', fill = 'rgba(37,64,255,.28)', mute = '#8a857c' } = {}){
+  const s = e.stats || {};
+  const mu = +e.score, lo = +s.lo90, hi = +s.hi90;
+  if(!(isFinite(mu) && isFinite(lo) && isFinite(hi)) || !dom) return '';
+  const [d0, d1] = dom, ml = 26, mr = 26, top = 14, base = h - 14;
+  const x = v => ml + (v - d0) / (d1 - d0) * (w - ml - mr);
+  const sig = Math.max((hi - lo) / 3.29, 0.15);
+  const amp = base - top;
+  const y = v => base - amp * Math.exp(-((v - mu) ** 2) / (2 * sig * sig));
+  const N = 72, pts = [];
+  for(let i = 0; i <= N; i++){ const v = d0 + (d1 - d0) * i / N; pts.push([x(v), y(v)]); }
+  const line = pts.map(([a, b], i) => `${i ? 'L' : 'M'}${a.toFixed(1)},${b.toFixed(1)}`).join('');
+  // shade only the published band, lo..hi, under the curve
+  const band = []; for(let i = 0; i <= 40; i++){ const v = lo + (hi - lo) * i / 40; band.push([x(v), y(v)]); }
+  const bandPath = `M${x(lo).toFixed(1)},${base} ` + band.map(([a, b]) => `L${a.toFixed(1)},${b.toFixed(1)}`).join('') + ` L${x(hi).toFixed(1)},${base} Z`;
+  const f = v => (Math.round(v * 10) / 10).toFixed(1);
+  return `<svg class="bell" viewBox="0 0 ${w} ${h}" width="${w}" height="${h}" role="img" aria-label="score ${f(mu)}, 5–95% interval ${f(lo)} to ${f(hi)}">
+    <line x1="${ml}" y1="${base}" x2="${w - mr}" y2="${base}" stroke="${ink}" stroke-width="1.5"/>
+    <path d="${bandPath}" fill="${fill}"/>
+    <path d="${line}" fill="none" stroke="${ink}" stroke-width="1.6"/>
+    <line x1="${x(mu).toFixed(1)}" y1="${y(mu).toFixed(1)}" x2="${x(mu).toFixed(1)}" y2="${base}" stroke="${ink}" stroke-width="1.6" stroke-dasharray="2 2"/>
+    <line x1="${x(lo).toFixed(1)}" y1="${base - 4}" x2="${x(lo).toFixed(1)}" y2="${base + 4}" stroke="${ink}" stroke-width="1.5"/>
+    <line x1="${x(hi).toFixed(1)}" y1="${base - 4}" x2="${x(hi).toFixed(1)}" y2="${base + 4}" stroke="${ink}" stroke-width="1.5"/>
+    <text x="${(x(lo) - 2).toFixed(1)}" y="${h - 2}" text-anchor="end" font-size="9" font-family="JetBrains Mono,monospace" fill="${mute}">${f(lo)}</text>
+    <text x="${(x(hi) + 2).toFixed(1)}" y="${h - 2}" text-anchor="start" font-size="9" font-family="JetBrains Mono,monospace" fill="${mute}">${f(hi)}</text>
+    <text x="${x(mu).toFixed(1)}" y="${Math.max(9, y(mu) - 4).toFixed(1)}" text-anchor="middle" font-size="10" font-weight="800" font-family="Hanken Grotesk,sans-serif" fill="${ink}">${f(mu)}</text>
+  </svg>`;
+}

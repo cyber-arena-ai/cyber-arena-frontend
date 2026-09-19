@@ -89,3 +89,13 @@
   .lead .nums .score{border-right:0;padding-right:0}
   .row .nm{font-size:18px}
 }
+
+/* --- posterior bell: score with its 5–95% interval on one shared axis --- */
+.row.iv{grid-template-columns:60px 1fr auto auto auto}
+.post{display:flex;align-items:flex-end}
+.post .bell{display:block;max-width:100%;height:auto}
+.post{min-width:0}
+.lead .nums .post{align-self:center;padding-left:18px;margin-left:4px;border-left:2px solid rgba(255,255,255,.35)}
+@media(max-width:1000px){ .row.iv{grid-template-columns:60px 1fr auto auto} .row.iv .stats{display:none} }
+@media(max-width:860px){ .row.iv{grid-template-columns:46px 1fr auto} .row.iv .post{display:none} }
+@media(max-width:680px){ .lead .nums .post{border-left:0;padding-left:0;margin-left:0;flex:1 1 100%;width:100%} }
