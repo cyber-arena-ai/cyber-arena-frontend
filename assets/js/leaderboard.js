@@ -13,6 +13,7 @@
 // The table is GENERIC. Each campaign declares its own `columns`, so a new
 // campaign with a different algorithm renders here without a frontend change.
 import { loadJSON, loadHarnesses, setActiveNav, api, dropdown, scoreDomain, bellSVG } from './util.js';
+import { DEFAULT_CAMPAIGN } from './config.js';
 
 setActiveNav('leaderboard.html');
 
@@ -63,11 +64,15 @@ if(!campaigns.length){
     match archive and publish their results here. None has registered yet, so there is
     nothing to show. This page stays deliberately blank rather than inventing a ranking.</div></div>`;
 } else {
-  // ?campaign=<id> makes a particular campaign's standings linkable.
-  // Default to one that is actually answering — landing on an offline campaign
-  // when a working one exists would read as "the leaderboard is broken".
+  // ?campaign=<id> makes a particular campaign's standings linkable. Otherwise
+  // open on DEFAULT_CAMPAIGN (config.js) whenever it is registered — even while
+  // its process is briefly away, since the midend then serves its cached or
+  // stored table labelled as such, and that is still the leaderboard the site
+  // means. Only without it: one that is actually answering, because landing on
+  // an offline campaign when a working one exists would read as "broken".
   const want = new URLSearchParams(location.search).get('campaign');
   let current = campaigns.find(c => c.id === want)
+             || campaigns.find(c => c.id === DEFAULT_CAMPAIGN)
              || campaigns.find(c => c.online) || campaigns[0];
 
   // no dek here: the campaign's own meta block and the picker heading the list

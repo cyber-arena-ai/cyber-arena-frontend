@@ -48,3 +48,9 @@ export const reg = path => `${REGISTRY_BASE}/_registry${path.startsWith('/') ? '
 // deliberately out — one stopped 18 seconds in still records whatever the board
 // held, which reads as a nil-nil draw.
 export const ARCHIVE_RUNS = '/api/runs?outcome=succeeded,running&parse=ok';
+
+// The campaign the leaderboard opens on when the URL names none. A campaign id,
+// not a competitor: the standings themselves still come from the campaign, and
+// `?campaign=<id>` overrides this for any registered one. mc-v1 is the
+// Monte-Carlo ranking campaign (cyber-arena-deploy/campaign/montecarlo).
+export const DEFAULT_CAMPAIGN = 'mc-v1';
