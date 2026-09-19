@@ -90,12 +90,24 @@
   .row .nm{font-size:18px}
 }
 
-/* --- posterior bell: score with its 5–95% interval on one shared axis --- */
-.row.iv{grid-template-columns:60px 1fr auto auto auto}
-.post{display:flex;align-items:flex-end}
+/* --- posterior bell: score with its 5–95% interval on one shared axis ---
+   The three trailing columns (bell · score · stats) have FIXED widths and are
+   shared by the champion block and every row, so all the axes align. */
+.row.iv{grid-template-columns:60px 1fr 320px 112px 76px}
+.row.iv .elo{text-align:right}
+.row.iv .stats{justify-content:flex-end}
+.post{display:flex;align-items:flex-end;min-width:0}
 .post .bell{display:block;max-width:100%;height:auto}
-.post{min-width:0}
-.lead .nums .post{align-self:center;padding-left:18px;margin-left:4px;border-left:2px solid rgba(255,255,255,.35)}
-@media(max-width:1000px){ .row.iv{grid-template-columns:60px 1fr auto auto} .row.iv .stats{display:none} }
-@media(max-width:860px){ .row.iv{grid-template-columns:46px 1fr auto} .row.iv .post{display:none} }
-@media(max-width:680px){ .lead .nums .post{border-left:0;padding-left:0;margin-left:0;flex:1 1 100%;width:100%} }
+/* right padding matches .row so the fixed trailing columns share one right edge */
+.lead.iv{grid-template-columns:auto 1fr 320px 112px 76px;gap:18px;padding-right:6px}
+.lead.iv > .post,.lead.iv > .score,.lead.iv > .stats{align-self:end;padding-bottom:2px}
+.lead.iv .score b{display:block;font-size:34px;line-height:1}
+.lead.iv .score span,.lead.iv .stats span{font-size:11px;text-transform:uppercase;letter-spacing:1px;opacity:.85;white-space:nowrap}
+.lead.iv .score{text-align:right}
+.lead.iv .stats{display:flex;justify-content:flex-end;gap:14px;text-align:right}
+.lead.iv .stats b{display:block;font-size:26px}
+@media(max-width:1000px){ .row.iv{grid-template-columns:60px 1fr 320px 112px} .row.iv .stats{display:none}
+  .lead.iv{grid-template-columns:auto 1fr 320px 112px} .lead.iv > .stats{display:none} }
+@media(max-width:860px){ .row.iv{grid-template-columns:46px 1fr auto} .row.iv .post{display:none}
+  .lead.iv{grid-template-columns:auto 1fr auto} .lead.iv > .post{display:none} }
+@media(max-width:680px){ .lead.iv{grid-template-columns:1fr} .lead.iv .score{text-align:left} }

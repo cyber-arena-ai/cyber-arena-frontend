@@ -344,7 +344,7 @@ export function scoreDomain(entries){
   return [Math.max(0, Math.floor(lo - pad)), Math.min(100, Math.ceil(hi + pad))];
 }
 
-export function bellSVG(e, dom, { w = 230, h = 56, ink = '#1A1A1A', fill = 'rgba(37,64,255,.28)', mute = '#8a857c' } = {}){
+export function bellSVG(e, dom, { w = 320, h = 60, ink = '#1A1A1A', fill = 'rgba(37,64,255,.28)', mute = '#8a857c' } = {}){
   const s = e.stats || {};
   const mu = +e.score, lo = +s.lo90, hi = +s.hi90;
   if(!(isFinite(mu) && isFinite(lo) && isFinite(hi)) || !dom) return '';

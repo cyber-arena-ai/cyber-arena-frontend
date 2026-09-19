@@ -184,9 +184,21 @@ async function show(id){
   const stamp = L.provisional
     ? `PROVISIONAL · ${esc(hL.shortName)}`
     : `CHAMPION · ${esc(hL.shortName)}`;
-  lead.className = `lead in${L.provisional ? ' prov' : ''}`;
+  lead.className = `lead in${L.provisional ? ' prov' : ''}${dom ? ' iv' : ''}`;
   lead.style.background = H.duoCSS(L.entrant || {});   // wears both halves of the combo
-  lead.innerHTML = `
+  // With an interval the champion takes the SAME trailing columns as every row
+  // below it (bell, score, stats), so the axis of the winner's bell lines up
+  // with the axes underneath and the eye can compare widths straight down.
+  lead.innerHTML = dom ? `
+    <div class="big">1</div>
+    <div>
+      <div class="stamp">${stamp}</div>
+      <div class="who">${esc(L.label || L.entrant?.model || '?')}</div>
+      <div class="org">${esc(idLine(hL))}</div>
+    </div>
+    ${bellCell(L, { ink: '#F7F3EC', fill: 'rgba(247,243,236,.3)', mute: 'rgba(247,243,236,.8)' })}
+    <div class="score"><b>${esc(L.score_label ?? '')}</b><span>${esc(scoreLabel(d))}</span></div>
+    <div class="stats">${statCells(L)}</div>` : `
     <div class="big">1</div>
     <div>
       <div class="stamp">${stamp}</div>
@@ -195,7 +207,6 @@ async function show(id){
       <div class="nums">
         <div class="score"><b>${esc(L.score_label ?? '')}</b><span>${esc(scoreLabel(d))}</span></div>
         ${statCells(L)}
-        ${bellCell(L, { w: 300, h: 70, ink: '#F7F3EC', fill: 'rgba(247,243,236,.3)', mute: 'rgba(247,243,236,.8)' })}
       </div>
     </div>`;
 
@@ -210,8 +221,8 @@ async function show(id){
         ${e.provisional ? `<i class="prov-tag" title="too few matches to be meaningful — ranked below everyone who cleared the bar">provisional</i>` : ''}
         <em>${esc(idLine(h))}</em>
       </div>
-      <div class="elo">${esc(e.score_label ?? '')}</div>
       ${bellCell(e, { fill: H.modelColor(t) + '55' })}
+      <div class="elo">${esc(e.score_label ?? '')}</div>
       <div class="stats">${statCells(e)}</div>
     </div>`;
   }).join('');
