@@ -19,7 +19,7 @@ read the repo root [../CLAUDE.md](../CLAUDE.md).
 | File | Module | Purpose |
 |---|---|---|
 | `index.html` | *(none — inline)* | **Homepage / explainer.** Self-contained marketing page. Fetches **nothing**. |
-| `leaderboard.html` | `assets/js/leaderboard.js` | **Empty** — title and nav only. The derived standings were removed; see the repo root CLAUDE.md §4. |
+| `leaderboard.html` | `assets/js/leaderboard.js` | Standings published by **campaigns** (`/api/campaigns`, workspace CLAUDE.md §4a) with a picker; opens on `DEFAULT_CAMPAIGN` from `config.js` (`mc-v1`) when registered, else the first online campaign; `?campaign=<id>` overrides. |
 | `runs.html` | `assets/js/runs.js` | Match archive (results ledger); rows link into a match thread. |
 | `games.html` | `assets/js/games.js` | Challenge/game catalogue (reads the challenge registry). |
 | `trajectory.html` | `assets/js/trajectory.js` | One match as a chat thread between the two agents, with a per-team minimap for scrubbing. Opened via `trajectory.html?run=<id>`. |
@@ -41,7 +41,7 @@ points) + a `<script type="module">` that fetches from the API and renders. Page
 This is the **integration** frontend: all data is fetched at runtime from the **midend** front-mid
 API, not bundled `data/*.json`.
 
-[`assets/js/config.js`](assets/js/config.js) resolves two base URLs at runtime (no build step):
+[`assets/js/config.js`](assets/js/config.js) resolves two base URLs at runtime (no build step) — and names `DEFAULT_CAMPAIGN`, the campaign the leaderboard opens on:
 
 - **`API_BASE`** → the midend. Resolution order (first hit wins):
   1. `?api=<url>` query param (persisted to `localStorage`)
