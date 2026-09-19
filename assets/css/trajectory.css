@@ -84,7 +84,7 @@
 .msg.team1 .who{color:var(--t1,var(--blue))}
 .msg.team2 .who{color:var(--t2,var(--pink))}
 .tm{font-family:'JetBrains Mono',monospace;font-size:11px;color:#a59a84}
-.think{font-size:15.5px;line-height:1.45}
+.think{font-size:15.5px;line-height:1.45;overflow-wrap:anywhere}
 .acts{margin-top:8px;display:flex;flex-direction:column;gap:6px}
 .act{border:1.5px solid var(--ink);border-left-width:4px;border-radius:6px;background:#fbf8f1;padding:5px 9px}
 .act .al{font-family:'Hanken Grotesk';font-weight:800;font-size:9px;letter-spacing:1.2px;text-transform:uppercase;color:#9a8f78;display:block;margin-bottom:2px}
