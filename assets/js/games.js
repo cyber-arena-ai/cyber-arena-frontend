@@ -17,7 +17,7 @@ const chals = (D.challenges || []).filter(c => c.show_in_gallery !== false);
 // ?v=<index build date>: covers keep their filename when redrawn, so without a
 // version token the browser serves its week-old copy of the previous artwork.
 const coverURL = c => reg('/' + (c.cover?.image || `covers/${c.slug}.webp`)) + `?v=${D.generated}`;
-const avatarURL = c => reg('/avatar/' + c.contributor + '.png');
+const avatarURL = handle => reg('/avatar/' + handle + '.png');
 const originLabel = t => (t === 'ctf' ? 'CTF' : t === 'real-world' ? 'REAL-WORLD' : '');
 
 /* ---- masthead / dek / summary ---- */
@@ -44,11 +44,18 @@ function tagChips(tags, max = 5) {
   return shown.map(chip).join('') + (extra > 0 ? `<span class="chip chip-more">+${extra}</span>` : '');
 }
 function diffPill(d) { return `<span class="gdiff ${d || ''}">${esc(d || '')}</span>`; }
-function authorLink(c, avClass) {
-  const gh = `https://github.com/${encodeURIComponent(c.contributor)}`;
-  return `<a class="gauthor" href="${gh}" target="_blank" rel="noopener" title="@${esc(c.contributor)} on GitHub">
-    <img class="gav ${avClass}" loading="lazy" src="${avatarURL(c)}" alt="" onerror="this.style.visibility='hidden'">
-    <span class="ghandle">${esc(c.contributor)}</span></a>`;
+function personLink(handle, avClass) {
+  const gh = `https://github.com/${encodeURIComponent(handle)}`;
+  return `<a class="gauthor" href="${gh}" target="_blank" rel="noopener" title="@${esc(handle)} on GitHub">
+    <img class="gav ${avClass}" loading="lazy" src="${avatarURL(handle)}" alt="" onerror="this.style.visibility='hidden'">
+    <span class="ghandle">${esc(handle)}</span></a>`;
+}
+const authorLink = (c, avClass) => personLink(c.contributor, avClass);
+// `reviewer` is a hand-set registry field (a handle or a list); absent = unreviewed
+const reviewers = c => [].concat(c.reviewer || []).filter(Boolean);
+function reviewerLinks(c, avClass) {
+  const r = reviewers(c);
+  return r.length ? `<span class="grev"><i>rev</i>${r.map(h => personLink(h, avClass)).join('')}</span>` : '';
 }
 
 function card(c, i) {
@@ -69,6 +76,7 @@ function card(c, i) {
         </div>
         <div class="gfoot">
           ${authorLink(c, '')}
+          ${reviewerLinks(c, '')}
           <span class="gorigin ${c.origin?.type || ''}">${originLabel(c.origin?.type)}</span>
         </div>
       </div>
@@ -210,6 +218,7 @@ function openSheet(c) {
         <dt>Service</dt><dd>${esc(svc.stack || '—')}${ports ? ` · ${esc(ports)}` : ''}</dd>
         <dt>Origin</dt><dd><span class="gorigin ${o.type || ''}">${originLabel(o.type)}</span> ${src}</dd>
         <dt>Author</dt><dd>${authorLink(c, 'sm')}</dd>
+        ${reviewers(c).length ? `<dt>Reviewer</dt><dd class="sheet-rev">${reviewers(c).map(h => personLink(h, 'sm')).join('')}</dd>` : ''}
       </dl>
       <div class="sheet-hist">
         <h4><i class="fa-solid fa-clock-rotate-left"></i> Match history</h4>
