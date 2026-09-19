@@ -60,12 +60,15 @@
 .gfoot{display:flex;align-items:center;gap:8px;padding-top:8px;border-top:2px solid var(--line)}
 .gauthor{display:inline-flex;align-items:center;gap:8px;text-decoration:none;color:inherit}
 .gauthor:hover .ghandle{color:var(--ink);text-decoration:underline}
-.gav{width:22px;height:22px;border-radius:50%;border:2px solid var(--ink);object-fit:cover}
-.gav.sm{width:20px;height:20px;vertical-align:-5px}
+.gav{position:relative;flex:none;display:inline-grid;place-items:center;width:22px;height:22px;border-radius:50%;
+  border:2px solid var(--ink);background:var(--paper);overflow:hidden;
+  font:800 10px/1 'JetBrains Mono',monospace;color:var(--ink)}
+.gav::before{content:attr(data-ini)}                 /* initial shows until/unless the PNG loads */
+.gav img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.gav.sm{width:20px;height:20px}
+.gav.rev{border-style:dashed}                         /* reviewer, vs the author's solid ring */
+.gpeople{display:inline-flex;align-items:center;gap:4px}
 .ghandle{font:600 12px/1 'JetBrains Mono',monospace;color:#555}
-.grev{display:inline-flex;align-items:center;gap:6px;min-width:0}
-.grev i{font:800 9px/1 'JetBrains Mono',monospace;font-style:normal;text-transform:uppercase;letter-spacing:.5px;color:#8a857c}
-.grev .ghandle{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .sheet-rev{display:flex;flex-wrap:wrap;gap:12px}
 .gorigin{margin-left:auto;font:800 9.5px/1 'JetBrains Mono',monospace;letter-spacing:.5px;
   padding:3px 7px;border:2px solid var(--ink);border-radius:20px}
