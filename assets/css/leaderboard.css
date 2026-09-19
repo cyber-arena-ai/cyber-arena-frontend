@@ -74,10 +74,6 @@
   color:#8a8378;border:1.5px solid #cfc7b7;padding:1px 5px;margin-left:8px;vertical-align:3px}
 .lead .stamp .prov-tag{border-color:var(--paper);color:var(--paper)}
 
-.readmore{text-align:center;margin-top:26px}
-.readmore a{font-family:'Hanken Grotesk';font-weight:800;font-size:15px;color:var(--paper);background:var(--ink);text-decoration:none;padding:10px 18px;display:inline-block;box-shadow:4px 4px 0 var(--blue)}
-.readmore a:hover{box-shadow:4px 4px 0 var(--pink)}
-
 @media(max-width:860px){
   .row{grid-template-columns:46px 1fr auto;gap:12px}
   .row .stats{display:none}          /* the score still ranks; stats need width */
