@@ -43,6 +43,16 @@ function tagChips(tags, max = 5) {
   const shown = tags.slice(0, max), extra = tags.length - shown.length;
   return shown.map(chip).join('') + (extra > 0 ? `<span class="chip chip-more">+${extra}</span>` : '');
 }
+// `axes`: the montecarlo ranking's six-axis weights for a challenge (registry
+// schematic.md §Axes) — short keys, non-zero only, sum to 1. Labels are the
+// method's axis names, for the tooltip.
+const AXES = { access: 'A · Identity and access control', exec: 'X · Input and execution semantics',
+  files: 'F · Filesystem and resource isolation', crypto: 'C · Cryptographic mechanisms and randomness',
+  parsing: 'R · Data representation and parsing', state: 'S · Protocol interaction and state management' };
+function axisChips(c) {
+  const ax = Object.entries(c.axes || {}).sort((a, b) => b[1] - a[1]);
+  return ax.map(([k, w]) => `<span class="gax" style="--w:${w}" title="${esc(AXES[k] || k)} — ${Math.round(w * 100)}%">${esc(k)}<b>${Math.round(w * 100)}</b></span>`).join('');
+}
 function diffPill(d) { return `<span class="gdiff ${d || ''}">${esc(d || '')}</span>`; }
 // avatar disc: the registry PNG when it exists, else the handle's initial
 function avatar(handle, cls = '') {
@@ -69,6 +79,7 @@ function card(c, i) {
       <div class="gdetails">
         <p class="gtagline">${esc(c.card?.tagline || '')}</p>
         <div class="gtags">${tagChips(c.tags || [])}</div>
+        ${c.axes ? `<div class="gaxes">${axisChips(c)}</div>` : ''}
         <div class="gmeta">
           <span class="gvuln">${esc(cl.vuln_class || '')}</span>
           ${svc.protocol ? `<span class="gport">${esc(svc.protocol)} ${esc(ports)}</span>` : ''}
@@ -206,6 +217,7 @@ function openSheet(c) {
       <div class="sheet-head"><h2>${esc(c.title || c.slug)}</h2>${diffPill(cl.difficulty)}</div>
       <p class="sheet-tagline">${esc(c.card?.tagline || '')}</p>
       <div class="gtags">${(c.tags || []).map(chip).join('')}</div>
+      ${c.axes ? `<div class="gaxes">${axisChips(c)}</div>` : ''}
       <p class="sheet-summary">${esc(c.card?.summary || '')}</p>
       <div class="sheet-ad">
         <div><h4><i class="fa-solid fa-bolt"></i> Attack</h4><p>${esc(c.card?.attack || '')}</p></div>
