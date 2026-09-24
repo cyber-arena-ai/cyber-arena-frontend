@@ -353,12 +353,19 @@ export function bellSVG(e, dom, { w = 320, h = 60, ink = '#1A1A1A', fill = 'rgba
   const sig = Math.max((hi - lo) / 3.29, 0.15);
   const amp = base - top;
   const y = v => base - amp * Math.exp(-((v - mu) ** 2) / (2 * sig * sig));
-  const N = 72, pts = [];
-  for(let i = 0; i <= N; i++){ const v = d0 + (d1 - d0) * i / N; pts.push([x(v), y(v)]); }
-  const line = pts.map(([a, b], i) => `${i ? 'L' : 'M'}${a.toFixed(1)},${b.toFixed(1)}`).join('');
-  // shade only the published band, lo..hi, under the curve
-  const band = []; for(let i = 0; i <= 40; i++){ const v = lo + (hi - lo) * i / 40; band.push([x(v), y(v)]); }
-  const bandPath = `M${x(lo).toFixed(1)},${base} ` + band.map(([a, b]) => `L${a.toFixed(1)},${b.toFixed(1)}`).join('') + ` L${x(hi).toFixed(1)},${base} Z`;
+  // Sample where the curve lives. Spread evenly over the whole axis, a narrow
+  // posterior (σ ≈ 1 point on a ~40-point axis) got a dozen samples and drew as a
+  // faceted spike whose apex missed the mean. So: dense within ±4σ of μ, μ itself
+  // always a sample, and the flat tails outside that as plain segments.
+  const samples = (a, b) => {
+    const k0 = Math.max(a, mu - 4 * sig), k1 = Math.min(b, mu + 4 * sig), n = 160, vs = [a, b];
+    if(k1 > k0) for(let i = 0; i <= n; i++) vs.push(k0 + (k1 - k0) * i / n);
+    if(mu > a && mu < b) vs.push(mu);
+    return [...new Set(vs)].sort((p, q) => p - q).map(v => [x(v), y(v)]);
+  };
+  const line = samples(d0, d1).map(([a, b], i) => `${i ? 'L' : 'M'}${a.toFixed(2)},${b.toFixed(2)}`).join('');
+  // shade only the published band, lo..hi, under the curve — same samples, so its edge sits on the line
+  const bandPath = `M${x(lo).toFixed(2)},${base} ` + samples(lo, hi).map(([a, b]) => `L${a.toFixed(2)},${b.toFixed(2)}`).join('') + ` L${x(hi).toFixed(2)},${base} Z`;
   const f = v => (Math.round(v * 10) / 10).toFixed(1);
   return `<svg class="bell" viewBox="0 0 ${w} ${h}" width="${w}" height="${h}" role="img" aria-label="score ${f(mu)}, 5–95% interval ${f(lo)} to ${f(hi)}">
     <line x1="${ml}" y1="${base}" x2="${w - mr}" y2="${base}" stroke="${ink}" stroke-width="1.5"/>
